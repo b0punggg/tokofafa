@@ -809,28 +809,31 @@ function write_num($input,$printer,$xpos,$ypos){
       $ago  = new DateTime($datetime);
       $diff = $now->diff($ago);
 
-      $diff->w = floor($diff->d / 7);
-      $diff->d -= $diff->w * 7;
+      // Hitung minggu secara manual untuk kompatibilitas PHP 5.6
+      $weeks = floor($diff->d / 7);
+      $days = $diff->d - ($weeks * 7);
 
       $string = array(
-        'y' => 'tahun',
-        'm' => 'bulan',
-        'w' => 'minggu',
-        'd' => 'hari',
-        'h' => 'jam',
-        'i' => 'menit',
-        's' => 'detik',
+        'y' => array('value' => $diff->y, 'label' => 'tahun'),
+        'm' => array('value' => $diff->m, 'label' => 'bulan'),
+        'w' => array('value' => $weeks, 'label' => 'minggu'),
+        'd' => array('value' => $days, 'label' => 'hari'),
+        'h' => array('value' => $diff->h, 'label' => 'jam'),
+        'i' => array('value' => $diff->i, 'label' => 'menit'),
+        's' => array('value' => $diff->s, 'label' => 'detik'),
       );
-      foreach ($string as $k => &$v) {
-        if ($diff->$k) {
-          $v = $diff->$k . ' ' . $v;
-        } else {
-          unset($string[$k]);
+      
+      $result = array();
+      foreach ($string as $k => $v) {
+        if ($v['value'] > 0) {
+          $result[$k] = $v['value'] . ' ' . $v['label'];
         }
       }
 
-      if (!$full) $string = array_slice($string, 0, 1);
-      return $string ? implode(', ', $string) . ' yang lalu' : 'baru saja';
+      if (!$full && !empty($result)) {
+        $result = array_slice($result, 0, 1);
+      }
+      return !empty($result) ? implode(', ', $result) . ' yang lalu' : 'baru saja';
     }
   }
 
