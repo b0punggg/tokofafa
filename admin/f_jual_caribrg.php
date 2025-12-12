@@ -42,21 +42,35 @@
           	  	LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
           	  	WHERE mas_brg.kd_toko='$id_toko'
 				GROUP BY mas_brg.kd_brg
+				HAVING jumstok > 0
           	    ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
           	$sql1 = mysqli_query($connect, $query1);
           	
           	if (!$sql1) {
-          		// Jika query gagal, coba query alternatif tanpa GROUP BY
-          		$query1_alt = "SELECT mas_brg.kd_brg, mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+          		// Jika query gagal, coba query alternatif dengan filter stok
+          		$query1_alt = "SELECT mas_brg.kd_brg, 
+          			IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+          			mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
           			mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
           			mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
           			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
           			WHERE mas_brg.kd_toko='$id_toko'
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
           			ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
           		$sql1 = mysqli_query($connect, $query1_alt);
           	}
           	
-          	$query2 = "SELECT COUNT(*) AS jumlah FROM mas_brg WHERE kd_toko='$id_toko'";
+          	$query2 = "SELECT COUNT(*) AS jumlah 
+          		FROM (
+          			SELECT mas_brg.kd_brg, IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok
+          			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          			WHERE mas_brg.kd_toko='$id_toko'
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
+          		) AS barang_berstok";
           	$sql2 = mysqli_query($connect, $query2);
           }
           else {
@@ -70,21 +84,35 @@
           	  	LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
           	  	WHERE mas_brg.nm_brg LIKE '$param' AND mas_brg.kd_toko='$id_toko'
           	  	GROUP BY mas_brg.kd_brg
+          	  	HAVING jumstok > 0
           	    ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit";
           	$sql1 = mysqli_query($connect, $query1);
           	
           	if (!$sql1) {
-          		// Jika query gagal, coba query alternatif
-          		$query1_alt = "SELECT mas_brg.kd_brg, mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,
+          		// Jika query gagal, coba query alternatif dengan filter stok
+          		$query1_alt = "SELECT mas_brg.kd_brg, 
+          			IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+          			mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,
           			mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
           			mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
           			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
           			WHERE mas_brg.nm_brg LIKE '$param' AND mas_brg.kd_toko='$id_toko'
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
           			ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit";
           		$sql1 = mysqli_query($connect, $query1_alt);
           	}
           	
-          	$query2 = "SELECT COUNT(*) AS jumlah FROM mas_brg WHERE nm_brg LIKE '$param' AND kd_toko='$id_toko'";
+          	$query2 = "SELECT COUNT(*) AS jumlah 
+          		FROM (
+          			SELECT mas_brg.kd_brg, IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok
+          			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          			WHERE mas_brg.nm_brg LIKE '$param' AND mas_brg.kd_toko='$id_toko'
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
+          		) AS barang_berstok";
           	$sql2 = mysqli_query($connect, $query2);
           }
 	      
@@ -106,21 +134,35 @@
 			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
 			WHERE mas_brg.kd_toko='$id_toko'
 			GROUP BY mas_brg.kd_brg
+			HAVING jumstok > 0
 		    ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
 			$sql1 = mysqli_query($connect, $query1);
 			
 			if (!$sql1) {
-				// Jika query gagal, coba query alternatif
-				$query1_alt = "SELECT mas_brg.kd_brg, mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+				// Jika query gagal, coba query alternatif dengan filter stok
+				$query1_alt = "SELECT mas_brg.kd_brg, 
+					IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+					mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
 					mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
 					mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
 					FROM mas_brg 
+					LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
 					WHERE mas_brg.kd_toko='$id_toko'
+					GROUP BY mas_brg.kd_brg
+					HAVING jumstok > 0
 					ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
 				$sql1 = mysqli_query($connect, $query1_alt);
 			}
 			
-			$query2 = "SELECT COUNT(*) AS jumlah FROM mas_brg WHERE kd_toko='$id_toko'";
+			$query2 = "SELECT COUNT(*) AS jumlah 
+				FROM (
+					SELECT mas_brg.kd_brg, IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok
+					FROM mas_brg 
+					LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+					WHERE mas_brg.kd_toko='$id_toko'
+					GROUP BY mas_brg.kd_brg
+					HAVING jumstok > 0
+				) AS barang_berstok";
 	  		$sql2 = mysqli_query($connect, $query2);
 	  		
 	  		// Cek apakah query berhasil sebelum fetch
