@@ -829,27 +829,42 @@
           document.addEventListener("DOMContentLoaded", fn);
         }
       }
+      
+      // Cek apakah device mobile sebelum inisialisasi scanner
+      var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       docReady(function () {
-        var resultContainer = document.getElementById('qr-reader-results');
-        var lastResult, countResults = 0;
-        function onScanSuccess(decodedText, decodedResult) {
-          if (decodedText !== lastResult) {
-              ++countResults;
-              lastResult = decodedText;
-              // Handle on success condition with the decoded message.
-              // console.log(`Scan result ${decodedText}`, decodedResult);
-              document.getElementById('kd_bar').value=decodedText;
-              // html5QrcodeScanner.clear();
-              pasif();
-              carikd_bar();
-              //lastResult=0;
-              document.getElementById('form-scancams').style.display='none';
-              //document.getElementById('qr-reader')=remove();
+        // Hanya inisialisasi scanner jika device mobile dan elemen qr-reader ada
+        if (isMobileDevice) {
+          var qrReaderElement = document.getElementById('qr-reader');
+          if (qrReaderElement) {
+            var resultContainer = document.getElementById('qr-reader-results');
+            var lastResult, countResults = 0;
+            function onScanSuccess(decodedText, decodedResult) {
+              if (decodedText !== lastResult) {
+                  ++countResults;
+                  lastResult = decodedText;
+                  // Handle on success condition with the decoded message.
+                  // console.log(`Scan result ${decodedText}`, decodedResult);
+                  document.getElementById('kd_bar').value=decodedText;
+                  // html5QrcodeScanner.clear();
+                  pasif();
+                  carikd_bar();
+                  //lastResult=0;
+                  document.getElementById('form-scancams').style.display='none';
+                  //document.getElementById('qr-reader')=remove();
+              }
+            }
+            try {
+              var html5QrcodeScanner = new Html5QrcodeScanner(
+                  "qr-reader", { fps: 10, qrbox: 250 });
+              html5QrcodeScanner.render(onScanSuccess);
+            } catch (e) {
+              // Jika error, tidak perlu melakukan apa-apa karena mungkin elemen sudah dihapus
+              console.log('QR Scanner initialization skipped:', e.message);
+            }
           }
         }
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
       });
 
       
@@ -1323,13 +1338,25 @@
       </div>
     </div>  
     <script>
-      var a=0;
-      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
-        a=1;
-      }else{a=0;}
-      if (a==0){
-        document.getElementById('qr-reader').remove();
-      }
+      // Hapus elemen qr-reader jika bukan mobile device
+      // Lakukan segera setelah DOM ready, sebelum scanner diinisialisasi
+      (function() {
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) {
+          function removeQrReader() {
+            var qrReaderElement = document.getElementById('qr-reader');
+            if (qrReaderElement) {
+              qrReaderElement.remove();
+            }
+          }
+          // Coba hapus segera jika DOM sudah ready
+          if (document.readyState === "complete" || document.readyState === "interactive") {
+            setTimeout(removeQrReader, 0);
+          } else {
+            document.addEventListener('DOMContentLoaded', removeQrReader);
+          }
+        }
+      })();
     </script>
     
       <!-- Form nota panding-->

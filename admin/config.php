@@ -4,34 +4,12 @@
 
 function opendtcek()
 {
-  // $host = "localhost";
-  // $username = "ADMIN1";
-  // $password = "$2y$10$5xiK8zoUiV38wsNe43Z9guuQ7SUW5wT.WQVeadyPdV/cQsM7HjQH."; 
-  // $database = "tokorahayu";
+  $host    = "localhost";
+  $username = "u219974054_defafa";
+  $password = "k8F!+0EYQgSG";
+  $database = "u219974054_tokofafa";
   
-  // $nmuser='';
-  // $nmuser=$_SESSION['nm_user'];
- 
-  //***cari user pada pemakai
-  // $con=mysqli_connect($host,$username,$password,$database);
-  // $sql=mysqli_query($con,"SELECT * FROM pemakai WHERE nm_user='$nmuser' ORDER BY nm_user ASC");
-   
-  //  if (mysqli_num_rows($sql)>=1){
-  //    $data=mysqli_fetch_assoc($sql); 
-  //    $username = $data['nm_user'];
-  //    $password = $data['pass'];
-  //    if ($username=="ADMIN1"){
-  //     $username="root";
-  //     $password="";
-  //    }
-  //  } else {
-  //    $username = "root";
-  //    $password = "";
-  //  }
-  // unset($data,$sql); 
-  // mysqli_close($con); 
-
-  return mysqli_connect('localhost','root','','fafa');
+  return mysqli_connect($host,$username,$password,$database);
 }
 
 function kd_barc39($strkon){ 
@@ -211,7 +189,8 @@ function konjumbrg2($sat_brg,$kd_brg,$hub){
     if($sat_brg==$cek['kd_kem1']){
       $jml_brg_sat=$cek['jum_kem1'];
     }
-    if ($cek['kd_kem1']==''){echo $kd_brg;}
+    // Hapus echo yang menampilkan kode barang (menyebabkan nama barang muncul di viewjmlstok)
+    // if ($cek['kd_kem1']==''){echo $kd_brg;}
     unset($datsql,$cek);
 
     //mysqli_close($connect3);
@@ -290,13 +269,16 @@ function konhrgbelibrg($sat_brg, $kd_brg, $no_urutbeli) {
   function carisatbesar($kd_brg){
     $connect4 = opendtcek();
     $kd_toko=$_SESSION['id_toko'];
+    $satbesar = ''; // Inisialisasi variabel
     $datsql=mysqli_query($connect4,"SELECT * FROM mas_brg WHERE kd_brg='$kd_brg' AND kd_toko='$kd_toko'");
-    $cek=mysqli_fetch_array($datsql);
-
-    if($cek['kd_kem1']>1){
-      $satbesar=$cek['kd_kem1'].';'.$cek['jum_kem1'];
+    if($datsql && mysqli_num_rows($datsql) > 0){
+      $cek=mysqli_fetch_array($datsql);
+      if(isset($cek['kd_kem1']) && $cek['kd_kem1']>1){
+        $satbesar=$cek['kd_kem1'].';'.$cek['jum_kem1'];
+      }
+      unset($cek);
     }
-    unset($datsql,$cek);
+    unset($datsql);
     mysqli_close($connect4);
     return $satbesar;
   }
@@ -318,13 +300,16 @@ function konhrgbelibrg($sat_brg, $kd_brg, $no_urutbeli) {
   function carisatbesar3($kd_brg,$hub){
     //$connect4 = opendtcek();
     $kd_toko=$_SESSION['id_toko'];
+    $satbesar = ''; // Inisialisasi variabel
     $datsql=mysqli_query($hub,"SELECT * FROM mas_brg WHERE kd_brg='$kd_brg' AND kd_toko='$kd_toko'");
-    $cek=mysqli_fetch_array($datsql);
-
-    if($cek['kd_kem1']>1){
-      $satbesar=$cek['kd_kem1'].';'.$cek['nm_kem1'].';'.$cek['jum_kem1'];
+    if($datsql && mysqli_num_rows($datsql) > 0){
+      $cek=mysqli_fetch_array($datsql);
+      if(isset($cek['kd_kem1']) && $cek['kd_kem1']>1){
+        $satbesar=$cek['kd_kem1'].';'.$cek['nm_kem1'].';'.$cek['jum_kem1'];
+      }
+      unset($cek);
     }
-    unset($datsql,$cek);
+    unset($datsql);
     //mysqli_close($connect4);
     return $satbesar;
   }

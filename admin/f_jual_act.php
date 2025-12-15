@@ -87,16 +87,18 @@
     //end difinisi
 
     //**--- bagian save data 
-      $x         = explode(';', carisatkecil($kd_brg));
-      $sat_kecil = $x[0]; 
-      $jum_kecil = $x[1]; 
+      $satkecil_result = carisatkecil($kd_brg);
+      $x = !empty($satkecil_result) ? explode(';', $satkecil_result) : array();
+      $sat_kecil = isset($x[0]) ? $x[0] : '';
+      $jum_kecil = isset($x[1]) ? $x[1] : 0;
       $nmkem     = ceknmkem2($sat_kecil,$conseek);
     //--  
 
     // cari satuan besar
-      $x         = explode(";",carisatbesar($kd_brg));
-        $bigsat  = $x[0];
-        $bigjum  = $x[1];
+      $satbesar_result = carisatbesar($kd_brg);
+      $x = !empty($satbesar_result) ? explode(";", $satbesar_result) : array();
+      $bigsat  = isset($x[0]) ? $x[0] : '';
+      $bigjum  = isset($x[1]) ? $x[1] : 0;
     //end cari satuan
 
     // Apakah ada discount tetap   
@@ -338,7 +340,13 @@
                 if ($c_proses==2){
                   $hrg_beli=$hrg_rata;
                 } else {
-                  $hrg_beli=($hrg_beliawal/konjumbrg2($cari['kd_sat'],$kd_brg,$conseek))*$jum_kem;
+                  $jum_kemasan_conv = konjumbrg2($cari['kd_sat'],$kd_brg,$conseek);
+                  // Cegah division by zero
+                  if ($jum_kemasan_conv > 0) {
+                    $hrg_beli=($hrg_beliawal/$jum_kemasan_conv)*$jum_kem;
+                  } else {
+                    $hrg_beli = $hrg_beliawal * $jum_kem; // Jika jum_kemasan 0, gunakan langsung
+                  }
                   $hrg_beli=$hrg_beli+($hrg_beli*$ppn);  
                 } 
               //end difinisi
