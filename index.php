@@ -8,7 +8,7 @@
 <link rel="stylesheet" type="text/css" href="assets/css/w3.css">  
 <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
 <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.min.css">
-<link rel="stylesheet" href="assets/css/darkgrey-theme.css">
+<!-- <link rel="stylesheet" href="assets/css/darkgrey-theme.css"> -->
 <link rel="stylesheet" href="assets/css/alertyaz.min.css">
 <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway|Cinzel Decorative&effect=outline|emboss">   -->
 <script src="assets/js/alertyaz.min.js"></script>
@@ -186,8 +186,6 @@
       </script>
     </div>
   </div>
-  <script type="text/javascript" src="assets/js/jquery-3.3.1.min.js"></script> 
-  <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
 
 </body>
 </html>

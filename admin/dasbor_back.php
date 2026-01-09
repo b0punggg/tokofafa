@@ -991,22 +991,25 @@ unset($dret,$sqlret);
     }; 
 
     window.onload = function() {
-      var ctx = document.getElementById('canvas').getContext('2d');
-      window.myMixedChart = new Chart(ctx, {
-        type: 'bar',
-        data: chartData,
-        options: {
-          responsive: true,
-          title: {
-            display: true,
-            text: 'Chart.js Combo Bar Line Chart'
-          },
-          tooltips: {
-            mode: 'index',
-            intersect: true
+      var canvasElement = document.getElementById('canvas');
+      if (canvasElement) {
+        var ctx = canvasElement.getContext('2d');
+        window.myMixedChart = new Chart(ctx, {
+          type: 'bar',
+          data: chartData,
+          options: {
+            responsive: true,
+            title: {
+              display: true,
+              text: 'Chart.js Combo Bar Line Chart'
+            },
+            tooltips: {
+              mode: 'index',
+              intersect: true
+            }
           }
-        }
-      });
+        });
+      }
    };   
   </script>
 

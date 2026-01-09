@@ -55,7 +55,7 @@
           onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
           onclick="document.getElementById('<?='tmb1'.$no?>').click();"
           value="<?php echo $satkecil1; ?>" 
-          readonly tabindex='8' id="<?='nm_satu1'.$no?>" 
+          readonly tabindex='8' id="<?='nm_satu1_1'.$no?>" 
           style="border: none;background-color: transparent;cursor:pointer">
         </td>
 
@@ -64,7 +64,7 @@
           onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
           onclick="document.getElementById('<?='tmb1'.$no?>').click();"
           value="<?php echo $satkecil1_1; ?>" 
-          readonly id="<?='nm_satu1'.$no?>" 
+          readonly id="<?='nm_satu1_2'.$no?>" 
           style="border: none;background-color: transparent;cursor: pointer">
         </td>
 
@@ -140,12 +140,9 @@
     if (!empty($param)){
       if ($no>=1){
         // cek jika satuan awal renteng pakai default 
-        $satbesar_result = carisatbesar3($param,$connect);
-        $xx = !empty($satbesar_result) ? explode(';', $satbesar_result) : array();
-        $kd_satbesar = isset($xx[0]) ? $xx[0] : '';
-        $nm_satbesar = isset($xx[1]) ? $xx[1] : '';
-        
-        if (!empty($nm_satbesar) && $nm_satbesar=="RTG"){
+        $xx=explode(';',carisatbesar3($param,$connect));
+        $kd_satbesar=$xx[0];$nm_satbesar=$xx[1];
+        if ($nm_satbesar=="RTG"){
           $hrg_jual_auto = carihrgjual($param, $kd_satbesar);
           ?><script>
             document.getElementById('kd_sat').value='<?=$kd_satbesar?>';
@@ -156,20 +153,17 @@
             </script>
           <?php 
         } else {
-          $satkecil_result = carisatkecil2($param,$connect);
-          $x = !empty($satkecil_result) ? explode(';', $satkecil_result) : array();
-          $kd_satkecil = isset($x[0]) ? $x[0] : '';
-          if (!empty($kd_satkecil)) {
-            $hrg_jual_auto = carihrgjual($param, $kd_satkecil);
-            ?><script>
-              document.getElementById('kd_sat').value='<?=$kd_satkecil?>';
-              document.getElementById('nm_sat').value='<?=ceknmkem2($kd_satkecil,$connect)?>';
-              cekjmlstok('<?=$kd_satkecil?>','<?=$param?>');
-              // Ambil discount promo dengan harga jual
-              getdiscpromo('<?=$param?>', <?=floatval($hrg_jual_auto)?>);
-              </script>
-            <?php
-          }
+          $x=explode(';',carisatkecil2($param,$connect));
+          $kd_satkecil=$x[0];
+          $hrg_jual_auto = carihrgjual($param, $kd_satkecil);
+          ?><script>
+            document.getElementById('kd_sat').value='<?=$kd_satkecil?>';
+            document.getElementById('nm_sat').value='<?=ceknmkem2($kd_satkecil,$connect)?>';
+            cekjmlstok('<?=$kd_satkecil?>','<?=$param?>');
+            // Ambil discount promo dengan harga jual
+            getdiscpromo('<?=$param?>', <?=floatval($hrg_jual_auto)?>);
+            </script>
+          <?php
         }
       }
     }  

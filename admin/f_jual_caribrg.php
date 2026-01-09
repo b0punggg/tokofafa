@@ -1,4 +1,8 @@
 <?php
+	// Tingkatkan waktu eksekusi untuk query yang kompleks
+	set_time_limit(60); // 60 detik
+	ini_set('max_execution_time', 60);
+	
 	$keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX	
 	ob_start();
 	session_start(); 
@@ -31,51 +35,98 @@
 	    	$param='%'.trim($params).'%';  	
 	    	
           if ($params=="") {	 
-          	// Query untuk menampilkan semua barang yang memiliki stok (mulai dari beli_brg)
-          	$sql1 = mysqli_query($connect, "SELECT beli_brg.kd_brg,beli_brg.stok_jual,beli_brg.kd_sat, SUM(beli_brg.stok_jual) AS jumstok,mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,beli_brg.id_bag
-          	  	FROM beli_brg LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg
-          	  	WHERE beli_brg.kd_toko='$id_toko' AND beli_brg.stok_jual>0
-				GROUP BY beli_brg.kd_brg
-          	    ORDER BY beli_brg.kd_brg ASC LIMIT $limit_start, $limit");
-          	$sql2 = mysqli_query($connect, "SELECT COUNT(DISTINCT kd_brg) AS jumlah FROM beli_brg WHERE kd_toko='$id_toko' AND beli_brg.stok_jual>0");
-          }
-          else {
-          	// Pencarian berdasarkan nama barang, kode barang, atau barcode (case-insensitive)
-          	// Mulai dari beli_brg untuk memastikan hanya barang yang ada stok
-	        $sql1 = mysqli_query($connect, "SELECT beli_brg.kd_brg,beli_brg.stok_jual,beli_brg.kd_sat, SUM(beli_brg.stok_jual) AS jumstok,mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,beli_brg.id_bag
-          	  	FROM beli_brg LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg 
-          	  	WHERE beli_brg.kd_toko='$id_toko' AND beli_brg.stok_jual>0
-          	  		AND (
-          	  			UPPER(mas_brg.nm_brg) LIKE UPPER('$param') 
-          	  			OR UPPER(mas_brg.kd_brg) LIKE UPPER('$param')
-          	  			OR (mas_brg.kd_bar IS NOT NULL AND mas_brg.kd_bar != '' AND UPPER(mas_brg.kd_bar) LIKE UPPER('$param'))
-          	  		)
-          	  	GROUP BY beli_brg.kd_brg
-          	    ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit");
+          	// Coba query dengan LEFT JOIN dulu untuk memastikan semua barang ditampilkan
+          	$query1 = "SELECT mas_brg.kd_brg, 
+          		IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+          		mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+          		mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+          		mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,
+          		IFNULL(beli_brg.id_bag, '') AS id_bag
+          	  	FROM mas_brg 
+          	  	LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          	  	WHERE mas_brg.kd_toko='$id_toko'
+				GROUP BY mas_brg.kd_brg
+				HAVING jumstok > 0
+          	    ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
+          	$sql1 = mysqli_query($connect, $query1);
           	
           	if (!$sql1) {
-          		// Jika query gagal karena UPPER, coba tanpa UPPER
-          		$sql1 = mysqli_query($connect, "SELECT beli_brg.kd_brg,beli_brg.stok_jual,beli_brg.kd_sat, SUM(beli_brg.stok_jual) AS jumstok,mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,beli_brg.id_bag
-          			FROM beli_brg LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg 
-          			WHERE beli_brg.kd_toko='$id_toko' AND beli_brg.stok_jual>0
+          		// Jika query gagal, coba query alternatif dengan filter stok
+          		$query1_alt = "SELECT mas_brg.kd_brg, 
+          			IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+          			mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+          			mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+          			mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
+          			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          			WHERE mas_brg.kd_toko='$id_toko'
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
+          			ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
+          		$sql1 = mysqli_query($connect, $query1_alt);
+          	}
+          	
+          	// Optimasi query COUNT dengan query yang lebih sederhana
+          	$query2 = "SELECT COUNT(DISTINCT mas_brg.kd_brg) AS jumlah 
+          		FROM mas_brg 
+          		INNER JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko
+          		WHERE mas_brg.kd_toko='$id_toko' AND beli_brg.stok_jual > 0";
+          	$sql2 = mysqli_query($connect, $query2);
+          }
+          else {
+	        // Query dengan pencarian multi-kriteria: nama, kode barang, dan barcode
+	        $query1 = "SELECT mas_brg.kd_brg, 
+	        	IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+	        	mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,
+	        	mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+	        	mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,
+	        	IFNULL(beli_brg.id_bag, '') AS id_bag
+          	  	FROM mas_brg 
+          	  	LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          	  	WHERE mas_brg.kd_toko='$id_toko'
+          	  		AND (
+          	  			mas_brg.nm_brg LIKE '$param' 
+          	  			OR mas_brg.kd_brg LIKE '$param'
+          	  			OR (mas_brg.kd_bar IS NOT NULL AND mas_brg.kd_bar != '' AND mas_brg.kd_bar LIKE '$param')
+          	  		)
+          	  	GROUP BY mas_brg.kd_brg
+          	  	HAVING jumstok > 0
+          	    ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit";
+          	$sql1 = mysqli_query($connect, $query1);
+          	
+          	if (!$sql1) {
+          		// Jika query gagal, coba query alternatif dengan filter stok
+          		$query1_alt = "SELECT mas_brg.kd_brg, 
+          			IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+          			mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2, mas_brg.jum_kem3,
+          			mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+          			mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
+          			FROM mas_brg 
+          			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+          			WHERE mas_brg.kd_toko='$id_toko'
           				AND (
           					mas_brg.nm_brg LIKE '$param' 
           					OR mas_brg.kd_brg LIKE '$param'
           					OR (mas_brg.kd_bar IS NOT NULL AND mas_brg.kd_bar != '' AND mas_brg.kd_bar LIKE '$param')
           				)
-          			GROUP BY beli_brg.kd_brg
-          			ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit");
+          			GROUP BY mas_brg.kd_brg
+          			HAVING jumstok > 0
+          			ORDER BY mas_brg.nm_brg ASC LIMIT $limit_start, $limit";
+          		$sql1 = mysqli_query($connect, $query1_alt);
           	}
           	
-          	$sql2 = mysqli_query($connect, "SELECT COUNT(DISTINCT beli_brg.kd_brg) AS jumlah FROM beli_brg 
-		      	LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg 
-		      	WHERE beli_brg.kd_toko='$id_toko' AND beli_brg.stok_jual>0
-		      		AND (
-		      			UPPER(mas_brg.nm_brg) LIKE UPPER('$param') 
-		      			OR UPPER(mas_brg.kd_brg) LIKE UPPER('$param')
-		      			OR (mas_brg.kd_bar IS NOT NULL AND mas_brg.kd_bar != '' AND UPPER(mas_brg.kd_bar) LIKE UPPER('$param'))
-		      		)");
-          }	
+          	// Optimasi query COUNT dengan query yang lebih sederhana
+          	$query2 = "SELECT COUNT(DISTINCT mas_brg.kd_brg) AS jumlah 
+          		FROM mas_brg 
+          		INNER JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko
+          		WHERE mas_brg.kd_toko='$id_toko' AND beli_brg.stok_jual > 0
+          			AND (
+          				mas_brg.nm_brg LIKE '$param' 
+          				OR mas_brg.kd_brg LIKE '$param'
+          				OR (mas_brg.kd_bar IS NOT NULL AND mas_brg.kd_bar != '' AND mas_brg.kd_bar LIKE '$param')
+          			)";
+          	$sql2 = mysqli_query($connect, $query2);
+          }
 	      
 	      // Cek apakah query berhasil sebelum fetch
 	      if ($sql2 !== false) {
@@ -85,12 +136,42 @@
 	      }
 
 	    }else{ // Jika user belum mengklik tombol search (PROSES TANPA AJAX)
-			$sql1 = mysqli_query($connect, "SELECT beli_brg.kd_brg,beli_brg.stok_jual,beli_brg.kd_sat, SUM(beli_brg.stok_jual) AS jumstok,mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,beli_brg.id_bag
-			FROM beli_brg LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg
-			WHERE beli_brg.kd_toko='$id_toko' AND beli_brg.stok_jual>0
-			GROUP BY beli_brg.kd_brg
-		    ORDER BY beli_brg.kd_brg ASC LIMIT $limit_start, $limit");
-	  		$sql2 = mysqli_query($connect, "SELECT COUNT(DISTINCT kd_brg) AS jumlah FROM beli_brg WHERE kd_toko='$id_toko' AND beli_brg.stok_jual>0");
+			$query1 = "SELECT mas_brg.kd_brg, 
+				IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+				mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+				mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+				mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3,
+				IFNULL(beli_brg.id_bag, '') AS id_bag
+			FROM mas_brg 
+			LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+			WHERE mas_brg.kd_toko='$id_toko'
+			GROUP BY mas_brg.kd_brg
+			HAVING jumstok > 0
+		    ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
+			$sql1 = mysqli_query($connect, $query1);
+			
+			if (!$sql1) {
+				// Jika query gagal, coba query alternatif dengan filter stok
+				$query1_alt = "SELECT mas_brg.kd_brg, 
+					IFNULL(SUM(beli_brg.stok_jual), 0) AS jumstok,
+					mas_brg.nm_brg,mas_brg.jum_kem1,mas_brg.jum_kem2,mas_brg.jum_kem3,
+					mas_brg.kd_kem1,mas_brg.kd_kem2,mas_brg.kd_kem3,
+					mas_brg.hrg_jum1,mas_brg.hrg_jum2,mas_brg.hrg_jum3
+					FROM mas_brg 
+					LEFT JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko AND beli_brg.stok_jual>0
+					WHERE mas_brg.kd_toko='$id_toko'
+					GROUP BY mas_brg.kd_brg
+					HAVING jumstok > 0
+					ORDER BY mas_brg.kd_brg ASC LIMIT $limit_start, $limit";
+				$sql1 = mysqli_query($connect, $query1_alt);
+			}
+			
+			// Optimasi query COUNT dengan query yang lebih sederhana
+			$query2 = "SELECT COUNT(DISTINCT mas_brg.kd_brg) AS jumlah 
+				FROM mas_brg 
+				INNER JOIN beli_brg ON mas_brg.kd_brg=beli_brg.kd_brg AND mas_brg.kd_toko=beli_brg.kd_toko
+				WHERE mas_brg.kd_toko='$id_toko' AND beli_brg.stok_jual > 0";
+	  		$sql2 = mysqli_query($connect, $query2);
 	  		
 	  		// Cek apakah query berhasil sebelum fetch
 	  		if ($sql2 !== false) {
@@ -105,46 +186,18 @@
 	    if ($sql1 !== false && mysqli_num_rows($sql1) > 0) {
 	    	while($databrg = mysqli_fetch_array($sql1)) { 
 			$no++;
-			$stok=caristok($databrg['kd_brg'],$connect);
+			// Gunakan stok yang sudah dihitung dari query utama (jumstok) untuk menghindari query tambahan
+			$stok = isset($databrg['jumstok']) ? floatval($databrg['jumstok']) : 0;
+			// Jika jumstok tidak ada, baru panggil caristok (fallback)
+			if ($stok == 0) {
+				$stok = caristok($databrg['kd_brg'],$connect);
+			}
 			
 			// Handle jika jum_kem tidak ada atau null
 			$jum_kem1 = isset($databrg['jum_kem1']) ? floatval($databrg['jum_kem1']) : 0;
 			$jum_kem2 = isset($databrg['jum_kem2']) ? floatval($databrg['jum_kem2']) : 0;
 			$jum_kem3 = isset($databrg['jum_kem3']) ? floatval($databrg['jum_kem3']) : 0;
 			
-			// Tentukan satuan default untuk auto-fill (menggunakan logika yang sama dengan f_jual_carisat.php)
-			$kd_sat_default = '';
-			$nm_sat_default = '';
-			$hrg_jual_default = 0;
-			
-			// Cek apakah ada satuan besar (renteng) yang harus digunakan sebagai default
-			$xx = explode(';', carisatbesar3($databrg['kd_brg'], $connect));
-			$kd_satbesar = isset($xx[0]) ? $xx[0] : '';
-			$nm_satbesar = isset($xx[1]) ? $xx[1] : '';
-			
-			if ($nm_satbesar == "RTG" && !empty($kd_satbesar)) {
-				// Jika ada satuan renteng, gunakan sebagai default
-				$kd_sat_default = $kd_satbesar;
-				$nm_sat_default = $nm_satbesar;
-				$hrg_jual_default = carihrgjual($databrg['kd_brg'], $kd_satbesar);
-			} else {
-				// Gunakan satuan kecil sebagai default
-				$x = explode(';', carisatkecil2($databrg['kd_brg'], $connect));
-				$kd_satkecil = isset($x[0]) ? $x[0] : '';
-				if (!empty($kd_satkecil)) {
-					$kd_sat_default = $kd_satkecil;
-					$nm_sat_default = ceknmkem2($kd_satkecil, $connect);
-					$hrg_jual_default = carihrgjual($databrg['kd_brg'], $kd_satkecil);
-				} else {
-					// Fallback: gunakan kd_kem1 jika ada
-					$kd_kem = isset($databrg['kd_kem1']) && !empty($databrg['kd_kem1']) ? mysqli_escape_string($connect, $databrg['kd_kem1']) : '1';
-					$kd_sat_default = $kd_kem;
-					$nm_sat_default = ceknmkem2($kd_kem, $connect);
-					$hrg_jual_default = isset($databrg['hrg_jum1']) ? floatval($databrg['hrg_jum1']) : 0;
-				}
-			}
-			
-			// Tentukan satuan untuk ditampilkan di tabel (untuk display)
 			if($jum_kem3==0 && $jum_kem2==0){
 				$kd_kem = isset($databrg['kd_kem1']) && !empty($databrg['kd_kem1']) ? mysqli_escape_string($connect, $databrg['kd_kem1']) : '';
 				if (!empty($kd_kem)) {
@@ -212,14 +265,8 @@
 					<button id="<?='tmb'.$no?>" type="button" class="btn btn-primary fa fa-search"
 					onkeydown="if(event.keyCode==13){this.click();}" 
 					onclick="document.getElementById('kd_brg').value='<?=$databrg['kd_brg'] ?>';
-					    // Isi satuan default secara langsung
-					    document.getElementById('kd_sat').value='<?=$kd_sat_default?>';
-					    document.getElementById('nm_sat').value='<?=$nm_sat_default?>';
-					    // Cek stok untuk satuan yang dipilih
-					    cekjmlstok('<?=$kd_sat_default?>','<?=$databrg['kd_brg'] ?>');
-					    // Ambil discount promo dengan harga jual
-					    getdiscpromo('<?=$databrg['kd_brg'] ?>', <?=floatval($hrg_jual_default)?>);
-					    // Panggil carisatbrg untuk menampilkan daftar satuan (opsional)
+					    // Ambil discount promo untuk barang ini (tanpa harga jual dulu, hanya discount rupiah)
+					    getdiscpromo('<?=$databrg['kd_brg'] ?>', 0);
 					    carisatbrg();
 						document.getElementById('viewnmbrg').style.display='none';
 						document.getElementById('viewnmbrgsm').style.display='none';
@@ -230,7 +277,7 @@
 			<?php
 			}
 		} else {
-			// Jika query gagal atau tidak ada data yang cocok
+			// Jika query gagal, tampilkan pesan error atau kosong
 			?>
 			<tr>
 				<td colspan="5" align="center" style="padding: 20px;">

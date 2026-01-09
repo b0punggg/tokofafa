@@ -470,7 +470,7 @@
         </div>
         
         <div class="modal-body">
-          <!-- <form id="form2" action="f_jualbayar_act.php" method="post" style="font-size: 10pt"> -->
+          <form id="form2" action="f_jualbayar_act.php" method="post" style="font-size: 10pt">
             <div class="form-group row" style="border-style: ridge;border-color:white;margin-top:-15px">
               <input id="tgl_jual" type="hidden" name="tgl_jual" value='<?=$tgl_fakjual?>'>
               <input id="tgl_jtnota" type="hidden" name="tgl_jtnota" value='<?=$tgl_jt?>'>
@@ -729,7 +729,7 @@
 
               </div>                
             </div>
-          <!-- </form> -->
+          </form>
 
         </div>  
       </div>  
