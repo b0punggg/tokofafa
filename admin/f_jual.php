@@ -847,9 +847,17 @@
               //document.getElementById('qr-reader')=remove();
           }
         }
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
+        // Cek apakah elemen qr-reader ada sebelum membuat scanner
+        var qrReaderElement = document.getElementById('qr-reader');
+        if (qrReaderElement) {
+          try {
+            var html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render(onScanSuccess);
+          } catch (error) {
+            console.log("QR Scanner tidak dapat diinisialisasi:", error);
+          }
+        }
       });
 
       
@@ -917,7 +925,7 @@
             <input type="hidden" id="kd_kat" name="kd_kat">
             <input type="hidden" name="no_urutjual" id="no_urutjual">
             <input type="hidden" id="edit-warning" value=0>   
-            <!-- <input type="text" id="id_bag" name="id_bag">    -->
+            <input type="hidden" id="id_bag" name="id_bag" value="">
             <!--  -->
 
             <div class="w3-col m6 l12 ">
@@ -929,7 +937,7 @@
               </div> 
 
               <div class="form-group row" style="margin-top: -10px">
-                <label for="tgl_fakjual" class="col-sm-4 col-form-label" ><b>No.Nota</b></label>
+                <label for="no_fakjual" class="col-sm-4 col-form-label" ><b>No.Nota</b></label>
                 <div class="col-sm-8">
                   <div class="input-group">
                   <input id="no_fakjual" onblur="caribrgjual(1,true);" style="border: 1px solid black;" type="text" class="form-control hrf_arial" name="no_fakjual" required tabindex="2" >
@@ -994,29 +1002,29 @@
             onclick="document.getElementById('fcari_jual').style.display='block';carinotajual(1,true);" style="border-radius:50%;width:38px;padding-right:7px;border:2px solid white;" title="cari nota jual"><i class="fa fa-sticky-note-o" style="margin-left:-4px;text-shadow:1px 1px 1px black" ></i><span class="tooltiptexts w3-text-blue" style="font-size:9pt;"><b>Nota jual</b></span>
           </button>
 
-          <button id="tmb-panding" type="button" class="tooltips 
+          <button id="tmb-panding-sm" type="button" class="tooltips 
            yz-theme-l2 w3-hover-shadow btn btn-md" onclick="if(confirm('Panding Nota?')){panding();}" tabindex="17" style="border: 2px solid white;border-radius:50%;width:39px">
             <i class="fa fa-pause" style="text-shadow:1px 1px 2px black;color:white"></i>
             <span class="tooltiptexts w3-text-blue" style="font-size:9pt"><b>Panding Nota</b></span>
           </button>
-          <button id="tmb-listpanding" type="button" class="tooltips 
+          <button id="tmb-listpanding-sm" type="button" class="tooltips 
             yz-theme-l2 w3-hover-shadow btn btn-md" onclick="carinopanding(1,true);document.getElementById('form-panding').style.display='block';" tabindex="18" style="border: 
             2px solid white;border-radius:50%;width:38px;">
             <i class="fa fa-reorder" style="text-shadow:1px 1px 2px black;color:white"></i>
             <span class="tooltiptexts w3-text-blue" style="font-size:9pt"><b>List panding</b></span>
           </button>
 
-          <button type="button" id="paketcl" 
+          <button type="button" id="paketcl-sm" 
             class="tooltips w3-hover-shadow w3-text-white yz-theme-l1 btn btn-md" onclick="carilistpaket(1,true);document.getElementById('form-paket').style.display='block';" 
             tabindex="14" style="border: 2px solid white;border-radius:50%;width:38px;padding-left:9px">
             <i class="fa fa-briefcase" style="text-shadow:1px 1px 2px black;color:white;"></i><span class="tooltiptexts w3-text-blue" style="color: black;font-size:9pt"><b>List Paket</b></span>
           </button>
-          <button id="tmb-batal" type="button" class="tooltips 
+          <button id="tmb-batal-sm" type="button" class="tooltips 
              w3-hover-shadow btn btn-md btn-danger" onclick="if(confirm('Nota akan dibatalkan??')){hapusnota();}" tabindex="19" style="border: 2px solid white;border-radius:50%;width:38px;"><i class="fa fa-trash" style="text-shadow:1px 1px 2px black"></i>
             <span class="tooltiptexts" style="font-size:9pt;color:red"><b>Batalkan nota</b></span>
           </button>
 
-          <button id="tmb-reset" type="button" class="tooltips 
+          <button id="tmb-reset-sm" type="button" class="tooltips 
             w3-text-black w3-yellow w3-hover-shadow btn btn-md"  tabindex="20" onclick="kosongkan2()" style="border: 2px solid white;border-radius:50%;width:38px;">
             <i class="fa fa-undo" ></i><span class="tooltiptexts" style="color: black;font-size:9pt;color:red"><b>Reset input</b></span>
           </button>
@@ -1030,29 +1038,29 @@
             onclick="document.getElementById('fcari_jual').style.display='block';carinotajual(1,true);" style="border-radius:50%;width:38px;padding-right:7px;border:2px solid white;" title="cari nota jual"><i class="fa fa-sticky-note-o" style="margin-left:-4px;text-shadow:1px 1px 1px black" ></i><span class="tooltiptexts w3-text-blue" style="font-size:9pt;"><b>Nota jual</b></span>
           </button>
 
-          <button id="tmb-panding" type="button" class="tooltips 
+          <button id="tmb-panding-md" type="button" class="tooltips 
            yz-theme-l2 w3-hover-shadow btn btn-md" onclick="if(confirm('Panding Nota?')){panding();}" tabindex="17" style="border: 2px solid white;border-radius:50%;width:39px">
             <i class="fa fa-pause" style="text-shadow:1px 1px 2px black;color:white"></i>
             <span class="tooltiptexts w3-text-blue" style="font-size:9pt"><b>Panding Nota</b></span>
           </button>
-          <button id="tmb-listpanding" type="button" class="tooltips 
+          <button id="tmb-listpanding-md" type="button" class="tooltips 
             yz-theme-l2 w3-hover-shadow btn btn-md" onclick="carinopanding(1,true);document.getElementById('form-panding').style.display='block';" tabindex="18" style="border: 
             2px solid white;border-radius:50%;width:38px;">
             <i class="fa fa-reorder" style="text-shadow:1px 1px 2px black;color:white"></i>
             <span class="tooltiptexts w3-text-blue" style="font-size:9pt"><b>List panding</b></span>
           </button>
 
-          <button type="button" id="paketcl" 
+          <button type="button" id="paketcl-md" 
             class="tooltips w3-hover-shadow w3-text-white yz-theme-l1 btn btn-md" onclick="carilistpaket(1,true);document.getElementById('form-paket').style.display='block';" 
             tabindex="14" style="border: 2px solid white;border-radius:50%;width:38px;padding-left:9px">
             <i class="fa fa-briefcase" style="text-shadow:1px 1px 2px black;color:white;"></i><span class="tooltiptexts w3-text-blue" style="color: black;font-size:9pt"><b>List Paket</b></span>
           </button>
-          <button id="tmb-batal" type="button" class="tooltips 
+          <button id="tmb-batal-md" type="button" class="tooltips 
              w3-hover-shadow btn btn-md btn-danger" onclick="if(confirm('Nota akan dibatalkan??')){hapusnota();}" tabindex="19" style="border: 2px solid white;border-radius:50%;width:38px;"><i class="fa fa-trash" style="text-shadow:1px 1px 2px black"></i>
             <span class="tooltiptexts" style="font-size:9pt;color:red"><b>Batalkan nota</b></span>
           </button>
 
-          <button id="tmb-reset" type="button" class="tooltips 
+          <button id="tmb-reset-md" type="button" class="tooltips 
             w3-text-black w3-yellow w3-hover-shadow btn btn-md"  tabindex="20" onclick="kosongkan2()" style="border: 2px solid white;border-radius:50%;width:38px;">
             <i class="fa fa-undo" ></i><span class="tooltiptexts" style="color: black;font-size:9pt;color:red"><b>Reset input</b></span>
           </button>
@@ -1157,7 +1165,7 @@
           <input id="discitem" name="discitem" type="text" class="form-control hrf_arial money" required tabindex="10" style="border: 1px solid black;" value="" placeholder="Disc">
         </div>
         <div class="w3-col s12 m12 l2 w3-margin-bottom pr-2" >
-          <input id="ketjual" name="ketjual" value="-" type="text" value="-" class="form-control hrf_arial" required="" placeholder="Keterangan" style="border: 1px solid black;" tabindex="11">
+          <input id="ketjual" name="ketjual" type="text" value="-" class="form-control hrf_arial" required="" placeholder="Keterangan" style="border: 1px solid black;" tabindex="11">
         </div>
         
         <!--buttom add screen small  -->
@@ -1169,7 +1177,7 @@
           </button>
            &NonBreakingSpace; 
           <!-- BAYAR NOTA -->
-          <button id="tmb-bayar" type="button" 
+          <button id="tmb-bayar-sm" type="button" 
             onclick="document.getElementById('form-bayar').style.display='block';
                       document.getElementById('bayar').focus();" 
             class="tooltips w3-text-blue w3-hover-shadow btn btn-md yz-theme-d1" 
@@ -1188,7 +1196,7 @@
           </button>
            &NonBreakingSpace; 
           <!-- BAYAR NOTA -->
-          <button id="tmb-bayar" type="button" 
+          <button id="tmb-bayar-md" type="button" 
             onclick="document.getElementById('form-bayar').style.display='block';
                       document.getElementById('bayar').focus();" 
             class="tooltips w3-text-blue w3-hover-shadow btn btn-md yz-theme-d1" 
@@ -1197,28 +1205,7 @@
             <span class="tooltiptexts w3-text-blue" style="color: black;font-size:9pt"><b>Bayar Nota</b></span>
           </button>
 
-          <!-- <button id="tmb-add2" type="submit"      
-            class="tooltips w3-blue customb w3-hover-shadow " tabindex="12" style="width: 105px;font-size: 9pt"><i class="fa fa-cart-plus"></i> &nbsp;ADD [F9] 
-          </button>
-
-          <button id="tmb-bayar" type="button" 
-            onclick="document.getElementById('form-bayar').style.display='block';
-                      document.getElementById('bayar').focus();" 
-            class="tooltips w3-green customb w3-hover-shadow " tabindex="13" style="width: 105px;font-size: 9pt"><i class="fa fa-money">&nbsp; BAYAR</i>
-          </button>
-
-          <button id="tmb-panding" type="button" class="tooltips w3-purple customb w3-hover-shadow " onclick="if(confirm('Panding Nota?')){panding();}" tabindex="14" style="width: 105px;font-size: 9pt"><i class="fa fa-archive">&nbsp;PANDING</i>
-          </button>
-          
-          <button id="tmb-listpanding" type="button" class="tooltips w3-deep-purple customb w3-hover-shadow " onclick="carinopanding(1,true);document.getElementById('form-panding').style.display='block';" tabindex="15" style="width: 105px;font-size: 9pt"><i class="fa fa-address-book-o">&nbsp;LIST</i>
-          </button>
-          
-          <button id="tmb-batal" type="button" class="tooltips w3-red customb w3-hover-shadow " onclick="if(confirm('Nota akan dibatalkan??')){hapusnota();}" tabindex="16" style="width: 105px;font-size: 8pt;margin-left: 10px"><i class="fa fa-trash">&nbsp;HAPUS NOTA</i>
-          </button>
-
-          <button id="tmb-reset" type="button" class="tooltips w3-yellow customb w3-margin-left"  tabindex="17" onclick="kosongkan2()">
-          <i class="fa fa-undo"></i>
-          </button>   -->
+          <!-- Kode tombol lama sudah dipindah ke large screen dengan ID yang unik -->
         </div>
         <!-- END MEDIUM SCREEN tombol-->
         
@@ -1328,7 +1315,13 @@
         a=1;
       }else{a=0;}
       if (a==0){
-        document.getElementById('qr-reader').remove();
+        // Tunggu sampai DOM benar-benar siap sebelum menghapus
+        setTimeout(function() {
+          var qrReaderElement = document.getElementById('qr-reader');
+          if (qrReaderElement) {
+            qrReaderElement.remove();
+          }
+        }, 100);
       }
     </script>
     
@@ -1544,6 +1537,34 @@
   })
   $(window).focus(function(){
     cektokos2();
+  });
+  
+  // Error handler untuk menangkap error dari browser extension atau message passing
+  window.addEventListener('error', function(event) {
+    // Abaikan error yang terkait dengan runtime.lastError atau message channel
+    var errorMsg = event.message || '';
+    if (errorMsg.includes('runtime.lastError') || 
+        errorMsg.includes('message channel closed') ||
+        errorMsg.includes('asynchronous response')) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  }, true);
+  
+  // Error handler untuk Promise rejection yang tidak ter-handle
+  window.addEventListener('unhandledrejection', function(event) {
+    // Abaikan error yang terkait dengan message channel
+    var reason = event.reason;
+    if (reason) {
+      var errorMsg = (reason.message || reason.toString() || '');
+      if (errorMsg.includes('message channel closed') ||
+          errorMsg.includes('asynchronous response') ||
+          errorMsg.includes('runtime.lastError')) {
+        event.preventDefault();
+        return false;
+      }
+    }
   });
 </script>     
 </html>  

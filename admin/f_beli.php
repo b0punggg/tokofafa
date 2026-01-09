@@ -20,6 +20,23 @@
   
   <script src="../assets/js/html5-qrcode.min.js"></script>
   <script>
+      // Global error handler to suppress specific browser extension errors
+      window.addEventListener('error', function(event) {
+        if (event.message && (event.message.includes("MessagePort") || event.message.includes("postMessage") || event.message.includes("message channel") || event.message.includes("asynchronous response"))) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          console.warn("Suppressed browser extension error:", event.message);
+        }
+      }, true); // Use capture phase
+
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && event.reason.message && (event.reason.message.includes("MessagePort") || event.reason.message.includes("postMessage") || event.reason.message.includes("message channel") || event.reason.message.includes("asynchronous response"))) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+          console.warn("Suppressed unhandled promise rejection from browser extension:", event.reason.message);
+        }
+      });
+
       // var html5QrcodeScanner = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 }); 
       // var lastResult, countResults = 0;
       // var resultContainer = document.getElementById('qr-reader-results');
@@ -50,9 +67,17 @@
               //document.getElementById('qr-reader')=remove();
           }
         }
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
+        // Cek apakah elemen qr-reader ada sebelum membuat scanner
+        var qrReaderElement = document.getElementById('qr-reader');
+        if (qrReaderElement) {
+          try {
+            var html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render(onScanSuccess);
+          } catch (error) {
+            console.log("QR Scanner tidak dapat diinisialisasi:", error);
+          }
+        }
       });
         
     function hitdiscbayar(nvaluep,nvaluea,ppn,field1,field2){
@@ -386,7 +411,13 @@
         a=1;
       }else{a=0;}
       if (a==0){
-        document.getElementById('qr-reader').remove();
+        // Tunggu sampai DOM benar-benar siap sebelum menghapus
+        setTimeout(function() {
+          var qrReaderElement = document.getElementById('qr-reader');
+          if (qrReaderElement) {
+            qrReaderElement.remove();
+          }
+        }, 100);
       }
       
     </script>
@@ -647,7 +678,7 @@
                   
                   <div class="form-group row" style="margin-top: -12px">
                     <input type="hidden" id="id_bag" name="id_bag">
-                    <label for="nm_brg" class="col-sm-3 col-form-label hrf_arial"><b>Bag. Jual</b></label>
+                    <label for="nm_bag" class="col-sm-3 col-form-label hrf_arial"><b>Bag. Jual</b></label>
                     <div class="col-sm-9" >
                       <div class="input-group">
                         <input id="nm_bag" type="text" style="border: 1px solid black; " class="form-control hrf_arial" onkeyup="carinmbag(1,true)" name="nm_bag" required="" tabindex="6" placeholder="ketik bagian penjualan">
@@ -694,7 +725,7 @@
                   </div>
 
                   <div class="form-group row" style="margin-top: -11px">
-                    <label for="nm_brg" class="col-sm-3 col-form-label hrf_arial"><b>EXP.Date</b></label>
+                    <label for="expdate" class="col-sm-3 col-form-label hrf_arial"><b>EXP.Date</b></label>
                     <div class="col-sm-9" style="margin-bottom: 0px">
                       <div class="input-group">
                         <input id="expdate" type="date" style="border: 1px solid black; " class="form-control hrf_arial" name="expdate" tabindex="7" placeholder="Exp date">
@@ -1127,10 +1158,10 @@
                     <!-- ---- -->
                 </div>
                 <div class="col-sm-2" >
-                  <input id="discttp1%" onkeyup="hit1(this.value,document.getElementById('hrg_jum1').value);" type="number" step="1.00" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial " name="discttp1%"  tabindex="26" placeholder="disc" value="0" >
+                  <input id="discttp1pct" onkeyup="hit1(this.value,document.getElementById('hrg_jum1').value);" type="number" step="1.00" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial " name="discttp1%"  tabindex="26" placeholder="disc" value="0" >
                 </div>
                 <div class="col-sm-3" >
-                  <input id="hrg_jum4" onkeyup="document.getElementById('discttp1%').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum4" required="" tabindex="27" placeholder="Harga jual [Rp.]" value="0">
+                  <input id="hrg_jum4" onkeyup="document.getElementById('discttp1pct').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum4" required="" tabindex="27" placeholder="Harga jual [Rp.]" value="0">
                   
                 </div>
               </div> 
@@ -1196,11 +1227,11 @@
                 </div>
 
                 <div class="col-sm-2" >
-                  <input id="discttp2%" onkeyup="hit2(this.value);" type="number" step="1.00" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial" name="discttp2%"  tabindex="30" placeholder="disc" value="0" >
+                  <input id="discttp2pct" onkeyup="hit2(this.value);" type="number" step="1.00" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial" name="discttp2%"  tabindex="30" placeholder="disc" value="0" >
                 </div>
                 
                 <div class="col-sm-3" >
-                  <input id="hrg_jum5" onkeyup="document.getElementById('discttp2%').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum5" required="" tabindex="31" placeholder="Harga jual [Rp.]" value="0">
+                  <input id="hrg_jum5" onkeyup="document.getElementById('discttp2pct').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum5" required="" tabindex="31" placeholder="Harga jual [Rp.]" value="0">
                   
                 </div>
               </div> 
@@ -1266,10 +1297,10 @@
                     <!-- ---- -->
                 </div>
                 <div class="col-sm-2">
-                  <input id="discttp3%" onkeyup="hit3(this.value);" type="number" step="0.01" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial" name="discttp3%"  tabindex="34" placeholder="disc" value="0" >
+                  <input id="discttp3pct" onkeyup="hit3(this.value);" type="number" step="0.01" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial" name="discttp3%"  tabindex="34" placeholder="disc" value="0" >
                 </div>
                 <div class="col-sm-3" >
-                  <input id="hrg_jum6" onkeyup="document.getElementById('discttp3%').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum6" required="" tabindex="35" placeholder="Harga jual [Rp.]" value="0">
+                  <input id="hrg_jum6" onkeyup="document.getElementById('discttp3pct').value=0;" type="text" style="border: 1px solid black; font-size: 10pt;" class="form-control hrf_arial money" name="hrg_jum6" required="" tabindex="35" placeholder="Harga jual [Rp.]" value="0">
                   
                 </div>
               </div> 
@@ -1457,11 +1488,11 @@
             document.getElementById('kd_sat3').value='<?=mysqli_escape_string($connect,$data['kd_kem3']) ?>';document.getElementById('jum_sat3').value='<?=mysqli_escape_string($connect,$data['jum_kem3']) ?>';document.getElementById('hrg_jum3').value='<?=gantitides(mysqli_escape_string($connect,$data['hrg_jum3'])) ?>';document.getElementById('nm_sat3').value='<?=$kd_kem3?>';
             document.getElementById('discitem1').value='<?=mysqli_escape_string($connect,$data['disc1']) ?>';document.getElementById('discitem2').value='<?=mysqli_escape_string($connect,$data['disc2']) ?>'
             document.getElementById('discttp1').value='<?=$lim1 ?>';document.getElementById('nm_sat4').value='<?=$nm_kem4?>';document.getElementById('kd_sat4').value='<?=$kd_sat4 ?>';document.getElementById('hrg_jum4').value='<?=gantitides($hrg_jum4) ?>';
-              document.getElementById('discttp1%').value='<?=$percen1 ?>';
+              document.getElementById('discttp1pct').value='<?=$percen1 ?>';
             document.getElementById('discttp2').value='<?=$lim2 ?>';document.getElementById('nm_sat5').value='<?=$nm_kem5?>';document.getElementById('kd_sat5').value='<?=$kd_sat5 ?>';document.getElementById('hrg_jum5').value='<?=gantitides($hrg_jum5) ?>';
-              document.getElementById('discttp2%').value='<?=$percen2 ?>';
+              document.getElementById('discttp2pct').value='<?=$percen2 ?>';
             document.getElementById('discttp3').value='<?=$lim3 ?>';document.getElementById('nm_sat6').value='<?=$nm_kem6?>';document.getElementById('kd_sat6').value='<?=$kd_sat6 ?>';document.getElementById('hrg_jum6').value='<?=gantitides($hrg_jum6) ?>';
-              document.getElementById('discttp3%').value='<?=$percen3?>';              
+              document.getElementById('discttp3pct').value='<?=$percen3?>';              
         </script>
         <?php
     }else{
@@ -1505,7 +1536,7 @@
       document.getElementById('discitem1').value='';
       document.getElementById('discitem2').value='';
 
-      document.getElementById('discttp1%').value='0';
+      document.getElementById('discttp1pct').value='0';
       document.getElementById('nm_sat4').value='-NONE-';
       document.getElementById('kd_sat4').value='1';
       document.getElementById('discttp1').value='0';
@@ -1514,13 +1545,13 @@
       document.getElementById('discttp2').value='0';
       document.getElementById('nm_sat5').value='-NONE-';
       document.getElementById('kd_sat5').value='1';
-      document.getElementById('discttp2%').value='0';
+      document.getElementById('discttp2pct').value='0';
       document.getElementById('hrg_jum5').value='0';
       
       document.getElementById('discttp3').value='0';
       document.getElementById('nm_sat6').value='-NONE-';
       document.getElementById('kd_sat6').value='1';
-      document.getElementById('discttp3%').value='0';
+      document.getElementById('discttp3pct').value='0';
       document.getElementById('hrg_jum6').value='0';
      
       document.getElementById('ketbel').value='';
@@ -1563,7 +1594,7 @@
       document.getElementById('discitem1').value='';
       document.getElementById('discitem2').value='';
 
-      document.getElementById('discttp1%').value='0';
+      document.getElementById('discttp1pct').value='0';
       document.getElementById('nm_sat4').value='-NONE-';
       document.getElementById('kd_sat4').value='1';
       document.getElementById('discttp1').value='0';
@@ -1572,13 +1603,13 @@
       document.getElementById('discttp2').value='0';
       document.getElementById('nm_sat5').value='-NONE-';
       document.getElementById('kd_sat5').value='1';
-      document.getElementById('discttp2%').value='0';
+      document.getElementById('discttp2pct').value='0';
       document.getElementById('hrg_jum5').value='0';
       
       document.getElementById('discttp3').value='0';
       document.getElementById('nm_sat6').value='-NONE-';
       document.getElementById('kd_sat6').value='1';
-      document.getElementById('discttp3%').value='0';
+      document.getElementById('discttp3pct').value='0';
       document.getElementById('hrg_jum6').value='0';
      
       document.getElementById('ketbel').value='';

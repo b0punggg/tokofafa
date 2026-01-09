@@ -55,7 +55,7 @@
           onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
           onclick="document.getElementById('<?='tmb1'.$no?>').click();"
           value="<?php echo $satkecil1; ?>" 
-          readonly tabindex='8' id="<?='nm_satu1'.$no?>" 
+          readonly tabindex='8' id="<?='nm_satu1_1'.$no?>" 
           style="border: none;background-color: transparent;cursor:pointer">
         </td>
 
@@ -64,7 +64,7 @@
           onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
           onclick="document.getElementById('<?='tmb1'.$no?>').click();"
           value="<?php echo $satkecil1_1; ?>" 
-          readonly id="<?='nm_satu1'.$no?>" 
+          readonly id="<?='nm_satu1_2'.$no?>" 
           style="border: none;background-color: transparent;cursor: pointer">
         </td>
 
