@@ -478,12 +478,15 @@
         }
         if (event.keyCode==121) {
           event.preventDefault()
-          document.getElementById('tmb-bayar').click();
+          // Try to click any tmb-bayar button (for different screen sizes)
+          var btn = document.getElementById('tmb-bayar') || document.getElementById('tmb-bayar-sm') || document.getElementById('tmb-bayar-md');
+          if (btn) btn.click();
           // F10
         }
         if (event.keyCode==123) {
           event.preventDefault()
-          document.getElementById('tmb-batal').click();
+          var btn = document.getElementById('tmb-batal') || document.getElementById('tmb-batal-sm') || document.getElementById('tmb-batal-md');
+          if (btn) btn.click();
           // F12
         }
         if (event.keyCode==35) {
@@ -505,12 +508,14 @@
         }
         if (event.keyCode==114) {
           event.preventDefault()
-          document.getElementById('tmb-panding').click();
+          var btn = document.getElementById('tmb-panding') || document.getElementById('tmb-panding-sm') || document.getElementById('tmb-panding-md');
+          if (btn) btn.click();
           // F3
         }
         if (event.keyCode==115) {
           event.preventDefault()
-          document.getElementById('tmb-listpanding').click();
+          var btn = document.getElementById('tmb-listpanding') || document.getElementById('tmb-listpanding-sm') || document.getElementById('tmb-listpanding-md');
+          if (btn) btn.click();
           // F4
         }
         if (event.keyCode==36) {
@@ -742,14 +747,112 @@
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
+            // Close payment form
             document.getElementById('form-bayar').style.display='none';
            
-            $("#viewsimpanbyr").html(response.hasil);
+            // Check if response is valid
+            if (!response || !response.hasil) {
+              console.error('Invalid response:', response);
+              setTimeout(function() {
+                window.location.reload();
+              }, 1000);
+              return;
+            }
+           
+            // Extract and execute scripts manually
+            var htmlContent = response.hasil || '';
+            var scripts = [];
+            var hasPrintScript = false;
+            var popupScripts = [];
+            
+            // Extract all script tags
+            htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
+              if (scriptContent && scriptContent.trim()) {
+                // Prioritize popup scripts (popnew_ok) to execute first
+                if (scriptContent.indexOf('popnew_ok') !== -1) {
+                  popupScripts.push(scriptContent);
+                } else {
+                  scripts.push(scriptContent);
+                }
+                if (scriptContent.indexOf('cetaknota') !== -1) {
+                  hasPrintScript = true;
+                }
+              }
+              return '';
+            });
+            
+            // Execute popup scripts first to show notification immediately
+            popupScripts.forEach(function(script) {
+              try {
+                eval(script);
+              } catch(e) {
+                console.error('Popup script error:', e);
+              }
+            });
+            
+            // Then execute other scripts (cetaknota, kosongkan2, etc.)
+            scripts.forEach(function(script) {
+              try {
+                eval(script);
+              } catch(e) {
+                console.error('Script error:', e);
+              }
+            });
+            
+            // Inject cleaned HTML
+            var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+            $("#viewsimpanbyr").html(cleanHtml);
+            
+            // Auto-reload after print
+            if (hasPrintScript) {
+              setTimeout(function() {
+                window.location.reload();
+              }, 3000);
+            } else {
+              setTimeout(function() {
+                window.location.reload();
+              }, 1500);
+            }
 
           },
-          error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+          error: function (xhr, ajaxOptions, thrownError) {
+            console.error('AJAX Error:', {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              responseText: xhr.responseText,
+              thrownError: thrownError
+            });
+            // If JSON parse error, try to handle it
+            try {
+              var response = JSON.parse(xhr.responseText);
+              if (response.hasil) {
+                var htmlContent = response.hasil || '';
+                // Extract and execute scripts
+                var scripts = [];
+                htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
+                  if (scriptContent && scriptContent.trim()) {
+                    scripts.push(scriptContent);
+                  }
+                  return '';
+                });
+                scripts.forEach(function(script) {
+                  try {
+                    eval(script);
+                  } catch(e) {
+                    console.error('Script error:', e);
+                  }
+                });
+                // Auto-reload
+                setTimeout(function() {
+                  window.location.reload();
+                }, 1500);
+              }
+            } catch(e) {
+              // If not JSON, just reload
+              setTimeout(function() {
+                window.location.reload();
+              }, 1000);
+            }
           }
         });
       }
@@ -829,33 +932,40 @@
           document.addEventListener("DOMContentLoaded", fn);
         }
       }
+      
+      // Cek apakah device mobile sebelum inisialisasi scanner
+      var isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       docReady(function () {
-        var resultContainer = document.getElementById('qr-reader-results');
-        var lastResult, countResults = 0;
-        function onScanSuccess(decodedText, decodedResult) {
-          if (decodedText !== lastResult) {
-              ++countResults;
-              lastResult = decodedText;
-              // Handle on success condition with the decoded message.
-              // console.log(`Scan result ${decodedText}`, decodedResult);
-              document.getElementById('kd_bar').value=decodedText;
-              // html5QrcodeScanner.clear();
-              pasif();
-              carikd_bar();
-              //lastResult=0;
-              document.getElementById('form-scancams').style.display='none';
-              //document.getElementById('qr-reader')=remove();
-          }
-        }
-        // Cek apakah elemen qr-reader ada sebelum membuat scanner
-        var qrReaderElement = document.getElementById('qr-reader');
-        if (qrReaderElement) {
-          try {
-            var html5QrcodeScanner = new Html5QrcodeScanner(
-                "qr-reader", { fps: 10, qrbox: 250 });
-            html5QrcodeScanner.render(onScanSuccess);
-          } catch (error) {
-            console.log("QR Scanner tidak dapat diinisialisasi:", error);
+        // Hanya inisialisasi scanner jika device mobile dan elemen qr-reader ada
+        if (isMobileDevice) {
+          var qrReaderElement = document.getElementById('qr-reader');
+          if (qrReaderElement) {
+            var resultContainer = document.getElementById('qr-reader-results');
+            var lastResult, countResults = 0;
+            function onScanSuccess(decodedText, decodedResult) {
+              if (decodedText !== lastResult) {
+                  ++countResults;
+                  lastResult = decodedText;
+                  // Handle on success condition with the decoded message.
+                  // console.log(`Scan result ${decodedText}`, decodedResult);
+                  document.getElementById('kd_bar').value=decodedText;
+                  // html5QrcodeScanner.clear();
+                  pasif();
+                  carikd_bar();
+                  //lastResult=0;
+                  document.getElementById('form-scancams').style.display='none';
+                  //document.getElementById('qr-reader')=remove();
+              }
+            }
+            try {
+              var html5QrcodeScanner = new Html5QrcodeScanner(
+                  "qr-reader", { fps: 10, qrbox: 250 });
+              html5QrcodeScanner.render(onScanSuccess);
+            } catch (e) {
+              // Jika error, tidak perlu melakukan apa-apa karena mungkin elemen sudah dihapus
+              console.log('QR Scanner initialization skipped:', e.message);
+            }
           }
         }
       });
@@ -925,7 +1035,7 @@
             <input type="hidden" id="kd_kat" name="kd_kat">
             <input type="hidden" name="no_urutjual" id="no_urutjual">
             <input type="hidden" id="edit-warning" value=0>   
-            <input type="hidden" id="id_bag" name="id_bag" value="">
+            <!-- <input type="text" id="id_bag" name="id_bag">    -->
             <!--  -->
 
             <div class="w3-col m6 l12 ">
@@ -937,7 +1047,7 @@
               </div> 
 
               <div class="form-group row" style="margin-top: -10px">
-                <label for="no_fakjual" class="col-sm-4 col-form-label" ><b>No.Nota</b></label>
+                <label for="tgl_fakjual" class="col-sm-4 col-form-label" ><b>No.Nota</b></label>
                 <div class="col-sm-8">
                   <div class="input-group">
                   <input id="no_fakjual" onblur="caribrgjual(1,true);" style="border: 1px solid black;" type="text" class="form-control hrf_arial" name="no_fakjual" required tabindex="2" >
@@ -1205,7 +1315,29 @@
             <span class="tooltiptexts w3-text-blue" style="color: black;font-size:9pt"><b>Bayar Nota</b></span>
           </button>
 
-          <!-- Kode tombol lama sudah dipindah ke large screen dengan ID yang unik -->
+          <!-- Commented out old buttons - IDs removed to avoid duplicate ID errors
+          <button type="submit"      
+            class="tooltips w3-blue customb w3-hover-shadow " tabindex="12" style="width: 105px;font-size: 9pt"><i class="fa fa-cart-plus"></i> &nbsp;ADD [F9] 
+          </button>
+
+          <button type="button" 
+            onclick="document.getElementById('form-bayar').style.display='block';
+                      document.getElementById('bayar').focus();" 
+            class="tooltips w3-green customb w3-hover-shadow " tabindex="13" style="width: 105px;font-size: 9pt"><i class="fa fa-money">&nbsp; BAYAR</i>
+          </button>
+
+          <button type="button" class="tooltips w3-purple customb w3-hover-shadow " onclick="if(confirm('Panding Nota?')){panding();}" tabindex="14" style="width: 105px;font-size: 9pt"><i class="fa fa-archive">&nbsp;PANDING</i>
+          </button>
+          
+          <button type="button" class="tooltips w3-deep-purple customb w3-hover-shadow " onclick="carinopanding(1,true);document.getElementById('form-panding').style.display='block';" tabindex="15" style="width: 105px;font-size: 9pt"><i class="fa fa-address-book-o">&nbsp;LIST</i>
+          </button>
+          
+          <button type="button" class="tooltips w3-red customb w3-hover-shadow " onclick="if(confirm('Nota akan dibatalkan??')){hapusnota();}" tabindex="16" style="width: 105px;font-size: 8pt;margin-left: 10px"><i class="fa fa-trash">&nbsp;HAPUS NOTA</i>
+          </button>
+
+          <button type="button" class="tooltips w3-yellow customb w3-margin-left"  tabindex="17" onclick="kosongkan2()">
+          <i class="fa fa-undo"></i>
+          </button>   -->
         </div>
         <!-- END MEDIUM SCREEN tombol-->
         
@@ -1310,19 +1442,25 @@
       </div>
     </div>  
     <script>
-      var a=0;
-      if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
-        a=1;
-      }else{a=0;}
-      if (a==0){
-        // Tunggu sampai DOM benar-benar siap sebelum menghapus
-        setTimeout(function() {
-          var qrReaderElement = document.getElementById('qr-reader');
-          if (qrReaderElement) {
-            qrReaderElement.remove();
+      // Hapus elemen qr-reader jika bukan mobile device
+      // Lakukan segera setelah DOM ready, sebelum scanner diinisialisasi
+      (function() {
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (!isMobile) {
+          function removeQrReader() {
+            var qrReaderElement = document.getElementById('qr-reader');
+            if (qrReaderElement) {
+              qrReaderElement.remove();
+            }
           }
-        }, 100);
-      }
+          // Coba hapus segera jika DOM sudah ready
+          if (document.readyState === "complete" || document.readyState === "interactive") {
+            setTimeout(removeQrReader, 0);
+          } else {
+            document.addEventListener('DOMContentLoaded', removeQrReader);
+          }
+        }
+      })();
     </script>
     
       <!-- Form nota panding-->
@@ -1537,34 +1675,6 @@
   })
   $(window).focus(function(){
     cektokos2();
-  });
-  
-  // Error handler untuk menangkap error dari browser extension atau message passing
-  window.addEventListener('error', function(event) {
-    // Abaikan error yang terkait dengan runtime.lastError atau message channel
-    var errorMsg = event.message || '';
-    if (errorMsg.includes('runtime.lastError') || 
-        errorMsg.includes('message channel closed') ||
-        errorMsg.includes('asynchronous response')) {
-      event.preventDefault();
-      event.stopPropagation();
-      return false;
-    }
-  }, true);
-  
-  // Error handler untuk Promise rejection yang tidak ter-handle
-  window.addEventListener('unhandledrejection', function(event) {
-    // Abaikan error yang terkait dengan message channel
-    var reason = event.reason;
-    if (reason) {
-      var errorMsg = (reason.message || reason.toString() || '');
-      if (errorMsg.includes('message channel closed') ||
-          errorMsg.includes('asynchronous response') ||
-          errorMsg.includes('runtime.lastError')) {
-        event.preventDefault();
-        return false;
-      }
-    }
   });
 </script>     
 </html>  

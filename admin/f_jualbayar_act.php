@@ -1,26 +1,35 @@
 <?php
+  // Prevent direct access - must be POST request
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Location: f_jual.php');
+    exit;
+  }
+  
   ob_start();
+  error_reporting(0);
+  ini_set('display_errors', 0);
 
 include 'config.php';
 date_default_timezone_set('Asia/Jakarta');
 session_start();
 $kd_toko      = $_SESSION['id_toko'];
 $id_user      = $_SESSION['id_user'];
-$tgl_jual     = $_POST['tgl_jual'];
-$no_fakjual   = $_POST['no_fakjuals'];
-$kd_pel       = $_POST['kd_pel_byr'];
-$kd_bayar     = $_POST['kd_bayar'];
-$byr_jual     = backnumdes($_POST['byr_awal']);//**Tagihan penjualan awal
-$byr_tot      = backnumdes($_POST['tot_belanja']);//**Tagihan awal + disc + ongkir
-$bayar        = backnumdes($_POST['bayar']);//dibayar sejumlah tagihan    
-$susuk        = backnumdes($_POST['kembali']);    
-$disctot      = backnumdes($_POST['disctot']); // Discount nota
-$disctotit    = backnumdes($_POST['tdiscitem1']);// Discount item
-$voucher      = backnumdes($_POST['voucher']);// voucher
-$ongkir       = backnumdes($_POST['ongkir']);
-$tf           = $_POST['pil_tf'];
-$tgl_jt       = $_POST['tgl_jtnota'];
-$pil_cetak    = $_POST['pil_cetak'];  
+$tgl_jual     = isset($_POST['tgl_jual']) ? $_POST['tgl_jual'] : '';
+$no_fakjual   = isset($_POST['no_fakjuals']) ? $_POST['no_fakjuals'] : '';
+$kd_pel       = isset($_POST['kd_pel_byr']) ? $_POST['kd_pel_byr'] : '';
+$kd_bayar     = isset($_POST['kd_bayar']) ? $_POST['kd_bayar'] : '';
+$byr_jual     = backnumdes(isset($_POST['byr_awal']) ? $_POST['byr_awal'] : '0');//**Tagihan penjualan awal
+$byr_tot      = backnumdes(isset($_POST['tot_belanja']) ? $_POST['tot_belanja'] : '0');//**Tagihan awal + disc + ongkir
+$bayar        = backnumdes(isset($_POST['bayar']) ? $_POST['bayar'] : '0');//dibayar sejumlah tagihan    
+$susuk        = backnumdes(isset($_POST['kembali']) ? $_POST['kembali'] : '0');    
+$disctot      = backnumdes(isset($_POST['disctot']) ? $_POST['disctot'] : '0'); // Discount nota
+$disctotit    = backnumdes(isset($_POST['tdiscitem1']) ? $_POST['tdiscitem1'] : '0');// Discount item
+$voucher      = backnumdes(isset($_POST['voucher']) ? $_POST['voucher'] : '0');// voucher
+$ongkir       = backnumdes(isset($_POST['ongkir']) ? $_POST['ongkir'] : '0');
+$tf           = isset($_POST['pil_tf']) ? $_POST['pil_tf'] : '';
+$tgl_jt       = isset($_POST['tgl_jtnota']) ? $_POST['tgl_jtnota'] : '';
+$pil_cetak    = isset($_POST['pil_cetak']) ? $_POST['pil_cetak'] : '';  
 $d            = false;
 $tghi         = date("Y-m-d H:i:s");   
   
@@ -36,6 +45,9 @@ if(mysqli_num_rows($cekret)>=1){
 }else {
   $no_urutretur=0;
 }
+
+$copy = 1; // Default value
+$nofak_awal = 1; // Default value
 
 $sq_set=mysqli_query($conbayar,"SELECT * FROM seting");
 while($dt_set=mysqli_fetch_assoc($sq_set)){
@@ -784,18 +796,22 @@ if ($pil_cetak =="CETAK-SM"){
 if ($d)
 {
   if ($update==1) {
-   ?><script>popnew_ok('Berhasil disimpan silahkan update piutang');</script><?php
+   ?><script type="text/javascript">popnew_ok('Berhasil disimpan silahkan update piutang');</script><?php
   } else {
-   ?><script>popnew_ok('Berhasil disimpan....'+"<?=$pil_cetak;?>")</script><?php
+   $msg_cetak = (!empty($pil_cetak)) ? 'Berhasil disimpan....' . $pil_cetak : 'Berhasil disimpan';
+   ?><script type="text/javascript">popnew_ok('<?= $msg_cetak; ?>');</script><?php
   }
 } else { 
-  ?><script>popnew_ok('Data gagal disimpan')</script><?php
+  ?><script type="text/javascript">popnew_ok('Data gagal disimpan');</script><?php
 }    
-    
-?>
-<script> kosongkan2();aktif();</script>
-<?php
+?><script> kosongkan2();aktif();</script><?php
   $html = ob_get_contents(); 
   ob_end_clean();
-  echo json_encode(array('hasil'=>$html));
-?>
+  
+  // Set header JSON before any output
+  if (!headers_sent()) {
+    header('Content-Type: application/json; charset=UTF-8');
+  }
+  
+  echo json_encode(array('hasil'=>$html), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+  exit;
