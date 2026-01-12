@@ -714,7 +714,29 @@
         });
       }    
       
+      // Flag untuk mencegah double execution - menggunakan window scope
+      if (typeof window.cetaknotaExecuted === 'undefined') {
+        window.cetaknotaExecuted = {};
+      }
+      
       function cetaknota(dtc,kopi){
+        // Buat key unik berdasarkan parameter
+        var currentKey = dtc + '|' + kopi;
+        
+        // Cek apakah fungsi sudah dieksekusi dengan parameter yang sama
+        if (window.cetaknotaExecuted[currentKey]) {
+          console.log('cetaknota already executed for this transaction, skipping...');
+          return;
+        }
+        
+        // Set flag
+        window.cetaknotaExecuted[currentKey] = true;
+        
+        // Reset flag setelah 3 detik untuk memungkinkan eksekusi berikutnya
+        setTimeout(function() {
+          delete window.cetaknotaExecuted[currentKey];
+        }, 3000);
+        
         $.ajax({
           url: 'f_jual_cetnota.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
