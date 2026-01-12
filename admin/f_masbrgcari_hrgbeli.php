@@ -68,9 +68,10 @@
       if(mysqli_num_rows($sql)>0){
         while($data = mysqli_fetch_array($sql)){ // Ambil semua data dari hasil eksekusi $sql
           $no++;
-          $x=explode(';',carisatkecil2($data['kd_brg'],$conhrg));
-          $kd_satuan=$x[0];
-          $jum_kem=$x[1];
+          $satkecil_result = carisatkecil2($data['kd_brg'],$conhrg);
+          $x = !empty($satkecil_result) ? explode(';', $satkecil_result) : array();
+          $kd_satuan = isset($x[0]) ? $x[0] : '';
+          $jum_kem = isset($x[1]) ? $x[1] : 0;
   
           $nm_sat2=ceknmkem($data['kd_sat'],$conhrg);
           $nm_sat1=ceknmkem2($kd_satuan,$conhrg);

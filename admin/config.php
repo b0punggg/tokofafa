@@ -4,12 +4,34 @@
 
 function opendtcek()
 {
-  $host    = "localhost";
-  $username = "u219974054_defafa";
-  $password = "k8F!+0EYQgSG";
-  $database = "u219974054_tokofafa";
+  // $host = "localhost";
+  // $username = "ADMIN1";
+  // $password = "$2y$10$5xiK8zoUiV38wsNe43Z9guuQ7SUW5wT.WQVeadyPdV/cQsM7HjQH."; 
+  // $database = "tokorahayu";
   
-  return mysqli_connect($host,$username,$password,$database);
+  // $nmuser='';
+  // $nmuser=$_SESSION['nm_user'];
+ 
+  //***cari user pada pemakai
+  // $con=mysqli_connect($host,$username,$password,$database);
+  // $sql=mysqli_query($con,"SELECT * FROM pemakai WHERE nm_user='$nmuser' ORDER BY nm_user ASC");
+   
+  //  if (mysqli_num_rows($sql)>=1){
+  //    $data=mysqli_fetch_assoc($sql); 
+  //    $username = $data['nm_user'];
+  //    $password = $data['pass'];
+  //    if ($username=="ADMIN1"){
+  //     $username="root";
+  //     $password="";
+  //    }
+  //  } else {
+  //    $username = "root";
+  //    $password = "";
+  //  }
+  // unset($data,$sql); 
+  // mysqli_close($con); 
+
+  return mysqli_connect('localhost','root','','fafa');
 }
 
 function kd_barc39($strkon){ 
@@ -189,8 +211,7 @@ function konjumbrg2($sat_brg,$kd_brg,$hub){
     if($sat_brg==$cek['kd_kem1']){
       $jml_brg_sat=$cek['jum_kem1'];
     }
-    // Hapus echo yang menampilkan kode barang (menyebabkan nama barang muncul di viewjmlstok)
-    // if ($cek['kd_kem1']==''){echo $kd_brg;}
+    if ($cek['kd_kem1']==''){echo $kd_brg;}
     unset($datsql,$cek);
 
     //mysqli_close($connect3);
@@ -269,16 +290,13 @@ function konhrgbelibrg($sat_brg, $kd_brg, $no_urutbeli) {
   function carisatbesar($kd_brg){
     $connect4 = opendtcek();
     $kd_toko=$_SESSION['id_toko'];
-    $satbesar = ''; // Inisialisasi variabel
     $datsql=mysqli_query($connect4,"SELECT * FROM mas_brg WHERE kd_brg='$kd_brg' AND kd_toko='$kd_toko'");
-    if($datsql && mysqli_num_rows($datsql) > 0){
-      $cek=mysqli_fetch_array($datsql);
-      if(isset($cek['kd_kem1']) && $cek['kd_kem1']>1){
-        $satbesar=$cek['kd_kem1'].';'.$cek['jum_kem1'];
-      }
-      unset($cek);
+    $cek=mysqli_fetch_array($datsql);
+
+    if($cek['kd_kem1']>1){
+      $satbesar=$cek['kd_kem1'].';'.$cek['jum_kem1'];
     }
-    unset($datsql);
+    unset($datsql,$cek);
     mysqli_close($connect4);
     return $satbesar;
   }
@@ -300,16 +318,13 @@ function konhrgbelibrg($sat_brg, $kd_brg, $no_urutbeli) {
   function carisatbesar3($kd_brg,$hub){
     //$connect4 = opendtcek();
     $kd_toko=$_SESSION['id_toko'];
-    $satbesar = ''; // Inisialisasi variabel
     $datsql=mysqli_query($hub,"SELECT * FROM mas_brg WHERE kd_brg='$kd_brg' AND kd_toko='$kd_toko'");
-    if($datsql && mysqli_num_rows($datsql) > 0){
-      $cek=mysqli_fetch_array($datsql);
-      if(isset($cek['kd_kem1']) && $cek['kd_kem1']>1){
-        $satbesar=$cek['kd_kem1'].';'.$cek['nm_kem1'].';'.$cek['jum_kem1'];
-      }
-      unset($cek);
+    $cek=mysqli_fetch_array($datsql);
+
+    if($cek['kd_kem1']>1){
+      $satbesar=$cek['kd_kem1'].';'.$cek['nm_kem1'].';'.$cek['jum_kem1'];
     }
-    unset($datsql);
+    unset($datsql,$cek);
     //mysqli_close($connect4);
     return $satbesar;
   }
@@ -794,31 +809,29 @@ function write_num($input,$printer,$xpos,$ypos){
       $ago  = new DateTime($datetime);
       $diff = $now->diff($ago);
 
-      // Hitung minggu secara manual untuk kompatibilitas PHP 5.6
-      $weeks = floor($diff->d / 7);
-      $days = $diff->d - ($weeks * 7);
+      // Calculate weeks manually (DateInterval doesn't have 'w' property)
+      $w = floor($diff->d / 7);
+      $d = $diff->d - ($w * 7);
 
       $string = array(
-        'y' => array('value' => $diff->y, 'label' => 'tahun'),
-        'm' => array('value' => $diff->m, 'label' => 'bulan'),
-        'w' => array('value' => $weeks, 'label' => 'minggu'),
-        'd' => array('value' => $days, 'label' => 'hari'),
-        'h' => array('value' => $diff->h, 'label' => 'jam'),
-        'i' => array('value' => $diff->i, 'label' => 'menit'),
-        's' => array('value' => $diff->s, 'label' => 'detik'),
+        'y' => array('val' => $diff->y, 'txt' => 'tahun'),
+        'm' => array('val' => $diff->m, 'txt' => 'bulan'),
+        'w' => array('val' => $w, 'txt' => 'minggu'),
+        'd' => array('val' => $d, 'txt' => 'hari'),
+        'h' => array('val' => $diff->h, 'txt' => 'jam'),
+        'i' => array('val' => $diff->i, 'txt' => 'menit'),
+        's' => array('val' => $diff->s, 'txt' => 'detik'),
       );
-      
-      $result = array();
-      foreach ($string as $k => $v) {
-        if ($v['value'] > 0) {
-          $result[$k] = $v['value'] . ' ' . $v['label'];
+      foreach ($string as $k => &$item) {
+        if ($item['val'] > 0) {
+          $item = $item['val'] . ' ' . $item['txt'];
+        } else {
+          unset($string[$k]);
         }
       }
 
-      if (!$full && !empty($result)) {
-        $result = array_slice($result, 0, 1);
-      }
-      return !empty($result) ? implode(', ', $result) . ' yang lalu' : 'baru saja';
+      if (!$full) $string = array_slice($string, 0, 1);
+      return $string ? implode(', ', $string) . ' yang lalu' : 'baru saja';
     }
   }
 
