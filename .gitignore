@@ -1,1 +1,1 @@
-echo "admin/config.php" >> .gitignore
+admin/config.php
