@@ -748,10 +748,45 @@
             }
           },
           success: function(response){ 
-            $("#viewcetnot").html(response.hasil);
+            console.log('📄 Response from f_jual_cetnota.php received');
+            var htmlContent = response.hasil || '';
+            
+            if (!htmlContent) {
+              console.error('❌ Empty response from f_jual_cetnota.php');
+              return;
+            }
+            
+            // Extract and execute scripts
+            var scripts = [];
+            htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
+              if (scriptContent && scriptContent.trim()) {
+                scripts.push(scriptContent);
+              }
+              return '';
+            });
+            
+            console.log('📜 Found', scripts.length, 'script(s) to execute');
+            
+            // Inject cleaned HTML first
+            var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+            $("#viewcetnot").html(cleanHtml);
+            
+            // Execute scripts after DOM injection with a small delay to ensure DOM is ready
+            setTimeout(function() {
+              scripts.forEach(function(script, index) {
+                try {
+                  console.log('▶️ Executing script', index + 1, 'of', scripts.length);
+                  eval(script);
+                } catch(e) {
+                  console.error('❌ Print script error:', e);
+                  console.error('Script content:', script.substring(0, 200));
+                }
+              });
+            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            console.error('Cetak nota error:', xhr.responseText);
+            alert('Gagal mencetak nota: ' + xhr.responseText); // munculkan alert
           }
         });
       }
@@ -822,9 +857,11 @@
             // Then execute other scripts (cetaknota, kosongkan2, etc.)
             scripts.forEach(function(script) {
               try {
+                console.log('Executing script:', script.substring(0, 100) + '...');
                 eval(script);
               } catch(e) {
                 console.error('Script error:', e);
+                console.error('Script content:', script);
               }
             });
             
