@@ -532,6 +532,7 @@
                           $("#nm_pelbayar").focus();
                           $("#boxpelbay_1").slideToggle("fast");
                           $("#tabbay").slideUp("fast");
+                          $("#viewidmemberbayar").slideUp("fast");
                         });
                         
                        });
@@ -558,6 +559,292 @@
                       }
                     </script>
                   </div>
+              </div>
+
+              <label for="nm_memberbayar" class="w3-col l4 s4 col-form-label" style="margin-left:15px"><b>Member</b></label>
+              <div class="w3-col l7 s7">
+                <div class="input-group">
+                  <input id="nm_memberbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_member_byr" value="" onkeyup="carnmmember()" placeholder="Kosongkan jika bukan member">
+                  <input type="hidden" id="kd_member_byr" name="kd_member_byr" value="">
+                  <input type="hidden" id="poin_member" name="poin_member" value="0">
+                  <div class="input-group-btn">
+                    <button id="btn-fmember" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
+                  </div>  
+                </div>  
+                <div id="viewidmemberbayar" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
+                </div>
+                <script>
+                  function bayarcarimember(){
+                    $.ajax({
+                      url: 'f_jualcarimember.php',
+                      type: 'POST',
+                      data: {keyword: $("#nm_memberbayar").val()}, 
+                      dataType: "json",
+                      beforeSend: function(e) {
+                        if(e && e.overrideMimeType) {
+                          e.overrideMimeType("application/json;charset=UTF-8");
+                        }
+                      },
+                      success: function(response){ 
+                        $("#viewidmemberbayar").html(response.hasil);
+                      },
+                      error: function (xhr, ajaxOptions, thrownError) {
+                        alert(xhr.responseText);
+                      }
+                    });
+                  }
+                  
+                  // Pastikan fungsi bisa diakses secara global
+                  window.bayarcarimember = bayarcarimember;
+                  
+                  // Panggil setelah fungsi didefinisikan
+                  $(document).ready(function(){
+                    // Tidak perlu dipanggil otomatis, akan dipanggil saat button diklik
+                  });
+
+                  function carnmmember() {
+                    var input, filter, table, tr, td, i, txtValue;
+                    input = document.getElementById("nm_memberbayar");
+                    filter = input.value.toUpperCase();
+                    table = document.getElementById("tabmember");
+                    if(table) {
+                      tr = table.getElementsByTagName("tr");
+                      for (i = 0; i < tr.length; i++) {
+                        td = tr[i].getElementsByTagName("input")[0];
+                        if (td) {
+                          txtValue = td.textContent || td.value;
+                          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                          } else {
+                            tr[i].style.display = "none";
+                          }
+                        }       
+                      }
+                    } else {
+                      // Jika tabel belum ada, load dulu
+                      bayarcarimember();
+                    }
+                  }
+
+                  function hitungdiscmember() {
+                    var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+                    var byr_awal = document.getElementById('byr_awal') ? document.getElementById('byr_awal').value : '0';
+                    byr_awal = Number(backangkades(byr_awal));
+                    
+                    var disc_member = 0;
+                    // Diskon member 1% jika belanja minimal Rp 350.000
+                    if(kd_member != '' && kd_member != null && byr_awal >= 350000) {
+                      disc_member = Math.floor(byr_awal * 0.01);
+                    }
+                    
+                    if(document.getElementById('disc_member')){
+                      document.getElementById('disc_member').value = angkatitikdes(disc_member);
+                    }
+                    if(document.getElementById('disc_member_hidden')){
+                      document.getElementById('disc_member_hidden').value = disc_member;
+                    }
+                    
+                    // JANGAN memanggil hitdisc() di sini untuk menghindari circular dependency
+                    // hitdisc() akan dipanggil secara terpisah jika diperlukan
+                  }
+
+                  function hitungpoin(skip_disc_update) {
+                    try {
+                      var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+                      var tot_belanja = document.getElementById('tot_belanja') ? document.getElementById('tot_belanja').value : '0';
+                      tot_belanja = Number(backangkades(tot_belanja));
+                      
+                      // JANGAN memanggil hitungdiscmember() atau hitdisc() di sini
+                      // hitungdiscmember() sudah dipanggil oleh hitdisc() sebelum memanggil fungsi ini
+                      // Jika dipanggil langsung (bukan dari hitdisc), skip_disc_update akan false
+                      // dan kita perlu memanggil hitdisc() terlebih dahulu dari luar
+                      
+                      // Hitung poin: setiap kelipatan Rp 50.000 mendapat 1 poin
+                      var poin_earned = Math.floor(tot_belanja / 50000);
+                      
+                      // Update poin yang akan didapat
+                      var poin_earned_display = document.getElementById('poin_earned_display');
+                      if(poin_earned_display){
+                        poin_earned_display.innerHTML = poin_earned + ' poin';
+                      }
+                      var poin_earned_hidden = document.getElementById('poin_earned_hidden');
+                      if(poin_earned_hidden){
+                        poin_earned_hidden.value = poin_earned;
+                      }
+                      
+                      // Jika tidak ada member yang dipilih
+                      if(kd_member == '' || kd_member == null) {
+                        // Reset poin redeem
+                        if(document.getElementById('poin_redeem')){
+                          document.getElementById('poin_redeem').value = '0';
+                        }
+                        if(document.getElementById('poin_redeem_hidden')){
+                          document.getElementById('poin_redeem_hidden').value = '0';
+                        }
+                        // Reset poin yang dimiliki
+                        if(document.getElementById('poin_member_available')){
+                          document.getElementById('poin_member_available').value = '0';
+                        }
+                        if(document.getElementById('poin_member_display')){
+                          document.getElementById('poin_member_display').innerHTML = '0 poin';
+                        }
+                        // Sembunyikan informasi poin jika belum memilih member
+                        var poin_info = document.getElementById('poin_info');
+                        if(poin_info){
+                          poin_info.style.display = 'none';
+                        }
+                        return;
+                      }
+                      
+                      // Tampilkan informasi poin terlebih dahulu
+                      var poin_info = document.getElementById('poin_info');
+                      if(poin_info){
+                        poin_info.style.display = 'block';
+                        console.log('Poin info displayed, kd_member:', kd_member, 'poin_earned:', poin_earned);
+                      } else {
+                        console.error('poin_info element not found!');
+                      }
+                      
+                      // Ambil poin member yang tersedia
+                      $.ajax({
+                        url: 'f_tukarpoin_cekpoin.php',
+                        type: 'POST',
+                        data: {kd_member: kd_member}, 
+                        dataType: "json",
+                        beforeSend: function(e) {
+                          if(e && e.overrideMimeType) {
+                            e.overrideMimeType("application/json;charset=UTF-8");
+                          }
+                        },
+                        success: function(response){ 
+                          var poin_available = response.poin || 0;
+                          if(document.getElementById('poin_member_available')){
+                            document.getElementById('poin_member_available').value = poin_available;
+                          }
+                          var poin_member_display = document.getElementById('poin_member_display');
+                          if(poin_member_display){
+                            poin_member_display.innerHTML = number_format(poin_available, 0, ',', '.') + ' poin';
+                          }
+                          var poin_info = document.getElementById('poin_info');
+                          if(poin_info){
+                            poin_info.style.display = 'block';
+                          }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                          console.error('Error loading poin:', xhr.responseText);
+                          var poin_available = 0;
+                          if(document.getElementById('poin_member_available')){
+                            document.getElementById('poin_member_available').value = '0';
+                          }
+                          var poin_member_display = document.getElementById('poin_member_display');
+                          if(poin_member_display){
+                            poin_member_display.innerHTML = '0 poin';
+                          }
+                          var poin_info = document.getElementById('poin_info');
+                          if(poin_info){
+                            poin_info.style.display = 'block';
+                          }
+                        }
+                      });
+                    } catch(e) {
+                      console.error('Error in hitungpoin:', e);
+                    }
+                  }
+                  
+                  // Pastikan fungsi bisa diakses secara global
+                  window.hitungpoin = hitungpoin;
+
+                  function number_format(number, decimals, dec_point, thousands_sep) {
+                    number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+                    var n = !isFinite(+number) ? 0 : +number,
+                      prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+                      sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+                      dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+                      s = '',
+                      toFixedFix = function(n, prec) {
+                        var k = Math.pow(10, prec);
+                        return '' + Math.round(n * k) / k;
+                      };
+                    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+                    if (s[0].length > 3) {
+                      s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+                    }
+                    if ((s[1] || '').length < prec) {
+                      s[1] = s[1] || '';
+                      s[1] += new Array(prec - s[1].length + 1).join('0');
+                    }
+                    return s.join(dec);
+                  }
+
+                  function hitungredeempoin(){
+                    var poin_redeem_str = document.getElementById('poin_redeem').value.replace(/\./g, '');
+                    var poin_redeem = parseFloat(poin_redeem_str) || 0;
+                    var poin_available = parseFloat(document.getElementById('poin_member_available').value) || 0;
+                    
+                    // Validasi poin tidak melebihi yang dimiliki
+                    if(poin_redeem > poin_available){
+                      alert('Poin yang digunakan melebihi poin yang dimiliki!\nPoin tersedia: ' + number_format(poin_available, 0, ',', '.') + ' poin');
+                      document.getElementById('poin_redeem').value = '0';
+                      poin_redeem = 0;
+                    }
+                    
+                    // Konversi poin ke rupiah: 1 poin = Rp 100
+                    var nilai_poin = poin_redeem * 100;
+                    document.getElementById('poin_redeem_hidden').value = nilai_poin;
+                    
+                    hitdisc();
+                  }
+
+                  $(document).ready(function(){
+                    $("#btn-fmember").click(function(){
+                      $("#nm_memberbayar").focus();
+                      $("#viewidmemberbayar").slideToggle("fast");
+                      $("#boxpelbay_1").slideUp("fast");
+                      $("#tabbay").slideUp("fast");
+                      bayarcarimember();
+                    });
+                    
+                    // Monitor perubahan pada kd_member_byr
+                    var kd_member_input = document.getElementById('kd_member_byr');
+                    if(kd_member_input) {
+                      // Gunakan MutationObserver atau event listener
+                      var observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                          if(mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                            setTimeout(function(){
+                              if(typeof window.hitungpoin === 'function') {
+                                window.hitungpoin();
+                              }
+                            }, 300);
+                          }
+                        });
+                      });
+                      
+                      // Observe perubahan value
+                      setInterval(function(){
+                        var current_value = kd_member_input.value;
+                        if(current_value && current_value !== kd_member_input.getAttribute('data-last-value')) {
+                          kd_member_input.setAttribute('data-last-value', current_value);
+                          setTimeout(function(){
+                            if(typeof window.hitungpoin === 'function') {
+                              window.hitungpoin();
+                            }
+                          }, 300);
+                        }
+                      }, 500);
+                    }
+                  });
+                </script>
+              </div>
+
+              <div id="poin_info" class="w3-col l11 s11" style="margin-left:15px;margin-top:5px;display:none">
+                <div class="w3-card w3-padding" style="background-color: #fff3cd;border-left: 4px solid #ffc107">
+                  <small><i class="fa fa-star" style="color:orange"></i> <b>Poin yang akan didapat:</b> <span id="poin_earned_display">0 poin</span></small>
+                  <input type="hidden" id="poin_earned_hidden" name="poin_earned_hidden" value="0">
+                  <br>
+                  <small><i class="fa fa-gift" style="color:green"></i> <b>Poin yang dimiliki:</b> <span id="poin_member_display">0 poin</span></small>
+                  <input type="hidden" id="poin_member_available" name="poin_member_available" value="0">
+                </div>
               </div>    
                 
               <label for="kd_bayar2" class="w3-col l4 s4 col-form-label" style="margin-left: 15px"><b>Cara Bayar</b></label>
@@ -638,6 +925,25 @@
                 >
               </div>
 
+              <label for="poin_redeem" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-gift" style="color:green"></i>&nbsp;&nbsp;<b>Tukar Poin</b></label >
+              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
+                <input id="poin_redeem" type="text" value="0" class= "form-control money" name="poin_redeem" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;"
+                onkeyup="hitungredeempoin()" 
+                onfocus="document.getElementById('bayar').value='';
+                hitbayar(document.getElementById('kd_bayar2').value);"
+                placeholder="0"
+                >
+                <input type="hidden" id="poin_redeem_hidden" name="poin_redeem_hidden" value="0">
+                <small style="color: #666;font-size: 9pt;">1 poin = Rp 100 (maks sesuai poin yang dimiliki)</small>
+              </div>
+
+              <label for="disc_member" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-user" style="color:purple"></i>&nbsp;&nbsp;<b>Diskon Member</b></label >
+              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
+                <input id="disc_member" type="text" value="0" class= "form-control money" name="disc_member" readonly style="border:none;background-color: #f0f0f0;font-size: 12pt;text-align: right;color:purple">
+                <input type="hidden" id="disc_member_hidden" name="disc_member_hidden" value="0">
+                <small style="color: #666;font-size: 9pt;">Diskon 1% untuk member belanja minimal Rp 350.000</small>
+              </div>
+
               <label for="ongkir" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-truck" style="color:red"></i>&nbsp;&nbsp;<b>Jasa Kirim </b></label>
               <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left:15px;">
                 <input type="text" id="ongkir" name="ongkir" class="form-control money" value="<?=gantitides(round($ongkir,0))?>" onkeyup="hitongkir(this.value);" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;">
@@ -701,6 +1007,7 @@
                   <button id='tmb-simpan' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px"
                     onkeypress=" if(event.keyCode==13){this.click();}"
                     onclick="if(window.innerWidth<=992){document.getElementById('pil_cetak').value=document.getElementById('inocetak').value}else{document.getElementById('pil_cetak').value=document.getElementById('inocetak').value};
+                    hitungpoin();
                     simpanbyr(document.getElementById('tgl_jual').value,document.getElementById('no_fakjuals').value,
                     document.getElementById('kd_pel_byr').value,document.getElementById('kd_bayar2').value,
                     document.getElementById('byr_awal').value,document.getElementById('tot_belanja').value,
@@ -719,6 +1026,7 @@
                 <!-- simpan tanpa cetak -->
                 <button id="btn-nocetak" type="button" onclick="
                   if (document.getElementById('tmb-simpan').disabled==false){
+                    hitungpoin();
                     document.getElementById('inocetak').value='NOCETAK';
                     document.getElementById('pil_cetak').checked=false;
                     document.getElementById('pil_cetak').value='NOCETAK';
@@ -818,18 +1126,31 @@
 
   function hitdisc()
   {
+    // Hitung diskon member terlebih dahulu jika ada member
+    if(typeof hitungdiscmember === 'function') {
+      hitungdiscmember();
+    }
+    
     var tag     = document.getElementById('byr_awal').value;
        disc     = document.getElementById('disctot').value;
        discitem = Number(backangkades(document.getElementById('tdiscitem1').value));
        congkir  = Number(backangkades(document.getElementById('ongkir').value));
        voucher  = Number(backangkades(document.getElementById('voucher').value));
+       poin_redeem = Number(backangkades(document.getElementById('poin_redeem_hidden').value)) || 0;
+       disc_member = Number(backangkades(document.getElementById('disc_member_hidden').value)) || 0;
 
     jumlah=0;   
     tag    = Number(backangkades(tag));
     disc   = Number(backangkades(disc));  
-    jumlah = (tag-(disc+discitem+voucher))+congkir;
+    jumlah = (tag-(disc+discitem+voucher+poin_redeem+disc_member))+congkir;
     document.getElementById('byr_jual').value=angkatitikdes(jumlah); 
-    document.getElementById('tot_belanja').value=angkatitikdes(jumlah); 
+    document.getElementById('tot_belanja').value=angkatitikdes(jumlah);
+    // Panggil hitungpoin dengan flag skip_disc_update=true untuk menghindari circular dependency
+    if(typeof window.hitungpoin === 'function') {
+      window.hitungpoin(true);
+    } else if(typeof hitungpoin === 'function') {
+      hitungpoin(true);
+    }
   }
 
   function hitbayar(kd_bayar)
@@ -838,6 +1159,8 @@
         disc     = Number(backangkades(document.getElementById('disctot').value));
         discitem = Number(backangkades(document.getElementById('tdiscitem1').value));
         voucher  = Number(backangkades(document.getElementById('voucher').value));
+        poin_redeem = Number(backangkades(document.getElementById('poin_redeem_hidden').value)) || 0;
+        disc_member = Number(backangkades(document.getElementById('disc_member_hidden').value)) || 0;
         congkir  = document.getElementById('ongkir').value;
         bayar    = document.getElementById('bayar').value;
         jumlah   = 0;   
@@ -845,8 +1168,8 @@
         congkir  = Number(backangkades(congkir));  
         bayar    = Number(backangkades(bayar));  
 
-    if (disc>0 || discitem>0 || voucher>0){
-      jumdisc = tag-(disc+discitem+voucher);  
+    if (disc>0 || discitem>0 || voucher>0 || poin_redeem>0 || disc_member>0){
+      jumdisc = tag-(disc+discitem+voucher+poin_redeem+disc_member);  
     }else{
       jumdisc = tag;
     }
@@ -876,6 +1199,7 @@
     if($kd_bayar=""){
       document.getElementById('tmb-simpan').setAttribute('disabled',true);  
     }
+    hitungpoin();
   }
 
   function hitongkir(congkir){
@@ -883,18 +1207,21 @@
         disc     = Number(backangkades(document.getElementById('disctot').value));
         discitem = Number(backangkades(document.getElementById('tdiscitem1').value));
         voucher  = Number(backangkades(document.getElementById('voucher').value));
+        poin_redeem = Number(backangkades(document.getElementById('poin_redeem_hidden').value)) || 0;
+        disc_member = Number(backangkades(document.getElementById('disc_member_hidden').value)) || 0;
     jumlah=0;
 
     tag    = Number(backangkades(tag));
     congkir  = Number(backangkades(congkir));  
-    if (disc>0 || discitem>0 || voucher>0){
-      jumlah = (tag-(disc+discitem+voucher))+congkir;  
+    if (disc>0 || discitem>0 || voucher>0 || poin_redeem>0 || disc_member>0){
+      jumlah = (tag-(disc+discitem+voucher+poin_redeem+disc_member))+congkir;  
     }else{
       jumlah = congkir+tag;
     }
     
     document.getElementById('byr_jual').value=angkatitikdes(jumlah);
-    document.getElementById('tot_belanja').value=angkatitikdes(jumlah); 
+    document.getElementById('tot_belanja').value=angkatitikdes(jumlah);
+    hitungpoin();
   }
 
   $(document).ready(function(){
@@ -907,6 +1234,15 @@
     $('.desimal').mask('000,00', {reverse: true});
     $('.desimal2').mask('00,00', {reverse: true});
     $('.angka').mask('000000', {reverse: true});
+    
+    // Hitung poin dan diskon member saat form dimuat
+    setTimeout(function(){
+      if(typeof hitungpoin === 'function') {
+        hitungpoin();
+      } else if(typeof hitungdiscmember === 'function') {
+        hitungdiscmember();
+      }
+    }, 500);
   });
 
   function cektf() {

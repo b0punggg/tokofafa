@@ -18,6 +18,7 @@ $id_user      = $_SESSION['id_user'];
 $tgl_jual     = isset($_POST['tgl_jual']) ? $_POST['tgl_jual'] : '';
 $no_fakjual   = isset($_POST['no_fakjuals']) ? $_POST['no_fakjuals'] : '';
 $kd_pel       = isset($_POST['kd_pel_byr']) ? $_POST['kd_pel_byr'] : '';
+$kd_member    = isset($_POST['kd_member_byr']) ? $_POST['kd_member_byr'] : '';
 $kd_bayar     = isset($_POST['kd_bayar']) ? $_POST['kd_bayar'] : '';
 $byr_jual     = backnumdes(isset($_POST['byr_awal']) ? $_POST['byr_awal'] : '0');//**Tagihan penjualan awal
 $byr_tot      = backnumdes(isset($_POST['tot_belanja']) ? $_POST['tot_belanja'] : '0');//**Tagihan awal + disc + ongkir
@@ -26,10 +27,16 @@ $susuk        = backnumdes(isset($_POST['kembali']) ? $_POST['kembali'] : '0');
 $disctot      = backnumdes(isset($_POST['disctot']) ? $_POST['disctot'] : '0'); // Discount nota
 $disctotit    = backnumdes(isset($_POST['tdiscitem1']) ? $_POST['tdiscitem1'] : '0');// Discount item
 $voucher      = backnumdes(isset($_POST['voucher']) ? $_POST['voucher'] : '0');// voucher
+$disc_member  = backnumdes(isset($_POST['disc_member_hidden']) ? $_POST['disc_member_hidden'] : '0');// Diskon member
 $ongkir       = backnumdes(isset($_POST['ongkir']) ? $_POST['ongkir'] : '0');
 $tf           = isset($_POST['pil_tf']) ? $_POST['pil_tf'] : '';
 $tgl_jt       = isset($_POST['tgl_jtnota']) ? $_POST['tgl_jtnota'] : '';
-$pil_cetak    = isset($_POST['pil_cetak']) ? $_POST['pil_cetak'] : '';  
+$pil_cetak    = isset($_POST['pil_cetak']) ? $_POST['pil_cetak'] : '';
+$poin_earned  = isset($_POST['poin_earned_hidden']) ? floatval($_POST['poin_earned_hidden']) : 0; // Poin yang didapat dari transaksi
+// Validasi server-side: setiap kelipatan Rp 50.000 mendapat 1 poin
+$poin_earned = floor($byr_tot / 50000);
+$poin_redeem  = isset($_POST['poin_redeem']) ? floatval(str_replace('.', '', $_POST['poin_redeem'])) : 0; // Jumlah poin yang ditukar
+$poin_redeem_value = isset($_POST['poin_redeem_hidden']) ? floatval($_POST['poin_redeem_hidden']) : 0; // Nilai rupiah dari poin yang ditukar
 $d            = false;
 $tghi         = date("Y-m-d H:i:s");   
   
@@ -161,6 +168,9 @@ if($voucher>0){
   unset($datahit,$ceksql);
 }
 //------------
+// Tambahkan diskon member ke tot_discitem
+$tot_discitem = $tot_discitem + $disc_member;
+$tot_discitem = round($tot_discitem, 2);
 //echo $tot_discitem;
 
 //ambil tanggal 
@@ -279,7 +289,31 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
         $labamsk =$bayar-$defmodal;
       }  
       $d=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang values('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
-      $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");    
+      $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
+      
+      // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar
+      if($kd_member != ''){
+        // Kurangi poin yang ditukar terlebih dahulu
+        if($poin_redeem > 0){
+          mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          $datapoin = mysqli_fetch_assoc($cekpoin);
+          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
+          mysqli_free_result($cekpoin);
+          unset($datapoin);
+        }
+        // Tambah poin yang didapat dari transaksi
+        if($poin_earned > 0){
+          mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          $datapoin = mysqli_fetch_assoc($cekpoin);
+          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
+          mysqli_free_result($cekpoin);
+          unset($datapoin);
+        }
+      }    
     }  
   } else {
     // jika edit menjadi cash hapus data lama
@@ -377,7 +411,31 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
         $labamsk =$bayar-$defmodal;
       }  
       $d=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang values('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
-      $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");    
+      $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
+      
+      // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar
+      if($kd_member != ''){
+        // Kurangi poin yang ditukar terlebih dahulu
+        if($poin_redeem > 0){
+          mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          $datapoin = mysqli_fetch_assoc($cekpoin);
+          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
+          mysqli_free_result($cekpoin);
+          unset($datapoin);
+        }
+        // Tambah poin yang didapat dari transaksi
+        if($poin_earned > 0){
+          mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          $datapoin = mysqli_fetch_assoc($cekpoin);
+          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
+          mysqli_free_result($cekpoin);
+          unset($datapoin);
+        }
+      }    
     }  
   } else {
     // jika edit menjadi cash hapus data lama
@@ -392,7 +450,31 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
   } else {
     $ket_bayar="BELUM";
   }
-  $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
+  $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
+
+  // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar
+  if($kd_member != ''){
+    // Kurangi poin yang ditukar terlebih dahulu
+    if($poin_redeem > 0){
+      mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
+      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+      $datapoin = mysqli_fetch_assoc($cekpoin);
+      $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+      mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
+      mysqli_free_result($cekpoin);
+      unset($datapoin);
+    }
+    // Tambah poin yang didapat dari transaksi
+    if($poin_earned > 0){
+      mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
+      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+      $datapoin = mysqli_fetch_assoc($cekpoin);
+      $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
+      mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
+      mysqli_free_result($cekpoin);
+      unset($datapoin);
+    }
+  }
 
   if($kd_bayar=='TEMPO'){
     // echo 'if...' .$defmodal.' '.$bayar.'<br>';

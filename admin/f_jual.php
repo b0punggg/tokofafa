@@ -758,10 +758,17 @@
       
       function simpanbyr(dtgl_jual,cno_fakjuals,ckd_pel_byr,ckd_bayar,nbyr_awal,ntot_belanja,nbayar,nkembali,ndisctot,ntdiscitem1,nvoucher,nongkir,cpil_tf,dtgl_jtnota,npil_cetak){
         
+        // Ambil data member dan poin sebelum submit
+        var kd_member_byr = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+        var poin_earned_hidden = document.getElementById('poin_earned_hidden') ? document.getElementById('poin_earned_hidden').value : '0';
+        var poin_redeem_hidden = document.getElementById('poin_redeem_hidden') ? document.getElementById('poin_redeem_hidden').value : '0';
+        var poin_redeem = document.getElementById('poin_redeem') ? document.getElementById('poin_redeem').value.replace(/\./g, '') : '0';
+        var disc_member_hidden = document.getElementById('disc_member_hidden') ? document.getElementById('disc_member_hidden').value : '0';
+        
         $.ajax({
           url: 'f_jualbayar_act.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
-          data: {tgl_jual:dtgl_jual,no_fakjuals:cno_fakjuals,kd_pel_byr:ckd_pel_byr,kd_bayar:ckd_bayar,byr_awal:nbyr_awal,tot_belanja:ntot_belanja,bayar:nbayar,kembali:nkembali,disctot:ndisctot,tdiscitem1:ntdiscitem1,voucher:nvoucher,ongkir:nongkir,pil_tf:cpil_tf,tgl_jtnota:dtgl_jtnota,pil_cetak:npil_cetak}, 
+          data: {tgl_jual:dtgl_jual,no_fakjuals:cno_fakjuals,kd_pel_byr:ckd_pel_byr,kd_member_byr:kd_member_byr,poin_earned_hidden:poin_earned_hidden,poin_redeem_hidden:poin_redeem_hidden,poin_redeem:poin_redeem,kd_bayar:ckd_bayar,byr_awal:nbyr_awal,tot_belanja:ntot_belanja,bayar:nbayar,kembali:nkembali,disctot:ndisctot,tdiscitem1:ntdiscitem1,voucher:nvoucher,disc_member_hidden:disc_member_hidden,ongkir:nongkir,pil_tf:cpil_tf,tgl_jtnota:dtgl_jtnota,pil_cetak:npil_cetak}, 
           dataType: "json",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {

@@ -406,11 +406,13 @@
           <a href="m_kemas.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Kemasan</a>
           <a href="m_sup.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Supplier</a>
           <a href="m_pel.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Pelanggan</a>
+          <a href="m_member.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Member</a>
           <a href="m_toko.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Toko</a>
           <a href="f_masbrg.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Barang</a>
           <a href="m_paket.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Inisial Perpaket</a>
           <a href="m_bagian.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Bagian Penjualan</a>
           <a href="f_discount_promo.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Discount Promo</a>
+          <a href="m_persediaan_bulan.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Persediaan Barang/Bulan</a>
           
           <a href="f_pasuser2.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>User</a>
         </div>  
@@ -549,11 +551,13 @@
             <a href="m_kemas.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Kemasan</a>
             <a href="m_sup.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Supplier</a>
             <a href="m_pel.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Pelanggan</a>
+            <a href="m_member.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Member</a>
             <!-- <a href="m_toko.php" class="w3-bar-item w3-button w3-border"><i class="fa fa-bullseye">&nbsp;</i>Toko</a> -->
             <a href="f_masbrg.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Barang</a>
             <a href="m_paket.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Inisial Perpaket</a>
             <a href="m_bagian.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Bagian Penjualan</a>
             <a href="f_discount_promo.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Discount Promo</a>
+            <a href="m_persediaan_bulan.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Persediaan Barang/Bulan</a>
             
             <a href="f_pasuser2.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>User</a>
             <!-- <a href="f_stokopname.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Stok Opname</a> -->
