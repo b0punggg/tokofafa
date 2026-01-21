@@ -26,12 +26,18 @@
   // Ambil kd_pel dari database berdasarkan mas_jual atau dum_jual
   $connect = opendtcek();
   $kd_pel = 'IDPEL-0'; // Default
+  $kd_member = ''; // Default
+  $poin_earned = 0; // Default
+  $nm_member = ''; // Default
+  $poin_saldo = 0; // Default
   
-  // Cari kd_pel dari mas_jual jika ada
-  $cekpel = mysqli_query($connect, "SELECT kd_pel FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+  // Cari kd_pel dan kd_member dari mas_jual jika ada
+  $cekpel = mysqli_query($connect, "SELECT kd_pel, kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
   if (mysqli_num_rows($cekpel) > 0) {
     $dtpel = mysqli_fetch_assoc($cekpel);
     $kd_pel = $dtpel['kd_pel'];
+    $kd_member = isset($dtpel['kd_member']) ? $dtpel['kd_member'] : '';
+    $poin_earned = isset($dtpel['poin_earned']) ? floatval($dtpel['poin_earned']) : 0;
   } else {
     // Jika tidak ada di mas_jual, cek dari dum_jual
     $cekpel2 = mysqli_query($connect, "SELECT kd_pel FROM dum_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
@@ -56,16 +62,30 @@
   $alamat=$datacari['al_pel'];
   unset($sqlcari,$datacari);
   
+  // Ambil data member jika ada
+  if (!empty($kd_member)) {
+    $sqlmember=mysqli_query($connect,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+    if (mysqli_num_rows($sqlmember) > 0) {
+      $datamember=mysqli_fetch_assoc($sqlmember);
+      $nm_member = $datamember['nm_member'];
+      $poin_saldo = isset($datamember['poin']) ? floatval($datamember['poin']) : 0;
+    }
+    mysqli_free_result($sqlmember);
+    unset($sqlmember,$datamember);
+  }
+  
   mysqli_close($connect);
   
   // Buat URL untuk f_jual_cetak_sm.php (HTML print)
+  // Tambahkan data member: kd_member, nm_member, poin_earned, poin_saldo
   $print_url_params = http_build_query([
       'nof' => implode(';', [
           $no_fakjual, $tgl_jual, $kd_toko, $kd_pel,
           $nm_toko, $al_toko,
           $nm_pel, $alamat, $kd_bayar, $bayar, $susuk,
           $disctot, $ongkir, $saldohut, $tgl_jt, $tgltime,
-          $_SESSION['nm_user'], $voucher
+          $_SESSION['nm_user'], $voucher,
+          $kd_member, $nm_member, $poin_earned, $poin_saldo
       ])
   ]);
   $print_url = 'f_jual_cetak_sm.php?' . $print_url_params;
@@ -77,8 +97,12 @@
   $script_content = '<script>
 (function() {
   try {
+    console.log("🖨️ Starting print process...");
+    var printUrl = ' . json_encode($print_url) . ';
+    console.log("📄 Print URL:", printUrl);
+    
     // Buat window baru untuk print nota
-    var printWindow = window.open(' . json_encode($print_url) . ', "_blank", "width=300,height=600");
+    var printWindow = window.open(printUrl, "_blank", "width=300,height=600");
     
     if (!printWindow) {
       console.error("❌ Popup blocked! Please allow popups for this site.");
@@ -86,11 +110,15 @@
       return;
     }
     
-    // Tunggu window selesai load, lalu coba print server lokal atau browser print
-    printWindow.onload = function() {
+    console.log("✅ Print window opened");
+    
+    // Function untuk trigger print
+    function triggerPrint() {
+      console.log("🖨️ Triggering print...");
+      
       // Coba gunakan print server lokal jika tersedia
       var printData = {
-        url: ' . json_encode($print_url) . ',
+        url: printUrl,
         printerName: "GP-80220(Cut) Series"
       };
       
@@ -112,40 +140,61 @@
         if (data.success) {
           console.log("✅ Nota dikirim ke print server lokal");
           setTimeout(function() { 
-            printWindow.close(); 
+            if (printWindow && !printWindow.closed) {
+              printWindow.close(); 
+            }
           }, 500);
         } else {
           console.warn("⚠️ Print server reported failure, falling back to browser print");
           setTimeout(function() {
-            printWindow.print();
-            setTimeout(function() { 
-              printWindow.close(); 
-            }, 1000);
+            if (printWindow && !printWindow.closed) {
+              printWindow.print();
+              setTimeout(function() { 
+                if (printWindow && !printWindow.closed) {
+                  printWindow.close(); 
+                }
+              }, 1000);
+            }
           }, 500);
         }
       })
       .catch(function(error) {
         console.log("🖨️ Menggunakan browser print dialog:", error.message);
         setTimeout(function() {
-          printWindow.print();
-          setTimeout(function() { 
-            printWindow.close(); 
-          }, 1000);
+          if (printWindow && !printWindow.closed) {
+            printWindow.print();
+            setTimeout(function() { 
+              if (printWindow && !printWindow.closed) {
+                printWindow.close(); 
+              }
+            }, 1000);
+          }
         }, 500);
       });
-    };
+    }
+    
+    // Tunggu window selesai load, lalu trigger print
+    if (printWindow.addEventListener) {
+      printWindow.addEventListener("load", function() {
+        console.log("✅ Print window loaded");
+        triggerPrint();
+      });
+    } else if (printWindow.onload) {
+      printWindow.onload = function() {
+        console.log("✅ Print window loaded (onload)");
+        triggerPrint();
+      };
+    }
     
     // Fallback jika onload tidak terpicu (untuk beberapa browser)
     setTimeout(function() {
       if (printWindow && !printWindow.closed) {
-        printWindow.print();
-        setTimeout(function() { 
-          printWindow.close(); 
-        }, 1000);
+        console.log("⏰ Fallback: triggering print after timeout");
+        triggerPrint();
       }
     }, 2000);
     
-    console.log("✅ Window print nota dibuka");
+    console.log("✅ Print process initiated");
   } catch(e) {
     console.error("❌ Error opening print window:", e);
     alert("Gagal membuka window print: " + e.message);

@@ -66,18 +66,20 @@
 	      $get_jumlah = mysqli_fetch_array($sql2);
 	    }
 	    $no=0;
+	    // Tambahkan unique_suffix untuk menghindari duplikasi ID
+	    $unique_suffix = '_' . str_replace([' ', '.'], '', microtime(true)) . '_' . rand(10000, 99999);
 	    while($databrg = mysqli_fetch_array($sql1)){ // Ambil semua data dari hasil eksekusi $sql
 	      $no++;
 	      
 	    ?>
 	      <tr style="cursor: pointer">
 	        <td align="left"><?php echo $databrg['kd_pel']; ?></td>
-	        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb2'.$no?>').click();}" onclick="document.getElementById('<?='tmb2'.$no?>').click()" value="<?php echo $databrg['nm_pel']; ?>" readonly tabindex='3' style="border: none;background-color: transparent;cursor: pointer"></td>
+	        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb2'.$no.$unique_suffix?>').click();}" onclick="document.getElementById('<?='tmb2'.$no.$unique_suffix?>').click()" value="<?php echo $databrg['nm_pel']; ?>" readonly tabindex='3' style="border: none;background-color: transparent;cursor: pointer"></td>
 	        <td align="left">
 	        	<input type="text" class="w3-input" readonly value="<?php echo $databrg['al_pel']; ?>" style="border: none;background-color: transparent;cursor: pointer" 
-	        	onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb2'.$no?>').click();}" onclick="document.getElementById('<?='tmb2'.$no?>').click()"></td>
+	        	onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb2'.$no.$unique_suffix?>').click();}" onclick="document.getElementById('<?='tmb2'.$no.$unique_suffix?>').click()"></td>
 	        <td>
-	          	<input id="<?='tmb2'.$no?>" type="button" class="btn btn-primary" style="cursor: pointer;font-size: 10pt;color: white;background-image: url('img/searchicok.png');background-repeat: no-repeat;background-position: 10px 3px;padding: 0px 5px 3px 26px;" onclick="
+	          	<input id="<?='tmb2'.$no.$unique_suffix?>" type="button" class="btn btn-primary" style="cursor: pointer;font-size: 10pt;color: white;background-image: url('img/searchicok.png');background-repeat: no-repeat;background-position: 10px 3px;padding: 0px 5px 3px 26px;" onclick="
 	          	   document.getElementById('kd_pel').value='<?=mysqli_escape_string($connect,$databrg['kd_pel']) ?>';
 	          	   document.getElementById('kd_pel_byr').value='<?=mysqli_escape_string($connect,$databrg['kd_pel']) ?>';
 	          	   document.getElementById('nm_pelbayar').value='<?=mysqli_escape_string($connect,$databrg['nm_pel']) ?>';

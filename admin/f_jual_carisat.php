@@ -39,8 +39,9 @@
     
     $sql=mysqli_query($connect,"SELECT * FROM mas_brg WHERE kd_brg='$param' ");
     $no=0;
-    // Tambahkan timestamp untuk membuat id lebih unik dan menghindari duplikasi
-    $unique_suffix = '_' . time() . '_' . rand(1000, 9999);
+    // Tambahkan timestamp dan random untuk membuat id lebih unik dan menghindari duplikasi
+    // Gunakan microtime untuk memastikan unik setiap kali file dipanggil
+    $unique_suffix = '_' . str_replace([' ', '.'], '', microtime(true)) . '_' . rand(10000, 99999);
     while ($data=mysqli_fetch_array($sql)) { 	
       //echo $data['kd_kem1'];
       $no=$no+1;
@@ -66,7 +67,7 @@
           onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();}" 
           onclick="document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();"
           value="<?php echo $satkecil1_1; ?>" 
-          readonly id="<?='nm_satu1'.$no?>" 
+          readonly id="<?='nm_satu1'.$no.$unique_suffix?>" 
           style="border: none;background-color: transparent;cursor: pointer">
         </td>
 

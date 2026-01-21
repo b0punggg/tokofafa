@@ -147,25 +147,57 @@
         // Bersihkan konten lama terlebih dahulu untuk menghindari duplikasi id
         $("#tabkem").empty();
         
-        $.ajax({
-          url: 'f_jual_carisat.php', // File tujuan
-          type: 'POST', // Tentukan type nya POST atau GET
-          data: {keyword:$("#kd_brg").val()}, 
-          dataType: "json",
-          beforeSend: function(e) {
-            if(e && e.overrideMimeType) {
-              e.overrideMimeType("application/json;charset=UTF-8");
+        // Hapus semua elemen dengan ID yang mungkin duplikat sebelum load content baru
+        // Hapus dari seluruh dokumen, tidak hanya dari tabkem
+        for (var i = 1; i <= 10; i++) {
+          var oldElements = document.querySelectorAll('[id^="tmb' + i + '_"], [id^="nm_satu' + i + '_"], [id="tmb' + i + '"], [id="nm_satu' + i + '"]');
+          oldElements.forEach(function(el) {
+            if (el && el.parentNode) {
+              el.parentNode.removeChild(el);
             }
-          },
-          success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-            
-            $("#tabkem").html(response.hasil);
-          },
-          error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+          });
+        }
+        // Juga hapus tmb2 dan tmb23 yang mungkin duplikat
+        var tmb2Old = document.querySelectorAll('[id^="tmb2_"], [id="tmb2"]');
+        tmb2Old.forEach(function(el) {
+          if (el && el.parentNode && el.parentNode.id !== 'viewidpel') {
+            el.parentNode.removeChild(el);
           }
         });
+        var tmb23Old = document.querySelectorAll('[id^="tmb23_"], [id="tmb23"]');
+        tmb23Old.forEach(function(el) {
+          if (el && el.parentNode && el.parentNode.id !== 'viewidpelbayar') {
+            el.parentNode.removeChild(el);
+          }
+        });
+        
+        // Tunggu sebentar untuk memastikan elemen benar-benar dihapus
+        setTimeout(function() {
+          $.ajax({
+            url: 'f_jual_carisat.php', // File tujuan
+            type: 'POST', // Tentukan type nya POST atau GET
+            data: {keyword:$("#kd_brg").val()}, 
+            dataType: "json",
+            beforeSend: function(e) {
+              if(e && e.overrideMimeType) {
+                e.overrideMimeType("application/json;charset=UTF-8");
+              }
+            },
+            success: function(response){ 
+              // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
+              
+              $("#tabkem").html(response.hasil);
+              
+              // Delay pengecekan duplicate IDs setelah content di-load
+              setTimeout(function() {
+                checkDuplicateFormIds();
+              }, 100);
+            },
+            error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
+              alert(xhr.responseText); // munculkan alert
+            }
+          });
+        }, 50);
       }
 
       function getdiscpromo(kd_brg, hrg_jual){
@@ -312,7 +344,14 @@
           success: function(response){ 
             // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
             
+            // Bersihkan elemen lama sebelum load content baru
+            $("#viewidpel").empty();
             $("#viewidpel").html(response.hasil);
+            
+            // Delay pengecekan duplicate IDs setelah content di-load
+            setTimeout(function() {
+              checkDuplicateFormIds();
+            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
             alert(xhr.responseText); // munculkan alert
@@ -334,7 +373,14 @@
           success: function(response){ 
             // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
             
+            // Bersihkan elemen lama sebelum load content baru
+            $("#viewidpelbayar").empty();
             $("#viewidpelbayar").html(response.hasil);
+            
+            // Delay pengecekan duplicate IDs setelah content di-load
+            setTimeout(function() {
+              checkDuplicateFormIds();
+            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
             alert(xhr.responseText); // munculkan alert
@@ -866,26 +912,76 @@
               // Ensure cetaknota function is available
               if (typeof cetaknota === 'undefined') {
                 console.error('❌ ERROR: cetaknota function is not defined!');
+                console.error('⚠️ Waiting for cetaknota function to be available...');
+                // Wait a bit and try again
+                setTimeout(function() {
+                  if (typeof cetaknota !== 'undefined') {
+                    console.log('✅ cetaknota function is now available, executing print...');
+                    scripts.forEach(function(script, idx) {
+                      try {
+                        if (script.indexOf('cetaknota') !== -1) {
+                          console.log('▶️ Executing cetaknota() script #' + (idx + 1) + '...');
+                          // Extract cetaknota call from script
+                          var cetakMatch = script.match(/cetaknota\(['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\)/);
+                          if (cetakMatch && typeof cetaknota === 'function') {
+                            var dtc = cetakMatch[1];
+                            var kopi = cetakMatch[2];
+                            console.log('📋 Calling cetaknota directly with dtc:', dtc.substring(0, 50) + '...', 'kopi:', kopi);
+                            cetaknota(dtc, kopi);
+                            console.log('✅ cetaknota() called successfully');
+                          } else {
+                            eval(script);
+                          }
+                          console.log('✅ cetaknota() script executed successfully');
+                        }
+                      } catch(e) {
+                        console.error('❌ Print script error:', e);
+                        console.error('Error details:', e.message, e.stack);
+                      }
+                    });
+                  } else {
+                    console.error('❌ cetaknota function still not available after wait');
+                  }
+                }, 100);
               } else {
                 console.log('✅ cetaknota function is available');
+                
+                // Execute print scripts first - use setTimeout to ensure DOM is ready
+                setTimeout(function() {
+                  scripts.forEach(function(script, idx) {
+                    try {
+                      if (script.indexOf('cetaknota') !== -1) {
+                        console.log('▶️ Executing cetaknota() script #' + (idx + 1) + '...');
+                        console.log('📝 Script preview:', script.substring(0, 150));
+                        // Extract cetaknota call from script
+                        var cetakMatch = script.match(/cetaknota\(['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\)/);
+                        if (cetakMatch) {
+                          var dtc = cetakMatch[1];
+                          var kopi = cetakMatch[2];
+                          console.log('📋 Calling cetaknota with dtc:', dtc.substring(0, 50) + '...', 'kopi:', kopi);
+                          // Call cetaknota directly
+                          if (typeof cetaknota === 'function') {
+                            cetaknota(dtc, kopi);
+                            console.log('✅ cetaknota() called successfully');
+                          } else {
+                            console.error('❌ cetaknota is not a function');
+                            // Fallback: execute script as is
+                            eval(script);
+                          }
+                        } else {
+                          // Fallback: execute script as is
+                          eval(script);
+                        }
+                        console.log('✅ Print script executed successfully');
+                      }
+                    } catch(e) {
+                      console.error('❌ Print script error:', e);
+                      console.error('Script content:', script.substring(0, 200));
+                      console.error('Full error:', e.message, e.stack);
+                    }
+                  });
+                }, 100);
               }
-              
-              // Execute print scripts first
-              scripts.forEach(function(script, idx) {
-                try {
-                  if (script.indexOf('cetaknota') !== -1) {
-                    console.log('▶️ Executing cetaknota() script #' + (idx + 1) + '...');
-                    console.log('📝 Script preview:', script.substring(0, 150));
-                    // Execute immediately - this will trigger the print process
-                    eval(script);
-                    console.log('✅ cetaknota() script executed successfully');
-                  }
-                } catch(e) {
-                  console.error('❌ Print script error:', e);
-                  console.error('Script content:', script.substring(0, 200));
-                  console.error('Full error:', e.message, e.stack);
-                }
-              });
               
               // Execute other non-print scripts
               scripts.forEach(function(script) {
@@ -1767,6 +1863,83 @@
   <script>
     // Function to check for duplicate form field ids
     function checkDuplicateFormIds() {
+      // Bersihkan elemen duplikat terlebih dahulu dari semua container AJAX
+      var containers = ['tabkem', 'viewidpel', 'viewidpelbayar', 'viewnmbrg', 'viewnmbrgsm'];
+      
+      // Bersihkan elemen dengan ID tmb1-tmb10, tmb2, tmb23 dan nm_satu1-nm_satu3 yang duplikat
+      // Check untuk tmb1-tmb10
+      for (var i = 1; i <= 10; i++) {
+        var elements = document.querySelectorAll('[id^="tmb' + i + '_"], [id^="nm_satu' + i + '_"], [id="tmb' + i + '"], [id="nm_satu' + i + '"]');
+        if (elements.length > 1) {
+          // Hapus semua kecuali yang terakhir (yang terbaru)
+          for (var j = 0; j < elements.length - 1; j++) {
+            if (elements[j] && elements[j].parentNode) {
+              // Pastikan elemen tidak berada di container yang aktif
+              var isInActiveContainer = false;
+              for (var k = 0; k < containers.length; k++) {
+                var container = document.getElementById(containers[k]);
+                if (container && container.contains(elements[j])) {
+                  // Skip jika container masih terlihat (display != none)
+                  var style = window.getComputedStyle(container);
+                  if (style.display !== 'none') {
+                    isInActiveContainer = true;
+                    break;
+                  }
+                }
+              }
+              if (!isInActiveContainer) {
+                elements[j].parentNode.removeChild(elements[j]);
+              }
+            }
+          }
+        }
+      }
+      
+      // Check untuk tmb2 dan tmb23 (dari f_cariidpel.php dan f_jualcariidpel.php)
+      var tmb2Elements = document.querySelectorAll('[id^="tmb2_"], [id="tmb2"]');
+      if (tmb2Elements.length > 1) {
+        for (var j = 0; j < tmb2Elements.length - 1; j++) {
+          if (tmb2Elements[j] && tmb2Elements[j].parentNode) {
+            var isInActiveContainer = false;
+            for (var k = 0; k < containers.length; k++) {
+              var container = document.getElementById(containers[k]);
+              if (container && container.contains(tmb2Elements[j])) {
+                var style = window.getComputedStyle(container);
+                if (style.display !== 'none') {
+                  isInActiveContainer = true;
+                  break;
+                }
+              }
+            }
+            if (!isInActiveContainer) {
+              tmb2Elements[j].parentNode.removeChild(tmb2Elements[j]);
+            }
+          }
+        }
+      }
+      
+      var tmb23Elements = document.querySelectorAll('[id^="tmb23_"], [id="tmb23"]');
+      if (tmb23Elements.length > 1) {
+        for (var j = 0; j < tmb23Elements.length - 1; j++) {
+          if (tmb23Elements[j] && tmb23Elements[j].parentNode) {
+            var isInActiveContainer = false;
+            for (var k = 0; k < containers.length; k++) {
+              var container = document.getElementById(containers[k]);
+              if (container && container.contains(tmb23Elements[j])) {
+                var style = window.getComputedStyle(container);
+                if (style.display !== 'none') {
+                  isInActiveContainer = true;
+                  break;
+                }
+              }
+            }
+            if (!isInActiveContainer) {
+              tmb23Elements[j].parentNode.removeChild(tmb23Elements[j]);
+            }
+          }
+        }
+      }
+      
       var forms = document.querySelectorAll('form');
       var duplicateIds = [];
       var allIds = {};
@@ -1789,6 +1962,25 @@
         });
       });
       
+      // Juga check elemen di luar form (di dalam container AJAX)
+      containers.forEach(function(containerId) {
+        var container = document.getElementById(containerId);
+        if (container) {
+          var containerFields = container.querySelectorAll('input, select, textarea, button');
+          containerFields.forEach(function(field) {
+            if (field.id) {
+              if (allIds[field.id]) {
+                if (duplicateIds.indexOf(field.id) === -1) {
+                  duplicateIds.push(field.id);
+                }
+              } else {
+                allIds[field.id] = 1;
+              }
+            }
+          });
+        }
+      });
+      
       if (duplicateIds.length > 0) {
         console.warn('⚠️ Duplicate form field ids detected:', duplicateIds);
         duplicateIds.forEach(function(id) {
@@ -1805,9 +1997,11 @@
       setTimeout(checkDuplicateFormIds, 500);
     });
     
-    // Also check after AJAX calls complete
+    // Also check after AJAX calls complete, but with delay to ensure DOM is updated
     $(document).ajaxComplete(function() {
-      setTimeout(checkDuplicateFormIds, 100);
+      setTimeout(function() {
+        checkDuplicateFormIds();
+      }, 300);
     });
   </script>   
      <?php

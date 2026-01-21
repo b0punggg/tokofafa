@@ -66,16 +66,18 @@
 	      $get_jumlah = mysqli_fetch_array($sql2);
 	    }
 	    $no=0;
+	    // Tambahkan unique_suffix untuk menghindari duplikasi ID
+	    $unique_suffix = '_' . str_replace([' ', '.'], '', microtime(true)) . '_' . rand(10000, 99999);
 	    while($databrg = mysqli_fetch_array($sql1)){ // Ambil semua data dari hasil eksekusi $sql
 	      $no++;
 	      
 	    ?>
 	      <tr>
 	        <td align="left"><?php echo $databrg['kd_pel']; ?></td>
-	        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb23'.$no?>').click();}" value="<?php echo $databrg['nm_pel']; ?>" readonly tabindex='3' style="border: none;outline: none;background-color: transparent;"></td>
+	        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb23'.$no.$unique_suffix?>').click();}" value="<?php echo $databrg['nm_pel']; ?>" readonly tabindex='3' style="border: none;outline: none;background-color: transparent;"></td>
 	        <td align="left"><?php echo $databrg['al_pel']; ?></td>
 	        <td>
-	          	<button id="<?='tmb23'.$no?>" onclick="
+	          	<button id="<?='tmb23'.$no.$unique_suffix?>" onclick="
 	          	    document.getElementById('kd_pel_byr').value='<?=mysqli_escape_string($con1,$databrg['kd_pel']) ?>';
 	          	    document.getElementById('nm_pelbayar').value='<?=mysqli_escape_string($con1,$databrg['nm_pel']) ?>';
 	          	    document.getElementById('viewidpelbayar').style.display='none'" class="btn-primary fa fa-edit" type="button" style="cursor: pointer; border-style;font-size: 12pt" title="Edit Data">

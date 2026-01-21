@@ -58,6 +58,34 @@
     $datacari=mysqli_fetch_assoc($sqlcari);
     $nm_pel=$datacari['nm_pel'];
     unset($sqlcari,$datacari);
+    
+    // Ambil data member jika ada
+    $kd_member = '';
+    $nm_member = '';
+    $poin_earned = 0;
+    $poin_saldo = 0;
+    
+    // Cari kd_member dari mas_jual
+    $cek_member = mysqli_query($connect, "SELECT kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+    if (mysqli_num_rows($cek_member) > 0) {
+      $dt_member = mysqli_fetch_assoc($cek_member);
+      $kd_member = isset($dt_member['kd_member']) ? $dt_member['kd_member'] : '';
+      $poin_earned = isset($dt_member['poin_earned']) ? floatval($dt_member['poin_earned']) : 0;
+      
+      // Ambil nama member dan poin saldo jika ada kd_member
+      if (!empty($kd_member)) {
+        $sqlmember=mysqli_query($connect,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+        if (mysqli_num_rows($sqlmember) > 0) {
+          $datamember=mysqli_fetch_assoc($sqlmember);
+          $nm_member = $datamember['nm_member'];
+          $poin_saldo = isset($datamember['poin']) ? floatval($datamember['poin']) : 0;
+        }
+        mysqli_free_result($sqlmember);
+        unset($sqlmember,$datamember);
+      }
+    }
+    mysqli_free_result($cek_member);
+    unset($cek_member,$dt_member);
 
     $sql=mysqli_query($connect,"SELECT *,sum(dum_jual.qty_brg) AS qty_brg FROM dum_jual LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut WHERE dum_jual.no_fakjual='$no_fakjual' AND dum_jual.tgl_jual='$tgl_jual' AND dum_jual.kd_toko='$kd_toko' GROUP BY dum_jual.kd_brg,dum_jual.kd_sat,dum_jual.discitem,dum_jual.hrg_jual ORDER BY dum_jual.no_urut ASC");
     if(mysqli_num_rows($sql)>=1){
@@ -69,6 +97,14 @@
       $Text .= spasistr('',$def)."No.Struk ".spasistr('',5).":".spasistr($no_fakjual,20)."\n";
       $Text .= spasistr('',$def)."Tanggal  ".spasistr('',5).":".spasistr(gantitgl($tgl_jual),10)."\n";
       //$Text .= spasistr('',$def)."Pembeli  ".spasistr('',5).":".spasistr($nm_pel,10)."\n";
+      // Tampilkan data member jika ada
+      if (!empty($kd_member) && !empty($nm_member)) {
+        $Text .= spasistr('',$def)."Member   ".spasistr('',5).":".spasistr($nm_member,30)."\n";
+        if ($poin_earned > 0) {
+          $Text .= spasistr('',$def)."Poin Dapat".spasistr('',3).":".spasistr(number_format($poin_earned, 0, ',', '.')." Poin",30)."\n";
+        }
+        $Text .= spasistr('',$def)."Poin Saldo".spasistr('',3).":".spasistr(number_format($poin_saldo, 0, ',', '.')." Poin",30)."\n";
+      }
       $Text .= spasistr('',$def)."-----------------------------------------------\n";
       $Text .= spasistr('',$def)."No.".spasistr('',5)."Nama Barang\n";
       $Text .= spasistr('',$def).spasistr('',5).spasistr("Jml",10).spasistr("Disc%",12).spasistr("Harga",11).spasistr("SubTotal",12)."\n";

@@ -43,7 +43,39 @@ th, td {
   $jam        = $zx[15];
   $user       = $zx[16];
   $voucer     = $zx[17];
+  // Data member (jika ada) - ambil dari URL atau database
+  $kd_member  = isset($zx[18]) ? $zx[18] : '';
+  $nm_member  = isset($zx[19]) ? $zx[19] : '';
+  $poin_earned = isset($zx[20]) ? floatval($zx[20]) : 0;
+  $poin_saldo = isset($zx[21]) ? floatval($zx[21]) : 0;
+  
   $con_sm=opendtcek();
+  
+  // Selalu ambil data member dari database untuk memastikan data terbaru
+  $cek_member = mysqli_query($con_sm, "SELECT kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+  if ($cek_member && mysqli_num_rows($cek_member) > 0) {
+    $dt_member = mysqli_fetch_assoc($cek_member);
+    if (!empty($dt_member['kd_member'])) {
+      $kd_member = $dt_member['kd_member'];
+      $poin_earned = isset($dt_member['poin_earned']) ? floatval($dt_member['poin_earned']) : 0;
+      
+      // Ambil nama member dan poin saldo jika ada kd_member
+      $sqlmember=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+      if ($sqlmember && mysqli_num_rows($sqlmember) > 0) {
+        $datamember=mysqli_fetch_assoc($sqlmember);
+        $nm_member = isset($datamember['nm_member']) ? $datamember['nm_member'] : '';
+        $poin_saldo = isset($datamember['poin']) ? floatval($datamember['poin']) : 0;
+      }
+      if ($sqlmember) {
+        mysqli_free_result($sqlmember);
+      }
+      unset($sqlmember,$datamember);
+    }
+  }
+  if ($cek_member) {
+    mysqli_free_result($cek_member);
+  }
+  unset($cek_member,$dt_member);
   $sql=mysqli_query($con_sm,"SELECT *,sum(dum_jual.qty_brg) AS qty_brg FROM dum_jual LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut WHERE dum_jual.no_fakjual='$no_fakjual' AND dum_jual.tgl_jual='$tgl_jual' AND dum_jual.kd_toko='$kd_toko' GROUP BY dum_jual.kd_brg,dum_jual.kd_sat,dum_jual.discrp,dum_jual.hrg_jual ORDER BY dum_jual.no_urut ASC");
   $no=$total=0; ?>
   <body >      
@@ -84,6 +116,46 @@ th, td {
             <td style="font-size:3px"><?=strtolower(ucwords($al_pel))?></td>
           </tr>  <?php
         } ?>
+        <?php 
+        // Debug: tampilkan nilai variabel (akan muncul di HTML source)
+        // echo "<!-- Debug: kd_member='$kd_member', nm_member='$nm_member', poin_earned=$poin_earned, poin_saldo=$poin_saldo -->";
+        
+        // Tampilkan data member jika ada kd_member
+        if(!empty($kd_member)){ 
+          // Jika nm_member masih kosong, ambil lagi dari database
+          if (empty($nm_member)) {
+            $sqlmember2=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+            if ($sqlmember2 && mysqli_num_rows($sqlmember2) > 0) {
+              $datamember2=mysqli_fetch_assoc($sqlmember2);
+              $nm_member = isset($datamember2['nm_member']) ? $datamember2['nm_member'] : '';
+              $poin_saldo = isset($datamember2['poin']) ? floatval($datamember2['poin']) : 0;
+            }
+            if ($sqlmember2) {
+              mysqli_free_result($sqlmember2);
+            }
+            unset($sqlmember2,$datamember2);
+          }
+          // Tampilkan nama member atau kd_member jika nm_member kosong
+          $display_member = !empty($nm_member) ? ucwords(strtolower($nm_member)) : $kd_member;
+        ?>
+          <tr> 
+            <td style="font-size:3px">Member</td>
+            <td style="font-size:3px">&nbsp;:&nbsp;</td>
+            <td style="font-size:3px"><?=$display_member?></td>
+          </tr>
+          <?php if($poin_earned > 0){ ?>
+          <tr> 
+            <td style="font-size:3px">Poin Dapat</td>
+            <td style="font-size:3px">&nbsp;:&nbsp;</td>
+            <td style="font-size:3px"><?=number_format($poin_earned, 0, ',', '.')?> Poin</td>
+          </tr>
+          <?php } ?>
+          <tr> 
+            <td style="font-size:3px">Poin Saldo</td>
+            <td style="font-size:3px">&nbsp;:&nbsp;</td>
+            <td style="font-size:3px"><?=number_format($poin_saldo, 0, ',', '.')?> Poin</td>
+          </tr>
+        <?php } ?>
       </table>
       <div style="font-size: 3px;">-------------------------------------------------------------------------</div>
       <div style="font-size:3px">NO. &nbsp;&nbsp;&nbsp;&nbsp;NAMA BARANG</div>
@@ -209,5 +281,19 @@ th, td {
 
   <!-- </section> -->
   </body>
-  <script>window.print();</script>
+  <script>
+    // Wait for page to fully load before printing
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 100);
+    };
+    
+    // Fallback if onload doesn't fire
+    setTimeout(function() {
+      if (document.readyState === 'complete') {
+        window.print();
+      }
+    }, 500);
+  </script>
   </html>

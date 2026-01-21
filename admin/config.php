@@ -1,9 +1,17 @@
 
 <?php 
   date_default_timezone_set('Asia/Jakarta');
-
-function opendtcek()
-{
+  function opendtcek()
+  {
+    $host    = "localhost";
+    $username = "u219974054_defafa";
+    $password = "k8F!+0EYQgSG";
+    $database = "u219974054_tokofafa";
+    
+    return mysqli_connect($host,$username,$password,$database);
+  }
+//function opendtcek()
+//{
   // $host = "localhost";
   // $username = "ADMIN1";
   // $password = "$2y$10$5xiK8zoUiV38wsNe43Z9guuQ7SUW5wT.WQVeadyPdV/cQsM7HjQH."; 
@@ -32,7 +40,7 @@ function opendtcek()
   // mysqli_close($con); 
 
   return mysqli_connect('localhost','root','','fafa');
-}
+//}
 
 function kd_barc39($strkon){ 
   $a=array("A"=>"1","B"=>"2","C"=>"3","D"=>"4","E"=>"5",
@@ -624,6 +632,15 @@ function spasinum($str,$pjg)
     $strjadi=$spa.$str;
     return $strjadi;
   }
+}
+
+function spasi($pjg){
+  $spa='';
+  for ($i=0; $i < $pjg ; $i++) 
+  { 
+   $spa=$spa.'&nbsp;';
+  }
+  return $spa;
 }  
 
 function write_num($input,$printer,$xpos,$ypos){

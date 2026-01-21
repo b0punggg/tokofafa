@@ -56,7 +56,8 @@
     $con=$hub;
       $tglhi=$_SESSION['tgl_set'];
       $xjual=0;$xdisc=0;$tot_omset=0;$tot_laba=0;$brg_keluar=0;
-      $sql = mysqli_query($con, "SELECT * FROM dum_jual WHERE tgl_jual='$tglhi' AND kd_toko='$kd_toko' AND panding=false and ket<>'RETUR BARANG'");
+      // Hanya hitung barang yang sudah dibayar (bayar='SUDAH')
+      $sql = mysqli_query($con, "SELECT * FROM dum_jual WHERE tgl_jual='$tglhi' AND kd_toko='$kd_toko' AND panding=false AND ket<>'RETUR BARANG' AND bayar='SUDAH'");
       if(mysqli_num_rows($sql)>=1){  
         while($cek=mysqli_fetch_array($sql)){
           
