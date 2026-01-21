@@ -1901,29 +1901,26 @@
         }
       }
       
-      var forms = document.querySelectorAll('form');
-      var duplicateIds = [];
+      // Kumpulkan semua ID dari seluruh dokumen untuk deteksi duplicate yang akurat
       var allIds = {};
+      var duplicateIds = [];
       
+      // Check semua form
+      var forms = document.querySelectorAll('form');
       forms.forEach(function(form) {
         var formFields = form.querySelectorAll('input, select, textarea, button');
-        var formIds = {};
-        
         formFields.forEach(function(field) {
           if (field.id) {
-            if (formIds[field.id]) {
-              if (duplicateIds.indexOf(field.id) === -1) {
-                duplicateIds.push(field.id);
-              }
+            if (allIds[field.id]) {
+              allIds[field.id]++;
             } else {
-              formIds[field.id] = true;
+              allIds[field.id] = 1;
             }
-            allIds[field.id] = (allIds[field.id] || 0) + 1;
           }
         });
       });
       
-      // Juga check elemen di luar form (di dalam container AJAX)
+      // Check semua container AJAX
       containers.forEach(function(containerId) {
         var container = document.getElementById(containerId);
         if (container) {
@@ -1931,9 +1928,7 @@
           containerFields.forEach(function(field) {
             if (field.id) {
               if (allIds[field.id]) {
-                if (duplicateIds.indexOf(field.id) === -1) {
-                  duplicateIds.push(field.id);
-                }
+                allIds[field.id]++;
               } else {
                 allIds[field.id] = 1;
               }
@@ -1942,6 +1937,14 @@
         }
       });
       
+      // Identifikasi ID yang benar-benar duplicate (muncul lebih dari 1 kali)
+      for (var id in allIds) {
+        if (allIds[id] > 1) {
+          duplicateIds.push(id);
+        }
+      }
+      
+      // Hanya tampilkan warning jika benar-benar ada duplicate
       if (duplicateIds.length > 0) {
         console.warn('⚠️ Duplicate form field ids detected:', duplicateIds);
         duplicateIds.forEach(function(id) {
