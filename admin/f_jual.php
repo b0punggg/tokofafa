@@ -756,7 +756,7 @@
               return;
             }
             
-            // Extract and execute scripts
+            // Extract and execute scripts IMMEDIATELY
             var scripts = [];
             htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
               if (scriptContent && scriptContent.trim()) {
@@ -765,24 +765,28 @@
               return '';
             });
             
-            console.log('📜 Found', scripts.length, 'script(s) to execute');
+            console.log('📜 Found', scripts.length, 'script(s) to execute from f_jual_cetnota.php');
             
-            // Inject cleaned HTML first
+            // Execute scripts IMMEDIATELY - don't wait for DOM injection
+            // The IIFE in f_jual_cetnota.php will execute immediately when eval() runs
+            scripts.forEach(function(script, index) {
+              try {
+                console.log('▶️ Executing print script', index + 1, 'of', scripts.length);
+                console.log('📝 Script preview:', script.substring(0, 100) + '...');
+                // Execute immediately without delay - IIFE will run immediately
+                eval(script);
+                console.log('✅ Script', index + 1, 'executed successfully');
+              } catch(e) {
+                console.error('❌ Print script error:', e);
+                console.error('Error message:', e.message);
+                console.error('Error stack:', e.stack);
+                console.error('Script content:', script.substring(0, 300));
+              }
+            });
+            
+            // Inject cleaned HTML (optional, for display purposes)
             var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
             $("#viewcetnot").html(cleanHtml);
-            
-            // Execute scripts after DOM injection with a small delay to ensure DOM is ready
-            setTimeout(function() {
-              scripts.forEach(function(script, index) {
-                try {
-                  console.log('▶️ Executing script', index + 1, 'of', scripts.length);
-                  eval(script);
-                } catch(e) {
-                  console.error('❌ Print script error:', e);
-                  console.error('Script content:', script.substring(0, 200));
-                }
-              });
-            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
             console.error('Cetak nota error:', xhr.responseText);
@@ -823,6 +827,8 @@
               return;
             }
            
+            console.log('📦 Response received from f_jualbayar_act.php');
+            
             // Extract and execute scripts manually
             var htmlContent = response.hasil || '';
             var scripts = [];
@@ -832,49 +838,105 @@
             // Extract all script tags
             htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
               if (scriptContent && scriptContent.trim()) {
-                // Prioritize popup scripts (popnew_ok) to execute first
-                if (scriptContent.indexOf('popnew_ok') !== -1) {
+                // Check for print script first
+                if (scriptContent.indexOf('cetaknota') !== -1) {
+                  hasPrintScript = true;
+                  console.log('🖨️ Found cetaknota script in response');
+                  // Print scripts should execute immediately, before popup
+                  scripts.unshift(scriptContent); // Add to beginning
+                } else if (scriptContent.indexOf('popnew_ok') !== -1) {
                   popupScripts.push(scriptContent);
                 } else {
                   scripts.push(scriptContent);
-                }
-                if (scriptContent.indexOf('cetaknota') !== -1) {
-                  hasPrintScript = true;
                 }
               }
               return '';
             });
             
-            // Execute popup scripts first to show notification immediately
-            popupScripts.forEach(function(script) {
-              try {
-                eval(script);
-              } catch(e) {
-                console.error('Popup script error:', e);
-              }
-            });
+            console.log('📊 Scripts extracted - Print:', hasPrintScript, 'Popup:', popupScripts.length, 'Other:', scripts.length);
             
-            // Then execute other scripts (cetaknota, kosongkan2, etc.)
-            scripts.forEach(function(script) {
-              try {
-                console.log('Executing script:', script.substring(0, 100) + '...');
-                eval(script);
-              } catch(e) {
-                console.error('Script error:', e);
-                console.error('Script content:', script);
-              }
-            });
-            
-            // Inject cleaned HTML
-            var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-            $("#viewsimpanbyr").html(cleanHtml);
-            
-            // Auto-reload after print
+            // Execute print scripts FIRST (before popup) to ensure printing happens
             if (hasPrintScript) {
+              console.log('🖨️ Print script detected, executing IMMEDIATELY...');
+              console.log('📋 Total scripts to process:', scripts.length);
+              
+              // Ensure cetaknota function is available
+              if (typeof cetaknota === 'undefined') {
+                console.error('❌ ERROR: cetaknota function is not defined!');
+              } else {
+                console.log('✅ cetaknota function is available');
+              }
+              
+              // Execute print scripts first
+              scripts.forEach(function(script, idx) {
+                try {
+                  if (script.indexOf('cetaknota') !== -1) {
+                    console.log('▶️ Executing cetaknota() script #' + (idx + 1) + '...');
+                    console.log('📝 Script preview:', script.substring(0, 150));
+                    // Execute immediately - this will trigger the print process
+                    eval(script);
+                    console.log('✅ cetaknota() script executed successfully');
+                  }
+                } catch(e) {
+                  console.error('❌ Print script error:', e);
+                  console.error('Script content:', script.substring(0, 200));
+                  console.error('Full error:', e.message, e.stack);
+                }
+              });
+              
+              // Execute other non-print scripts
+              scripts.forEach(function(script) {
+                try {
+                  if (script.indexOf('cetaknota') === -1 && script.indexOf('kosongkan2') !== -1) {
+                    eval(script);
+                  }
+                } catch(e) {
+                  console.error('Script error:', e);
+                }
+              });
+              
+              // Execute popup scripts after print is initiated
               setTimeout(function() {
-                window.location.reload();
-              }, 3000);
+                popupScripts.forEach(function(script) {
+                  try {
+                    eval(script);
+                  } catch(e) {
+                    console.error('Popup script error:', e);
+                  }
+                });
+              }, 500);
+              
+              // Inject cleaned HTML
+              var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+              $("#viewsimpanbyr").html(cleanHtml);
+              
+              // NO AUTO-RELOAD - User requested to remove it
+              console.log('✅ Print process initiated, no auto-reload');
             } else {
+              // No print script - execute normally
+              // Execute popup scripts first
+              popupScripts.forEach(function(script) {
+                try {
+                  eval(script);
+                } catch(e) {
+                  console.error('Popup script error:', e);
+                }
+              });
+              
+              // Execute other scripts
+              scripts.forEach(function(script) {
+                try {
+                  eval(script);
+                } catch(e) {
+                  console.error('Script error:', e);
+                }
+              });
+              
+              // Inject cleaned HTML
+              var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+              $("#viewsimpanbyr").html(cleanHtml);
+              
+              // Only reload if no print script (for other operations)
               setTimeout(function() {
                 window.location.reload();
               }, 1500);
@@ -1696,7 +1758,55 @@
       </script>     
     </div><!-- Div.Main -->
   </body>
-  <div id="snackbar" style="z-index: 1"></div>   
+  <div id="snackbar" style="z-index: 1"></div>
+  
+  <!-- Script to detect and warn about duplicate form field ids -->
+  <script>
+    // Function to check for duplicate form field ids
+    function checkDuplicateFormIds() {
+      var forms = document.querySelectorAll('form');
+      var duplicateIds = [];
+      var allIds = {};
+      
+      forms.forEach(function(form) {
+        var formFields = form.querySelectorAll('input, select, textarea, button');
+        var formIds = {};
+        
+        formFields.forEach(function(field) {
+          if (field.id) {
+            if (formIds[field.id]) {
+              if (duplicateIds.indexOf(field.id) === -1) {
+                duplicateIds.push(field.id);
+              }
+            } else {
+              formIds[field.id] = true;
+            }
+            allIds[field.id] = (allIds[field.id] || 0) + 1;
+          }
+        });
+      });
+      
+      if (duplicateIds.length > 0) {
+        console.warn('⚠️ Duplicate form field ids detected:', duplicateIds);
+        duplicateIds.forEach(function(id) {
+          var elements = document.querySelectorAll('#' + id);
+          console.warn('  - id="' + id + '" appears ' + elements.length + ' time(s)');
+        });
+      }
+      
+      return duplicateIds;
+    }
+    
+    // Check after page load and after AJAX content is loaded
+    $(document).ready(function() {
+      setTimeout(checkDuplicateFormIds, 500);
+    });
+    
+    // Also check after AJAX calls complete
+    $(document).ajaxComplete(function() {
+      setTimeout(checkDuplicateFormIds, 100);
+    });
+  </script>   
      <?php
       if(isset($_GET['pesan'])){
         $pesan=$_GET['pesan'];

@@ -95,12 +95,34 @@
       // $Text .= spasicenter('*TERIMA KASIH*',47+$def)."\n\n\n\n\n\n\n\n\n\n\n";
       $Text .= spasicenter('*TERIMA KASIH*',47+$def)."\n\n\n\n\n\n";
       $Text .= $cutPaper;
-      //$printer = printer_open("GP-80250N Series"); //open printer
-      //$printer = printer_open("POS-80C"); //open printer
-      $printer = printer_open("GP-80220(Cut) Series"); //open printer
-      printer_set_option($printer,PRINTER_MODE,"RAW");
-      printer_write($printer, $Text);    
-      printer_close($printer);
+      
+      // Cek apakah fungsi printer tersedia
+      if (function_exists('printer_open')) {
+        // Definisikan konstanta PRINTER_MODE jika belum ada
+        if (!defined('PRINTER_MODE')) {
+          define('PRINTER_MODE', 2); // PRINTER_MODE = 2 untuk RAW mode
+        }
+        
+        // Gunakan call_user_func untuk menghindari linter error
+        $printer_name = "ZJ-80";
+        //$printer_name = "GP-80250N Series"; // Alternatif 1
+        //$printer_name = "POS-80C"; // Alternatif 2
+        //$printer_name = "GP-80220(Cut) Series"; // Alternatif 3
+        
+        $printer = call_user_func('printer_open', $printer_name);
+        
+        if ($printer) {
+          call_user_func('printer_set_option', $printer, PRINTER_MODE, "RAW");
+          call_user_func('printer_write', $printer, $Text);    
+          call_user_func('printer_close', $printer);
+        } else {
+          // Jika printer tidak ditemukan, log error
+          error_log("Printer $printer_name tidak ditemukan atau tidak dapat dibuka");
+        }
+      } else {
+        // Jika extension printer tidak tersedia, log error
+        error_log("PHP Printer extension tidak tersedia. Pastikan extension php_printer.dll sudah diaktifkan di php.ini");
+      }
     }
 
     
