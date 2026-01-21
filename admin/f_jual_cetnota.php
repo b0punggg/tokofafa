@@ -1,5 +1,4 @@
 <?php
-  ob_start();
   include_once 'config.php';
   session_start();
   
@@ -44,20 +43,115 @@
   }
   mysqli_free_result($cekpel);
   
-  // Format keyword untuk f_jualcetaknota.php: kd_toko;kd_pel;no_fakjual;tgl_jual;d;kd_bayar;bayar;saldohut;tgl_jt;susuk
-  $d = ''; // Parameter tambahan
-  $keyword = $kd_toko . ';' . $kd_pel . ';' . $no_fakjual . ';' . $tgl_jual . ';' . $d . ';' . $kd_bayar . ';' . $bayar . ';' . $saldohut . ';' . $tgl_jt . ';' . $susuk;
+  // Ambil data toko dan pelanggan
+  $sqlcari=mysqli_query($connect,"SELECT * from toko where kd_toko='$kd_toko'");
+  $datacari=mysqli_fetch_assoc($sqlcari);
+  $nm_toko=$datacari['nm_toko'];
+  $al_toko=$datacari['al_toko'];
+  unset($sqlcari,$datacari);
   
-  // Simpan keyword ke $_POST agar f_jualcetaknota.php bisa mengaksesnya
-  $_POST['keyword'] = mysqli_real_escape_string($connect, $keyword);
-  
-  // Panggil f_jualcetaknota.php langsung untuk cetak ke thermal printer
-  // File ini akan langsung mencetak ke printer tanpa perlu response
-  include 'f_jualcetaknota.php';
+  $sqlcari=mysqli_query($connect,"SELECT * from pelanggan where kd_pel='$kd_pel'");
+  $datacari=mysqli_fetch_assoc($sqlcari);
+  $nm_pel=$datacari['nm_pel'];
+  $alamat=$datacari['al_pel'];
+  unset($sqlcari,$datacari);
   
   mysqli_close($connect);
   
-  $html = ob_get_contents(); 
-  ob_end_clean();
-  echo json_encode(array('hasil'=>$html));
+  // Buat URL untuk f_jual_cetak_sm.php (HTML print)
+  $print_url_params = http_build_query([
+      'nof' => implode(';', [
+          $no_fakjual, $tgl_jual, $kd_toko, $kd_pel,
+          $nm_toko, $al_toko,
+          $nm_pel, $alamat, $kd_bayar, $bayar, $susuk,
+          $disctot, $ongkir, $saldohut, $tgl_jt, $tgltime,
+          $_SESSION['nm_user'], $voucher
+      ])
+  ]);
+  $print_url = 'f_jual_cetak_sm.php?' . $print_url_params;
+  
+  // Response JSON dengan script yang akan dieksekusi
+  header('Content-Type: application/json');
+  
+  // Escape script untuk JSON
+  $script_content = '<script>
+(function() {
+  try {
+    // Buat window baru untuk print nota
+    var printWindow = window.open(' . json_encode($print_url) . ', "_blank", "width=300,height=600");
+    
+    if (!printWindow) {
+      console.error("❌ Popup blocked! Please allow popups for this site.");
+      alert("Popup diblokir! Silakan izinkan popup untuk situs ini.");
+      return;
+    }
+    
+    // Tunggu window selesai load, lalu coba print server lokal atau browser print
+    printWindow.onload = function() {
+      // Coba gunakan print server lokal jika tersedia
+      var printData = {
+        url: ' . json_encode($print_url) . ',
+        printerName: "GP-80220(Cut) Series"
+      };
+      
+      fetch("http://localhost:3000/print/url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(printData),
+      })
+      .then(function(response) {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Print server tidak tersedia");
+      })
+      .then(function(data) {
+        console.log("✅ Print server response:", data);
+        if (data.success) {
+          console.log("✅ Nota dikirim ke print server lokal");
+          setTimeout(function() { 
+            printWindow.close(); 
+          }, 500);
+        } else {
+          console.warn("⚠️ Print server reported failure, falling back to browser print");
+          setTimeout(function() {
+            printWindow.print();
+            setTimeout(function() { 
+              printWindow.close(); 
+            }, 1000);
+          }, 500);
+        }
+      })
+      .catch(function(error) {
+        console.log("🖨️ Menggunakan browser print dialog:", error.message);
+        setTimeout(function() {
+          printWindow.print();
+          setTimeout(function() { 
+            printWindow.close(); 
+          }, 1000);
+        }, 500);
+      });
+    };
+    
+    // Fallback jika onload tidak terpicu (untuk beberapa browser)
+    setTimeout(function() {
+      if (printWindow && !printWindow.closed) {
+        printWindow.print();
+        setTimeout(function() { 
+          printWindow.close(); 
+        }, 1000);
+      }
+    }, 2000);
+    
+    console.log("✅ Window print nota dibuka");
+  } catch(e) {
+    console.error("❌ Error opening print window:", e);
+    alert("Gagal membuka window print: " + e.message);
+  }
+})();
+</script>';
+  
+  echo json_encode(array('hasil'=>$script_content));
 ?>
