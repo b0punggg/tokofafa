@@ -797,49 +797,10 @@
             }
           },
           success: function(response){ 
-            console.log('📄 Response from f_jual_cetnota.php received');
-            var htmlContent = response.hasil || '';
-            
-            if (!htmlContent) {
-              console.error('❌ Empty response from f_jual_cetnota.php');
-              return;
-            }
-            
-            // Extract and execute scripts IMMEDIATELY
-            var scripts = [];
-            htmlContent.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, function(match, scriptContent) {
-              if (scriptContent && scriptContent.trim()) {
-                scripts.push(scriptContent);
-              }
-              return '';
-            });
-            
-            console.log('📜 Found', scripts.length, 'script(s) to execute from f_jual_cetnota.php');
-            
-            // Execute scripts IMMEDIATELY - don't wait for DOM injection
-            // The IIFE in f_jual_cetnota.php will execute immediately when eval() runs
-            scripts.forEach(function(script, index) {
-              try {
-                console.log('▶️ Executing print script', index + 1, 'of', scripts.length);
-                console.log('📝 Script preview:', script.substring(0, 100) + '...');
-                // Execute immediately without delay - IIFE will run immediately
-                eval(script);
-                console.log('✅ Script', index + 1, 'executed successfully');
-              } catch(e) {
-                console.error('❌ Print script error:', e);
-                console.error('Error message:', e.message);
-                console.error('Error stack:', e.stack);
-                console.error('Script content:', script.substring(0, 300));
-              }
-            });
-            
-            // Inject cleaned HTML (optional, for display purposes)
-            var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-            $("#viewcetnot").html(cleanHtml);
+            $("#viewcetnot").html(response.hasil);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            console.error('Cetak nota error:', xhr.responseText);
-            alert('Gagal mencetak nota: ' + xhr.responseText); // munculkan alert
+            alert(xhr.responseText); // munculkan alert
           }
         });
       }

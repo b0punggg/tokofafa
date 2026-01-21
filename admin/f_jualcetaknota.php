@@ -129,7 +129,40 @@
 
       }
       $Text .= spasistr('',$def)."-----------------------------------------------\n"; 
-      $Text .= spasistr('',7+$def).spasinum("Total",15).spasistr('',4).'Rp. '.spasinum(gantiti($total),16)."\n";      
+      $Text .= spasistr('',7+$def).spasinum("Total",15).spasistr('',4).'Rp. '.spasinum(gantiti($total),16)."\n";
+      
+      // Ambil disctot, voucher, ongkir dari mas_jual
+      $cek_tot = mysqli_query($connect, "SELECT tot_disc, ongkir FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+      $disctot = 0;
+      $voucher = 0;
+      $ongkir = 0;
+      if ($cek_tot && mysqli_num_rows($cek_tot) > 0) {
+        $dt_tot = mysqli_fetch_assoc($cek_tot);
+        $disctot = isset($dt_tot['tot_disc']) ? floatval($dt_tot['tot_disc']) : 0;
+        $ongkir = isset($dt_tot['ongkir']) ? floatval($dt_tot['ongkir']) : 0;
+        // Voucher biasanya termasuk dalam tot_disc, atau bisa diambil dari kolom terpisah jika ada
+        // Untuk sementara, anggap voucher = 0 atau bagian dari disctot
+      }
+      if ($cek_tot) {
+        mysqli_free_result($cek_tot);
+      }
+      unset($cek_tot, $dt_tot);
+      
+      // Tampilkan disctot jika ada
+      if ($disctot > 0) {
+        $Text .= spasistr('',7+$def).spasinum("Disc Nota",15).spasistr('',4).'Rp. '.spasinum(gantiti(round($disctot,0)),16)."\n";
+      }
+      
+      // Tampilkan voucher jika ada (biasanya sudah termasuk dalam disctot, tapi jika terpisah)
+      // if ($voucher > 0) {
+      //   $Text .= spasistr('',7+$def).spasinum("Voucher",15).spasistr('',4).'Rp. '.spasinum(gantiti(round($voucher,0)),16)."\n";
+      // }
+      
+      // Tampilkan ongkir jika ada
+      if ($ongkir > 0) {
+        $Text .= spasistr('',7+$def).spasinum("Ongkir",15).spasistr('',4).'Rp. '.spasinum(gantiti(round($ongkir,0)),16)."\n";
+      }
+      
       if($kd_bayar=="TUNAI"){
         $Text .= spasistr('',7+$def).spasinum("Uang Tunai",15).spasistr('',4).'Rp. '.spasinum(gantiti($bayar),16)."\n";
         $Text .= spasistr('',7+$def).spasinum("Kembali",15).spasistr('',4).'Rp. '.spasinum(gantiti($susuk),16)."\n";
@@ -160,12 +193,42 @@
         $printer = call_user_func('printer_open', $printer_name);
         
         if ($printer) {
-          call_user_func('printer_set_option', $printer, PRINTER_MODE, "RAW");
-          call_user_func('printer_write', $printer, $Text);    
-          call_user_func('printer_close', $printer);
+          try {
+            call_user_func('printer_set_option', $printer, PRINTER_MODE, "RAW");
+            call_user_func('printer_write', $printer, $Text);    
+            call_user_func('printer_close', $printer);
+            // Log success untuk debugging
+            error_log("Thermal printing berhasil: Nota $no_fakjual dicetak ke printer $printer_name");
+          } catch (Exception $e) {
+            error_log("Error saat mencetak ke printer: " . $e->getMessage());
+            call_user_func('printer_close', $printer);
+          }
         } else {
-          // Jika printer tidak ditemukan, log error
-          error_log("Printer $printer_name tidak ditemukan atau tidak dapat dibuka");
+          // Jika printer tidak ditemukan, coba printer alternatif
+          $alt_printers = ["GP-80250N Series", "POS-80C", "ZJ-80"];
+          $printed = false;
+          
+          foreach ($alt_printers as $alt_printer) {
+            $printer = call_user_func('printer_open', $alt_printer);
+            if ($printer) {
+              try {
+                call_user_func('printer_set_option', $printer, PRINTER_MODE, "RAW");
+                call_user_func('printer_write', $printer, $Text);    
+                call_user_func('printer_close', $printer);
+                error_log("Thermal printing berhasil dengan printer alternatif: $alt_printer");
+                $printed = true;
+                break;
+              } catch (Exception $e) {
+                error_log("Error saat mencetak ke printer $alt_printer: " . $e->getMessage());
+                call_user_func('printer_close', $printer);
+              }
+            }
+          }
+          
+          if (!$printed) {
+            // Jika semua printer gagal, log error
+            error_log("Semua printer tidak ditemukan atau tidak dapat dibuka. Printer yang dicoba: $printer_name, " . implode(", ", $alt_printers));
+          }
         }
       } else {
         // Jika extension printer tidak tersedia, log error
