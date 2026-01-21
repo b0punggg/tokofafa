@@ -39,6 +39,8 @@
     
     $sql=mysqli_query($connect,"SELECT * FROM mas_brg WHERE kd_brg='$param' ");
     $no=0;
+    // Tambahkan timestamp untuk membuat id lebih unik dan menghindari duplikasi
+    $unique_suffix = '_' . time() . '_' . rand(1000, 9999);
     while ($data=mysqli_fetch_array($sql)) { 	
       //echo $data['kd_kem1'];
       $no=$no+1;
@@ -52,17 +54,17 @@
       <tr>
         <td align="left">
           <input class="w3-input" type="text" 
-          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
-          onclick="document.getElementById('<?='tmb1'.$no?>').click();"
+          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();}" 
+          onclick="document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();"
           value="<?php echo $satkecil1; ?>" 
-          readonly tabindex='8' id="<?='nm_satu1'.$no?>" 
+          readonly tabindex='8' id="<?='nm_satu1'.$no.$unique_suffix?>" 
           style="border: none;background-color: transparent;cursor:pointer">
         </td>
 
         <td align="left">
           <input class="w3-input" type="text" 
-          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no?>').click();}" 
-          onclick="document.getElementById('<?='tmb1'.$no?>').click();"
+          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();}" 
+          onclick="document.getElementById('<?='tmb1'.$no.$unique_suffix?>').click();"
           value="<?php echo $satkecil1_1; ?>" 
           readonly id="<?='nm_satu1'.$no?>" 
           style="border: none;background-color: transparent;cursor: pointer">
@@ -78,7 +80,7 @@
                getdiscpromo(document.getElementById('kd_brg').value, <?=isset($data['hrg_jum1']) ? floatval($data['hrg_jum1']) : 0 ?>);
                document.getElementById('tabkem').style.display='none';
                document.getElementById('tmb-add').focus()"          
-          readonly id="<?='tmb1'.$no?>" 
+          readonly id="<?='tmb1'.$no.$unique_suffix?>" 
           style="cursor: pointer;font-size: 10pt;color: white;background-image: url('img/searchicok.png');background-repeat: no-repeat;background-position: 10px 3px;padding: 0px 5px 0px 26px;">
         </td>    
       </tr>
@@ -87,17 +89,17 @@
       <tr>
         <td>
           <input class="w3-input" type="text" 
-          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb4'.$no?>').click();}" 
-          onclick="document.getElementById('<?='tmb4'.$no?>').click();"
+          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb4'.$no.$unique_suffix?>').click();}" 
+          onclick="document.getElementById('<?='tmb4'.$no.$unique_suffix?>').click();"
           value="<?php echo $satkecil2; ?>" 
-          readonly tabindex='8' id="<?='nm_satu2'.$no?>" 
+          readonly tabindex='8' id="<?='nm_satu2'.$no.$unique_suffix?>" 
           style="border: none;background-color: transparent;cursor:pointer">
         </td>
 
         <td>
           <input class="w3-input" type="text" 
-          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb4'.$no?>').click();}" 
-          onclick="document.getElementById('<?='tmb4'.$no?>').click();"
+          onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb4'.$no.$unique_suffix?>').click();}" 
+          onclick="document.getElementById('<?='tmb4'.$no.$unique_suffix?>').click();"
           value="<?php echo $satkecil2_1; ?>" 
           readonly 
           style="border: none;background-color: transparent;cursor: pointer">    
@@ -115,7 +117,7 @@
                getdiscpromo(document.getElementById('kd_brg').value, <?=isset($data['hrg_jum2']) ? floatval($data['hrg_jum2']) : 0 ?>);
                document.getElementById('tabkem').style.display='none';
                document.getElementById('tmb-add').focus()"
-          readonly id="<?='tmb4'.$no?>" 
+          readonly id="<?='tmb4'.$no.$unique_suffix?>" 
           style="cursor: pointer;font-size: 10pt;color: white;background-image: url('img/searchicok.png');background-repeat: no-repeat;background-position: 10px 3px;padding: 0px 5px 0px 26px;">
         </td>    
       </tr>
@@ -123,10 +125,10 @@
 
       <?php if($data['kd_kem3']>1){ ?>
       <tr>
-        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb3'.$no?>').click();}" value="<?php echo $satkecil3; ?>" readonly tabindex='8' id="<?='nm_satu3'.$no?>" style="border: none;outline: none;background-color: transparent;"></td>
+        <td align="left"><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='tmb3'.$no.$unique_suffix?>').click();}" value="<?php echo $satkecil3; ?>" readonly tabindex='8' id="<?='nm_satu3'.$no.$unique_suffix?>" style="border: none;outline: none;background-color: transparent;"></td>
         <td align="left"><?php echo $satkecil3_1; ?></td>
         <td>
-          	<button id="<?='tmb3'.$no?>" onclick="document.getElementById('kd_sat').value='<?=mysqli_escape_string($connect,$data['kd_kem3']) ?>';
+          	<button id="<?='tmb3'.$no.$unique_suffix?>" onclick="document.getElementById('kd_sat').value='<?=mysqli_escape_string($connect,$data['kd_kem3']) ?>';
           	   document.getElementById('nm_sat').value='<?=$satkecil3?>';
                cekjmlstok(document.getElementById('kd_sat').value,document.getElementById('kd_brg').value);
                // Ambil discount promo dengan harga jual

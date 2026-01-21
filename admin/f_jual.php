@@ -144,6 +144,9 @@
       } 
 
       function carisatbrg(){
+        // Bersihkan konten lama terlebih dahulu untuk menghindari duplikasi id
+        $("#tabkem").empty();
+        
         $.ajax({
           url: 'f_jual_carisat.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET

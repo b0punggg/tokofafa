@@ -1,11 +1,24 @@
  
 <?php
-  $keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX  
-  ob_start();
-  include 'config.php';
-  session_start();
-  $connect=opendtcek();
-  $keyword=mysqli_escape_string($connect,$_POST['keyword']);
+  // File ini di-include dari f_jual_cetnota.php
+  // Pastikan config.php sudah di-include
+  if (!function_exists('opendtcek')) {
+    include_once 'config.php';
+  }
+  
+  // Pastikan session sudah dimulai
+  if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+  }
+  
+  // Pastikan $connect tersedia, jika belum ada buat baru
+  if (!isset($connect) || !$connect) {
+    $connect = opendtcek();
+  }
+  
+  // Ambil keyword dari $_POST yang sudah diset oleh f_jual_cetnota.php
+  $keyword = isset($_POST['keyword']) ? $_POST['keyword'] : '';
+  $keyword = mysqli_real_escape_string($connect, $keyword);
   //echo $keyword;
   $x=explode(';', $keyword);
   $kd_toko=$x[0];
@@ -104,10 +117,9 @@
         }
         
         // Gunakan call_user_func untuk menghindari linter error
-        $printer_name = "ZJ-80";
         //$printer_name = "GP-80250N Series"; // Alternatif 1
         //$printer_name = "POS-80C"; // Alternatif 2
-        //$printer_name = "GP-80220(Cut) Series"; // Alternatif 3
+        $printer_name = "GP-80220(Cut) Series"; // Printer default yang digunakan sebelumnya
         
         $printer = call_user_func('printer_open', $printer_name);
         
@@ -124,13 +136,8 @@
         error_log("PHP Printer extension tidak tersedia. Pastikan extension php_printer.dll sudah diaktifkan di php.ini");
       }
     }
-
     
-?>    
-<?php
-  $html = ob_get_contents(); // Masukan isi dari view.php ke dalam variabel $html
-  ob_end_clean();
-  // Buat array dengan index hasil dan value nya $html
-  // Lalu konversi menjadi JSON
-  echo json_encode(array('hasil'=>$html));
+    // File ini di-include oleh f_jual_cetnota.php
+    // Output buffering dan JSON encoding ditangani oleh file yang meng-include
+    // Tidak perlu ob_get_contents, ob_end_clean, atau json_encode di sini
 ?>

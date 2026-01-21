@@ -1019,7 +1019,7 @@
                    "
                   ><i class="fa fa-save"></i> Simpan</button>   
                 <?php } else {?>     
-                  <button id='tmb-simpan' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px" disabled><i class="fa fa-save"></i> Simpan</button>     
+                  <button id='tmb-simpan-disabled' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px" disabled><i class="fa fa-save"></i> Simpan</button>     
                 <?php } ?>
                 <button onclick="document.getElementById('form-bayar').style.display='none'" type="button" class="btn btn-warning" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px"><i class="fa fa-undo"></i> Batal</button>   
 
