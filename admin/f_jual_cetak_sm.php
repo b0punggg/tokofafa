@@ -283,22 +283,25 @@ th, td {
   </body>
   <script>
     // Fungsi untuk print langsung ke printer thermal tanpa dialog
-    // Ini adalah metode yang digunakan sebelumnya untuk print otomatis
+    // Metode ini mengirim HTML content langsung ke print server tanpa membuka window
     (function() {
-      var printUrl = window.location.href;
       var printed = false;
       
       function attemptPrint() {
         if (printed) return;
         
-        // Metode 1: Coba print server lokal (port 3000) - untuk print langsung tanpa dialog
-        fetch("http://localhost:3000/print/url", {
+        // Ambil HTML content dari halaman ini
+        var htmlContent = document.documentElement.outerHTML;
+        
+        // Metode 1: Kirim HTML content langsung ke print server (port 3000)
+        fetch("http://localhost:3000/print/html", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            url: printUrl,
-            printerName: "POS58 Printer" // Ganti dengan nama printer thermal Anda
-          })
+            html: htmlContent,
+            printerName: "POS58 Printer"
+          }),
+          signal: AbortSignal.timeout(2000)
         })
         .then(function(response) {
           if (response.ok) {
@@ -320,14 +323,15 @@ th, td {
           throw new Error("Print gagal");
         })
         .catch(function(error) {
-          // Metode 2: Coba print server alternatif
-          return fetch("http://localhost:8080/print", {
+          // Metode 2: Coba print server alternatif dengan HTML content
+          return fetch("http://localhost:8080/print/html", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              url: printUrl,
+              html: htmlContent,
               printer: "POS58 Printer"
-            })
+            }),
+            signal: AbortSignal.timeout(2000)
           })
           .then(function(response) {
             if (response.ok) {
@@ -344,15 +348,19 @@ th, td {
           });
         })
         .catch(function(error) {
-          // Metode 3: Print langsung menggunakan window.print() tanpa membuka dialog baru
-          // Catatan: Browser modern akan menampilkan dialog, tapi kita coba langsung print
+          // Metode 3: Gunakan WebUSB/Web Serial API jika printer mendukung
+          if (navigator.serial || navigator.usb) {
+            console.log("🖨️ Mencoba print langsung via WebUSB/Web Serial");
+            // Implementasi WebUSB/Web Serial akan ditambahkan jika printer mendukung
+          }
+          
+          // Metode 4: Fallback - gunakan window.print() (akan muncul dialog di browser modern)
           if (!printed) {
-            // Coba print langsung (beberapa browser akan langsung print jika printer sudah dipilih sebelumnya)
+            console.warn("⚠️ Print server tidak tersedia, menggunakan window.print() (akan muncul dialog print)");
             setTimeout(function() {
               try {
                 window.print();
                 printed = true;
-                // Tutup window setelah print (jika dibuka dari popup)
                 setTimeout(function() {
                   if (window.opener) {
                     window.close();

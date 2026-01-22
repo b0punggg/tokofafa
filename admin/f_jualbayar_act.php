@@ -892,87 +892,78 @@ if ($d && $pil_cetak =="CETAK-SM"){
   }
   unset($cek_member_print,$dt_member_print);
   
-  $print_url = 'f_jual_cetak_sm.php?nof=' . urlencode($no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$kd_pel.';'.$nm_toko.';'.$al_toko.';'.$nm_pel.';'.$alamat.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$disctot.';'.$ongkir.';'.$saldohut.';'.$tgl_jt.';'.$jam.';'.$_SESSION['nm_user'].';'.$voucher.';'.$kd_member_print.';'.$nm_member_print.';'.$poin_earned_print.';'.$poin_saldo_print);
+  // Format dtc sesuai dengan script lama untuk get_nota.php
+  $dtc = $no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$nm_pel.';'.$alamat.';'.$jam.';'.$disctot.';'.$voucher.';'.$ongkir.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$saldohut.';'.gantitgl($tgl_jt);
   ?>
   <script>
-    // Print langsung tanpa membuka window baru menggunakan iframe tersembunyi
-    (function() {
-      var printUrl = <?=json_encode($print_url)?>;
-      
-      // Coba print server lokal terlebih dahulu (untuk print langsung tanpa dialog)
-      fetch("http://localhost:3000/print/url", {
+    // Print langsung menggunakan metode script lama yang terbukti bekerja
+    // Mengirim JSON data langsung ke print server tanpa membuka window
+    async function fetchJSON(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        try {
+          return await res.json();
+        } catch (jsonErr) {
+          const raw = await res.text();
+          console.error("❌ JSON Parse Error:", jsonErr.message);
+          console.log("📜 RAW RESPONSE:\n", raw);
+          throw jsonErr;
+        }
+      } catch (err) {
+        console.error("❌ Fetch Error:", err);
+        throw err;
+      }
+    }
+    
+    fetch("get_nota.php?dts=<?=addslashes($dtc)?>")
+    .then(res => res.json())
+    .then(data => {
+      console.log("✅ Parsed JSON:", data);
+      fetch("http://localhost:3000/print/nota", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: printUrl,
-          printerName: "POS58 Printer"
-        }),
-        signal: AbortSignal.timeout(1000)
+        body: JSON.stringify(data.data)
       })
-      .then(function(response) {
-        if (response.ok) {
-          return response.json();
+      .then(res => {
+        const ct = res.headers.get("content-type") || "";
+        if (!res.ok) {
+          if (ct.includes("application/json")) {
+            return res.json().then(obj => Promise.reject({ status: res.status, body: obj }));
+          } else {
+            return res.text().then(txt => Promise.reject({ status: res.status, body: txt }));
+          }
         }
-        throw new Error("Print server tidak tersedia");
+        if (ct.includes("application/json")) return res.json();
+        return res.text();
       })
-      .then(function(data) {
-        if (data.success) {
-          console.log("✅ Nota dikirim langsung ke printer thermal tanpa dialog");
-          return true;
-        }
-        throw new Error("Print gagal");
+      .then(result => {
+        console.log("✅ Response from print bridge:", result);
       })
-      .catch(function(error) {
-        // Jika print server tidak tersedia, gunakan iframe tersembunyi untuk print langsung
-        var iframe = document.createElement("iframe");
-        iframe.style.position = "fixed";
-        iframe.style.right = "0";
-        iframe.style.bottom = "0";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "0";
-        iframe.style.opacity = "0";
-        iframe.style.pointerEvents = "none";
-        iframe.src = printUrl;
-        document.body.appendChild(iframe);
-        
-        var printAttempted = false;
-        function doPrint() {
-          if (printAttempted) return;
-          printAttempted = true;
-          
-          try {
-            // Print langsung tanpa membuka window baru
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            
-            // Hapus iframe setelah beberapa detik
-            setTimeout(function() {
-              if (iframe && iframe.parentNode) {
-                document.body.removeChild(iframe);
-              }
-            }, 2000);
-          } catch(e) {
-            console.error("Error printing via iframe:", e);
-            if (iframe && iframe.parentNode) {
-              document.body.removeChild(iframe);
+      .catch(err => {
+        console.error("❌ Print request failed:", err);
+        // Fallback: coba print server alternatif
+        fetch("get_nota.php?dts=<?=addslashes($dtc)?>")
+        .then(res => res.json())
+        .then(data => {
+          fetch("http://localhost:8080/print/nota", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data.data)
+          })
+          .then(res => {
+            if (res.ok) {
+              console.log("✅ Nota dikirim ke print server alternatif");
             }
-          }
-        }
-        
-        // Tunggu iframe load
-        iframe.onload = function() {
-          setTimeout(doPrint, 300);
-        };
-        
-        // Fallback timeout
-        setTimeout(function() {
-          if (!printAttempted) {
-            doPrint();
-          }
-        }, 2000);
+          })
+          .catch(err => {
+            console.error("❌ Print server alternatif juga gagal:", err);
+          });
+        });
       });
-    })();
+    })
+    .catch(err => {
+      console.error("❌ Error fetching nota data:", err);
+    });
   </script>
   <?php 
 }  

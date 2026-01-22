@@ -136,128 +136,84 @@
     exit; // Keluar langsung setelah print, jangan lanjut ke mode online
     
   } else {
-    // MODE ONLINE: Gunakan print langsung tanpa membuka window baru
-    // Buat URL untuk HTML print
-    $print_url_params = http_build_query([
-        'nof' => implode(';', [
-            $no_fakjual, $tgl_jual, $kd_toko, $kd_pel,
-            $nm_toko, $al_toko,
-            $nm_pel, $alamat, $kd_bayar, $bayar, $susuk,
-            $disctot, $ongkir, $saldohut, $tgl_jt, $tgltime,
-            $_SESSION['nm_user'], $voucher,
-            $kd_member, $nm_member, $poin_earned, $poin_saldo
-        ])
+    // MODE ONLINE: Gunakan metode script lama yang terbukti bekerja
+    // Format dtc sesuai dengan script lama: no_fakjual;tgl_jual;kd_toko;nm_pel;alamat;tgltime;disctot;voucher;ongkir;kd_bayar;bayar;susuk;saldohut;tgl_jt
+    $dtc = implode(';', [
+        $no_fakjual, $tgl_jual, $kd_toko, $nm_pel, $alamat, 
+        $tgltime, $disctot, $voucher, $ongkir, $kd_bayar, 
+        $bayar, $susuk, $saldohut, $tgl_jt
     ]);
-    $print_url = 'f_jual_cetak_sm.php?' . $print_url_params;
     
     header('Content-Type: application/json');
     
-    // Gunakan iframe tersembunyi untuk print langsung tanpa membuka window baru
+    // Gunakan metode script lama yang terbukti bekerja - kirim JSON data langsung ke print server
     $script_content = '<script>
-(function() {
+async function fetchJSON(url, options = {}) {
   try {
-    var printUrl = ' . json_encode($print_url) . ';
-    
-    // Metode 1: Coba print server lokal terlebih dahulu (untuk print langsung tanpa dialog)
-    fetch("http://localhost:3000/print/url", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        url: printUrl,
-        printerName: "POS58 Printer"
-      }),
-      signal: AbortSignal.timeout(1000)
-    })
-    .then(function(response) {
-      if (response.ok) {
-        return response.json();
+    const res = await fetch(url, options);
+    try {
+      return await res.json();
+    } catch (jsonErr) {
+      const raw = await res.text();
+      console.error("❌ JSON Parse Error:", jsonErr.message);
+      console.log("📜 RAW RESPONSE:\n", raw);
+      throw jsonErr;
+    }
+  } catch (err) {
+    console.error("❌ Fetch Error:", err);
+    throw err;
+  }
+}
+
+fetch("get_nota.php?dts=' . addslashes($dtc) . '")
+.then(res => res.json())
+.then(data => {
+  console.log("✅ Parsed JSON:", data);
+  fetch("http://localhost:3000/print/nota", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data.data)
+  })
+  .then(res => {
+    const ct = res.headers.get("content-type") || "";
+    if (!res.ok) {
+      if (ct.includes("application/json")) {
+        return res.json().then(obj => Promise.reject({ status: res.status, body: obj }));
+      } else {
+        return res.text().then(txt => Promise.reject({ status: res.status, body: txt }));
       }
-      throw new Error("Print server tidak tersedia");
-    })
-    .then(function(data) {
-      if (data.success) {
-        console.log("✅ Nota dikirim langsung ke printer thermal tanpa dialog");
-        return true;
-      }
-      throw new Error("Print gagal");
-    })
-    .catch(function(error) {
-      // Metode 2: Coba print server alternatif
-      return fetch("http://localhost:8080/print", {
+    }
+    if (ct.includes("application/json")) return res.json();
+    return res.text();
+  })
+  .then(result => {
+    console.log("✅ Response from print bridge:", result);
+  })
+  .catch(err => {
+    console.error("❌ Print request failed:", err);
+    // Fallback: coba print server alternatif
+    fetch("get_nota.php?dts=' . addslashes($dtc) . '")
+    .then(res => res.json())
+    .then(data => {
+      fetch("http://localhost:8080/print/nota", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: printUrl,
-          printer: "POS58 Printer"
-        }),
-        signal: AbortSignal.timeout(1000)
+        body: JSON.stringify(data.data)
       })
-      .then(function(response) {
-        if (response.ok) {
+      .then(res => {
+        if (res.ok) {
           console.log("✅ Nota dikirim ke print server alternatif");
-          return true;
         }
-        throw new Error("Print server alternatif tidak tersedia");
+      })
+      .catch(err => {
+        console.error("❌ Print server alternatif juga gagal:", err);
       });
-    })
-    .catch(function(error) {
-      // Metode 3: Gunakan iframe tersembunyi untuk print langsung tanpa membuka window baru
-      // Ini adalah metode yang digunakan sebelumnya untuk print otomatis
-      var iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.right = "0";
-      iframe.style.bottom = "0";
-      iframe.style.width = "0";
-      iframe.style.height = "0";
-      iframe.style.border = "0";
-      iframe.style.opacity = "0";
-      iframe.style.pointerEvents = "none";
-      iframe.src = printUrl;
-      document.body.appendChild(iframe);
-      
-      // Tunggu iframe selesai load, lalu langsung print tanpa dialog
-      var printAttempted = false;
-      function doPrint() {
-        if (printAttempted) return;
-        printAttempted = true;
-        
-        try {
-          // Coba print langsung (beberapa browser akan langsung print tanpa dialog jika printer sudah dipilih)
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-          
-          // Hapus iframe setelah beberapa detik
-          setTimeout(function() {
-            if (iframe && iframe.parentNode) {
-              document.body.removeChild(iframe);
-            }
-          }, 2000);
-        } catch(e) {
-          console.error("Error printing via iframe:", e);
-          // Jika gagal, hapus iframe
-          if (iframe && iframe.parentNode) {
-            document.body.removeChild(iframe);
-          }
-        }
-      }
-      
-      // Tunggu iframe load
-      iframe.onload = function() {
-        setTimeout(doPrint, 300);
-      };
-      
-      // Fallback timeout
-      setTimeout(function() {
-        if (!printAttempted) {
-          doPrint();
-        }
-      }, 2000);
     });
-    
-  } catch(e) {
-    console.error("❌ Error dalam print:", e);
-  }
-})();
+  });
+})
+.catch(err => {
+  console.error("❌ Error fetching nota data:", err);
+});
 </script>';
     
     echo json_encode(array('hasil'=>$script_content));
