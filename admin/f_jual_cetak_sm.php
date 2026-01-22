@@ -282,18 +282,81 @@ th, td {
   <!-- </section> -->
   </body>
   <script>
+    // Fungsi untuk print langsung ke printer thermal tanpa dialog
+    function silentPrint() {
+      var printUrl = window.location.href;
+      var printed = false;
+      
+      // Metode 1: Coba print server lokal (port 3000) - untuk print langsung tanpa dialog
+      fetch("http://localhost:3000/print/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: printUrl,
+          printerName: "POS58 Printer" // Ganti dengan nama printer thermal Anda
+        })
+      })
+      .then(function(response) {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Print server tidak tersedia");
+      })
+      .then(function(data) {
+        if (data.success) {
+          console.log("✅ Nota dikirim langsung ke printer thermal");
+          printed = true;
+          setTimeout(function() {
+            window.close();
+          }, 500);
+        }
+      })
+      .catch(function(error) {
+        // Metode 2: Coba print server alternatif
+        fetch("http://localhost:8080/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: printUrl,
+            printer: "POS58 Printer"
+          })
+        })
+        .then(function(response) {
+          if (response.ok) {
+            console.log("✅ Nota dikirim ke print server alternatif");
+            printed = true;
+            setTimeout(function() {
+              window.close();
+            }, 500);
+          }
+        })
+        .catch(function(error) {
+          // Metode 3: Jika print server tidak tersedia, gunakan window.print()
+          // Catatan: Browser akan menampilkan dialog print
+          // Untuk menghindari dialog, install print server lokal atau gunakan extension browser
+          if (!printed) {
+            console.log("⚠️ Print server tidak tersedia. Menggunakan browser print.");
+            console.log("💡 Tips: Install print server lokal untuk print langsung tanpa dialog.");
+            setTimeout(function() {
+              window.print();
+            }, 200);
+          }
+        });
+      });
+    }
+    
     // Wait for page to fully load before printing
     window.onload = function() {
       setTimeout(function() {
-        window.print();
-      }, 100);
+        silentPrint();
+      }, 300);
     };
     
     // Fallback if onload doesn't fire
     setTimeout(function() {
       if (document.readyState === 'complete') {
-        window.print();
+        silentPrint();
       }
-    }, 500);
+    }, 800);
   </script>
   </html>

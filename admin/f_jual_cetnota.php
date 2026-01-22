@@ -76,21 +76,42 @@
   
   mysqli_close($connect);
   
-  // CEK: Apakah PHP printer extension tersedia DAN apakah ini localhost?
-  $isLocal = ($_SERVER['HTTP_HOST'] == 'localhost' || 
-              $_SERVER['HTTP_HOST'] == '127.0.0.1' || 
-              strpos($_SERVER['HTTP_HOST'], 'localhost') !== false ||
-              strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
+  // CEK: Apakah ini localhost? (deteksi lebih lengkap)
+  $http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+  $server_name = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : '';
+  $server_addr = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : '';
+  
+  $isLocal = (
+    $http_host == 'localhost' || 
+    $http_host == '127.0.0.1' || 
+    strpos($http_host, 'localhost') !== false ||
+    strpos($http_host, '127.0.0.1') !== false ||
+    $server_name == 'localhost' ||
+    $server_name == '127.0.0.1' ||
+    $server_addr == '127.0.0.1' ||
+    $server_addr == '::1'
+  );
   
   $hasPrinterExtension = function_exists('printer_open');
   
-  if ($isLocal && $hasPrinterExtension) {
-    // MODE LOCAL: Gunakan thermal printing langsung via PHP
+  // Debug logging (bisa dihapus setelah testing)
+  error_log("Print Debug - HTTP_HOST: $http_host, SERVER_NAME: $server_name, SERVER_ADDR: $server_addr, isLocal: " . ($isLocal ? 'YES' : 'NO') . ", hasPrinterExtension: " . ($hasPrinterExtension ? 'YES' : 'NO'));
+  
+  // Jika di localhost, SELALU gunakan thermal printing langsung (dengan atau tanpa extension)
+  // Ini adalah cara yang digunakan sebelumnya untuk print langsung tanpa window
+  if ($isLocal) {
+    // MODE LOCAL: Gunakan thermal printing langsung via PHP (seperti sebelumnya)
     $keyword = $kd_toko.';'.$kd_pel.';'.$no_fakjual.';'.$tgl_jual.';1;'.$kd_bayar.';'.$bayar.';'.$saldohut.';'.$tgl_jt.';'.$susuk;
     $_POST['keyword'] = $keyword;
     
+    // Clear any previous output
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
     ob_start();
+    
     try {
+      // Include file thermal printing (ini yang melakukan print langsung tanpa window)
       include 'f_jualcetaknota.php';
       $thermal_success = true;
     } catch (Exception $e) {
@@ -100,11 +121,19 @@
       $thermal_success = false;
       error_log("Thermal printing fatal error: " . $e->getMessage());
     }
+    
+    // Clear output buffer (tidak perlu output HTML untuk print langsung)
     ob_end_clean();
     
+    // Return JSON response tanpa membuka window baru
     header('Content-Type: application/json');
-    $script_content = '<script>console.log("✅ Thermal printing dilakukan langsung ke printer");</script>';
+    if ($thermal_success) {
+      $script_content = '<script>console.log("✅ Thermal printing dilakukan langsung ke printer tanpa window");</script>';
+    } else {
+      $script_content = '<script>console.log("⚠️ Thermal printing mungkin gagal, cek error log");</script>';
+    }
     echo json_encode(array('hasil'=>$script_content));
+    exit; // Keluar langsung setelah print, jangan lanjut ke mode online
     
   } else {
     // MODE ONLINE: Gunakan client-side printing dengan fallback
@@ -135,14 +164,17 @@
     }
     
     function triggerPrint() {
-      // Coba print server lokal jika tersedia (untuk thermal printer)
+      // Coba beberapa metode print langsung tanpa dialog
+      
+      // Metode 1: Coba print server lokal (port 3000)
       fetch("http://localhost:3000/print/url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: printUrl,
-          printerName: "GP-80220(Cut) Series"
-        })
+          printerName: "POS58 Printer" // Ganti dengan nama printer thermal Anda (cek di Windows Settings > Printers)
+        }),
+        signal: AbortSignal.timeout(1000) // Timeout 1 detik
       })
       .then(function(response) {
         if (response.ok) {
@@ -158,33 +190,87 @@
               printWindow.close(); 
             }
           }, 500);
-        } else {
-          // Fallback ke browser print
-          setTimeout(function() {
-            if (printWindow && !printWindow.closed) {
-              printWindow.print();
-              setTimeout(function() { 
-                if (printWindow && !printWindow.closed) {
-                  printWindow.close(); 
-                }
-              }, 1000);
-            }
-          }, 500);
+          return true;
         }
+        throw new Error("Print gagal");
       })
       .catch(function(error) {
-        // Print server tidak tersedia, gunakan browser print (tidak tampilkan error)
-        console.log("🖨️ Menggunakan browser print dialog");
-        setTimeout(function() {
-          if (printWindow && !printWindow.closed) {
-            printWindow.print();
+        // Metode 2: Coba print server alternatif (port 8080)
+        return fetch("http://localhost:8080/print", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: printUrl,
+            printer: "POS58 Printer"
+          }),
+          signal: AbortSignal.timeout(1000)
+        })
+        .then(function(response) {
+          if (response.ok) {
+            console.log("✅ Nota dikirim ke print server alternatif");
             setTimeout(function() { 
               if (printWindow && !printWindow.closed) {
                 printWindow.close(); 
               }
-            }, 1000);
+            }, 500);
+            return true;
           }
-        }, 500);
+          throw new Error("Print server alternatif tidak tersedia");
+        });
+      })
+      .catch(function(error) {
+        // Metode 3: Gunakan WebUSB/Web Serial API untuk printer thermal langsung
+        // Catatan: Hanya bekerja jika printer mendukung WebUSB/Web Serial
+        if (navigator.serial || navigator.usb) {
+          console.log("🖨️ Mencoba print langsung via WebUSB/Web Serial");
+          // Implementasi WebUSB/Web Serial akan ditambahkan jika printer mendukung
+        }
+        
+        // Metode 4: Fallback - gunakan window.print() dengan auto-print
+        // Catatan: Browser modern tetap akan menampilkan dialog
+        console.log("⚠️ Print server tidak tersedia, menggunakan browser print");
+        
+        // Coba gunakan iframe untuk print tanpa popup
+        var iframe = document.createElement("iframe");
+        iframe.style.position = "fixed";
+        iframe.style.right = "0";
+        iframe.style.bottom = "0";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "0";
+        iframe.src = printUrl;
+        document.body.appendChild(iframe);
+        
+        iframe.onload = function() {
+          setTimeout(function() {
+            try {
+              iframe.contentWindow.print();
+              // Tutup iframe setelah print
+              setTimeout(function() {
+                document.body.removeChild(iframe);
+                if (printWindow && !printWindow.closed) {
+                  printWindow.close();
+                }
+              }, 1000);
+            } catch(e) {
+              console.error("Error printing via iframe:", e);
+              // Fallback ke window.print()
+              if (printWindow && !printWindow.closed) {
+                printWindow.print();
+              }
+            }
+          }, 500);
+        };
+        
+        // Fallback timeout untuk iframe
+        setTimeout(function() {
+          if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+          }
+          if (printWindow && !printWindow.closed) {
+            printWindow.print();
+          }
+        }, 3000);
       });
     }
     
