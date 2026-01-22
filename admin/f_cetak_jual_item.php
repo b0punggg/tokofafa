@@ -61,21 +61,37 @@
     
     ini_set('memory_limit', '1024M'); // or you could use 1G
     $pesan    = explode(';',$_GET['pesan']);
-    $tgl1     = $pesan[0];
-    $tgl2     = $pesan[1];
-    $cr_bay   = $pesan[2];
+    $tgl1     = isset($pesan[0]) ? $pesan[0] : '';
+    $tgl2     = isset($pesan[1]) ? $pesan[1] : '';
+    $cr_bay   = isset($pesan[2]) ? $pesan[2] : '';
     $kd_toko  = $_SESSION['id_toko'];
     $nm_toko  = "";
+    $al_toko  = "";
     $tglhi    = $_SESSION['tgl_set'];
     $xx=explode("-",$_SESSION['tgl_set']);
     $blnhi =$xx[1];
     $thnhi =$xx[0];
+    
+    // Escape input untuk mencegah SQL injection
+    $kd_toko = mysqli_real_escape_string($connect, $kd_toko);
+    $tgl1 = mysqli_real_escape_string($connect, $tgl1);
+    $tgl2 = mysqli_real_escape_string($connect, $tgl2);
+    $cr_bay = mysqli_real_escape_string($connect, $cr_bay);
+    
     $cektoko=mysqli_query($connect,"SELECT * FROM toko WHERE kd_toko='$kd_toko'");
-    $sql=mysqli_fetch_assoc($cektoko);
-    $nm_toko=mysqli_escape_string($connect,$sql['nm_toko']);
-    $al_toko=mysqli_escape_string($connect,$sql['al_toko']);
+    if ($cektoko && $cektoko !== false) {
+      $sql=mysqli_fetch_assoc($cektoko);
+      if ($sql) {
+        $nm_toko=mysqli_escape_string($connect,$sql['nm_toko']);
+        $al_toko=mysqli_escape_string($connect,$sql['al_toko']);
+      }
+      mysqli_free_result($cektoko);
+    }
     unset($cektoko,$sql); 
     $a=0;$ket='';
+    $cekjual = false;
+    $sqlret = false;
+    
     if($cr_bay=="TUNAI"){
       $hspan=11;    
       $ket='TUNAI';
@@ -85,6 +101,9 @@
         LEFT JOIN mas_jual ON dum_jual.no_fakjual=mas_jual.no_fakjual
         LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
         WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TUNAI' AND panding=false ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
+      if (!$cekjual) {
+        echo "Error query cekjual: " . mysqli_error($connect);
+      }
 
       $sqlret  = mysqli_query($connect,"SELECT * FROM retur_jual 
       LEFT JOIN dum_jual ON retur_jual.no_urutjual=dum_jual.no_urut 
@@ -94,6 +113,9 @@
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
       WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' 
       ORDER BY retur_jual.no_urutretur ASC ");
+      if (!$sqlret) {
+        echo "Error query sqlret: " . mysqli_error($connect);
+      }
 
     }else if($cr_bay=="TEMPO"){
       $hspan=12;    
@@ -104,6 +126,9 @@
         LEFT JOIN mas_jual ON dum_jual.no_fakjual=mas_jual.no_fakjual and dum_jual.tgl_jual=mas_jual.tgl_jual
         LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
         WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TEMPO' AND panding=false ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
+      if (!$cekjual) {
+        echo "Error query cekjual: " . mysqli_error($connect);
+      }
 
       $sqlret  = mysqli_query($connect,"SELECT * FROM retur_jual 
       LEFT JOIN dum_jual ON retur_jual.no_urutjual=dum_jual.no_urut 
@@ -112,7 +137,10 @@
       LEFT JOIN pelanggan ON dum_jual.kd_pel=pelanggan.kd_pel 
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
       WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' AND dum_jual.kd_bayar='TEMPO'
-      ORDER BY retur_jual.no_urutretur ASC ");          
+      ORDER BY retur_jual.no_urutretur ASC ");
+      if (!$sqlret) {
+        echo "Error query sqlret: " . mysqli_error($connect);
+      }
     }else{
       $hspan=14;  
       $ket='TUNAI / TEMPO';
@@ -123,6 +151,9 @@
       LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
       WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' AND panding=false 
       ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
+      if (!$cekjual) {
+        echo "Error query cekjual: " . mysqli_error($connect);
+      }
 
       $sqlret  = mysqli_query($connect,"SELECT retur_jual.*,dum_jual.tgl_jual,dum_jual.no_fakjual,dum_jual.nm_brg,dum_jual.hrg_beli,dum_jual.hrg_jual,dum_jual.discitem,dum_jual.discrp,dum_jual.kd_bayar,dum_jual.ket,dum_jual.trf,dum_jual.discvo,dum_jual.execut,pelanggan.nm_pel,kemas.nm_sat1,mas_jual.bayar_uang,mas_jual.saldo_hutang,dum_jual.id_bag,bag_brg.nm_bag FROM retur_jual 
       LEFT JOIN dum_jual ON retur_jual.no_urutjual=dum_jual.no_urut 
@@ -132,8 +163,14 @@
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
       WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' 
       ORDER BY retur_jual.no_urutretur ASC ");
+      if (!$sqlret) {
+        echo "Error query sqlret: " . mysqli_error($connect);
+      }
     } 
     $sqlbag=mysqli_query($connect,"SELECT * FROM bag_brg ORDER by no_urut ASC");
+    if (!$sqlbag) {
+      echo "Error query sqlbag: " . mysqli_error($connect);
+    }
   ?>  
 
 <body class="F4 landscape">      
@@ -167,29 +204,48 @@
         <?php 
             
             // hitung kas toko
+            $uangkas = 0;
+            $totbiaya = 0;
+            $piutcash = 0;
+            $piutrf = 0;
+            
+            $blnhi = mysqli_real_escape_string($connect, $blnhi);
+            $thnhi = mysqli_real_escape_string($connect, $thnhi);
+            
             $cek=mysqli_query($connect,"SELECT SUM(uang_kas) as uangkas FROM kas_harian WHERE kd_toko='$kd_toko' AND MONTH(tgl_kas)='$blnhi' AND YEAR(tgl_kas)='$thnhi'");
-            $dcek=mysqli_fetch_assoc($cek);
-            $uangkas=$dcek['uangkas'];
+            if ($cek && $cek !== false) {
+              $dcek=mysqli_fetch_assoc($cek);
+              $uangkas=$dcek['uangkas'];
+              mysqli_free_result($cek);
+            }
             unset($cek,$dcek);
 
             $cek=mysqli_query($connect,"SELECT SUM(nominal) as totbiaya FROM biaya_ops WHERE kd_toko='$kd_toko' AND MONTH(tgl_biaya)='$blnhi' AND YEAR(tgl_biaya)='$thnhi'");
-            $dcek=mysqli_fetch_assoc($cek);
-            $totbiaya=$dcek['totbiaya'];
+            if ($cek && $cek !== false) {
+              $dcek=mysqli_fetch_assoc($cek);
+              $totbiaya=$dcek['totbiaya'];
+              mysqli_free_result($cek);
+            }
             unset($cek,$dcek);
             
             //hitung jumlah bayar piutang masuk
-            $piutcash=0;$piutrf=0;
             $cekpi=mysqli_query($connect,"SELECT SUM(byr_hutang) AS ptrf FROM mas_jual_hutang WHERE mas_jual_hutang.kd_toko='$kd_toko' and mas_jual_hutang.tgl_tran>='$tgl1' and mas_jual_hutang.tgl_tran<='$tgl2' AND mas_jual_hutang.trf='TRANSFER' AND ket <> 'RETUR'");
-            $dpit=mysqli_fetch_assoc($cekpi);
-            $piutrf=$dpit['ptrf'];
+            if ($cekpi && $cekpi !== false) {
+              $dpit=mysqli_fetch_assoc($cekpi);
+              $piutrf=$dpit['ptrf'];
+              mysqli_free_result($cekpi);
+            }
             unset($cekpi,$dpit);
 
             $cekpi=mysqli_query($connect,"SELECT SUM(byr_hutang) AS pcash FROM mas_jual_hutang WHERE mas_jual_hutang.kd_toko='$kd_toko' and mas_jual_hutang.tgl_tran>='$tgl1' and mas_jual_hutang.tgl_tran<='$tgl2' AND mas_jual_hutang.trf='' AND ket <> 'RETUR'");
-            $dpit=mysqli_fetch_assoc($cekpi);
-            $piutcash=$dpit['pcash'];
+            if ($cekpi && $cekpi !== false) {
+              $dpit=mysqli_fetch_assoc($cekpi);
+              $piutcash=$dpit['pcash'];
+              mysqli_free_result($cekpi);
+            }
             unset($cekpi,$dpit);
             
-            if(mysqli_num_rows($cekjual)>=1){
+            if($cekjual && $cekjual !== false && mysqli_num_rows($cekjual)>=1){
                 $no=0;$tot_hrgjual=0;$tot_jual=0;$jumlah=0;
                 $disc=0;$subtot1=0;$subtot2=0;$totpit=0;$diskon=0;$totdp=0;$dp=0;$jumtrf=0;$jumtun=0;$totdivo=0;$totdisc=0;
                 $nofak="";$tottempo=0;$tottunai=0;
@@ -284,48 +340,50 @@
                     </tr>
                     <?php     
                 } // while
+                mysqli_free_result($cekjual);
 
                 // untuk data retur
                 $totsub=0;$ret=0;$totdisc_r=0;$totdivo_r=0;$divo_r=0;$diskon_r=0;$jmlsub=0;$totdivor=0;$totdiscr=0;
-                while($dret=mysqli_fetch_assoc($sqlret)){
-                  $no++;
-                  if($dret['discrp'] > 0){
-                    $ditem=$dret['discrp'];
-                  }else{
-                    $ditem=0;
-                  }
-                  if($dret['discitem'] > 0){
-                    $dnota=$dret['hrg_jual']*$dret['discitem']/100;
-                  }else{
-                    $dnota=0;
-                  }
-                  if ($dret['discvo']>0){
-                    $divo_r =$dret['hrg_jual']*($dret['discvo']/100);
-                  }else{
-                    $divo_r =0;  
-                  }     
-                  $disc_r=$ditem+$dnota;
-                  $hrgjl=$dret['hrg_jual']-($ditem+$dnota+$divo_r);  
-                  $jmlsub=round($hrgjl*$dret['qty_retur'],0); 
-                  $totsub=$totsub+$jmlsub;
-                  $ex=explode(' ',$dret['execut']);
-                  $etglr=gantitgl($ex[0]).' '.$ex[1];
-                  if ($dret['saldo_hutang']<=$jmlsub ){
-                    $ret=$ret+$jmlsub;
-                    $totdiscr=$totdiscr+($disc_r*$dret['qty_retur']);
-                    $totdivor=$totdivor+($divo_r*$dret['qty_retur']);
-                  }
-                  if($dret['trf']=="TRANSFER"){
-                    $ketr="-TRF";
-                  }else{
-                    $ketr="";
-                  }
-                  if ($dret['kd_bayar']=='TEMPO'){
-                    $nm_pel=' an,'.ucwords(strtolower($dret['nm_pel']));
-                  }else{
-                    $nm_pel="";
-                  }
-                  ?>
+                if ($sqlret && $sqlret !== false) {
+                  while($dret=mysqli_fetch_assoc($sqlret)){
+                    $no++;
+                    if($dret['discrp'] > 0){
+                      $ditem=$dret['discrp'];
+                    }else{
+                      $ditem=0;
+                    }
+                    if($dret['discitem'] > 0){
+                      $dnota=$dret['hrg_jual']*$dret['discitem']/100;
+                    }else{
+                      $dnota=0;
+                    }
+                    if ($dret['discvo']>0){
+                      $divo_r =$dret['hrg_jual']*($dret['discvo']/100);
+                    }else{
+                      $divo_r =0;  
+                    }     
+                    $disc_r=$ditem+$dnota;
+                    $hrgjl=$dret['hrg_jual']-($ditem+$dnota+$divo_r);  
+                    $jmlsub=round($hrgjl*$dret['qty_retur'],0); 
+                    $totsub=$totsub+$jmlsub;
+                    $ex=explode(' ',$dret['execut']);
+                    $etglr=gantitgl($ex[0]).' '.$ex[1];
+                    if ($dret['saldo_hutang']<=$jmlsub ){
+                      $ret=$ret+$jmlsub;
+                      $totdiscr=$totdiscr+($disc_r*$dret['qty_retur']);
+                      $totdivor=$totdivor+($divo_r*$dret['qty_retur']);
+                    }
+                    if($dret['trf']=="TRANSFER"){
+                      $ketr="-TRF";
+                    }else{
+                      $ketr="";
+                    }
+                    if ($dret['kd_bayar']=='TEMPO'){
+                      $nm_pel=' an,'.ucwords(strtolower($dret['nm_pel']));
+                    }else{
+                      $nm_pel="";
+                    }
+                    ?>
                     <tr style="color:red;font-weight:bold">
                       <td style="text-align:right;font-size: 8pt;border-left: 1px solid"><?php echo $no.'.';?></td>
                       <td style="text-align:center;font-size: 8pt"><?php echo gantitgl($dret['tgl_retur']);?></td>
@@ -342,7 +400,9 @@
                       <td style="text-align:center;font-size: 8pt;border-right: 1px solid"><?php echo $dret['nm_bag']; ?></td>
                       <td style="text-align:center;font-size: 8pt;border-right: 1px solid"><?php echo $etglr; ?></td>
                     </tr>
-                  <?php
+                    <?php
+                  }
+                  mysqli_free_result($sqlret);
                 }
                 ?>
                 
@@ -441,28 +501,43 @@
                 <tr><td style="border:none"></td></tr><tr><td style="border:none"></td></tr><tr><td style="border:none"></td></tr>
                 <?php
                 $totbag=$totrt=0;
-                while($dtbag=mysqli_fetch_assoc($sqlbag)){
-                  $id_bag=$dtbag['no_urut'];
-                  $nm_bag=$dtbag['nm_bag'];
-                  $x=explode(";",caritotbag($id_bag,$kd_toko,$tgl1,$tgl2,$cr_bay,$connect));
-                  $totbag=$x[0];
-                  $totrt=$x[1]; 
-                  if($totbag>0){
-                  ?>
-                  <tr style="font-weight:bold">
-                    <td style="border:none"></td>
-                    <td style="border:none;text-align:left;"><i class="fa fa-bullseye">&nbsp;</i>Penjualan &emsp13;&emsp13;<?=ucwords(strtolower($nm_bag))?></td>
-                    <td style="border:none;text-align:right;"><?=gantitides($totbag)?> &emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;</td>
-                    <!-- Bag Retur -->
-                    <td style="border:none;text-align:right;"><i class="fa fa-bullseye">&nbsp;</i>Retur&nbsp;<?=ucwords(strtolower($nm_bag))?>&emsp13;&emsp13;&emsp13;<?=gantitides($totrt)?>&emsp13;&emsp13;&emsp13;<i class="fa fa-check-square-o"></i>&nbsp;Jumlah</td>
-                    <td style="border:none;text-align:right;border-bottom:1px solid black"><?=gantitides($totbag-$totrt)?></td>
-                  </tr>
-                  <?php
+                if ($sqlbag && $sqlbag !== false) {
+                  while($dtbag=mysqli_fetch_assoc($sqlbag)){
+                    $id_bag=$dtbag['no_urut'];
+                    $nm_bag=$dtbag['nm_bag'];
+                    $x=explode(";",caritotbag($id_bag,$kd_toko,$tgl1,$tgl2,$cr_bay,$connect));
+                    $totbag=$x[0];
+                    $totrt=$x[1]; 
+                    if($totbag>0){
+                    ?>
+                    <tr style="font-weight:bold">
+                      <td style="border:none"></td>
+                      <td style="border:none;text-align:left;"><i class="fa fa-bullseye">&nbsp;</i>Penjualan &emsp13;&emsp13;<?=ucwords(strtolower($nm_bag))?></td>
+                      <td style="border:none;text-align:right;"><?=gantitides($totbag)?> &emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;</td>
+                      <!-- Bag Retur -->
+                      <td style="border:none;text-align:right;"><i class="fa fa-bullseye">&nbsp;</i>Retur&nbsp;<?=ucwords(strtolower($nm_bag))?>&emsp13;&emsp13;&emsp13;<?=gantitides($totrt)?>&emsp13;&emsp13;&emsp13;<i class="fa fa-check-square-o"></i>&nbsp;Jumlah</td>
+                      <td style="border:none;text-align:right;border-bottom:1px solid black"><?=gantitides($totbag-$totrt)?></td>
+                    </tr>
+                    <?php
+                    }
                   }
+                  mysqli_free_result($sqlbag);
                 }
                 ?>
                 
             <?php
+            } else {
+              // Tampilkan pesan jika tidak ada data
+              ?>
+              <tr>
+                <td colspan="<?=$hspan?>" style="text-align:center;padding:20px;">
+                  <h3>Tidak ada data penjualan untuk periode <?=gantitgl($tgl1)?> sampai <?=gantitgl($tgl2)?>, Pembayaran <?=$ket?></h3>
+                  <?php if (!$cekjual) { ?>
+                    <p style="color:red;">Error: <?=mysqli_error($connect)?></p>
+                  <?php } ?>
+                </td>
+              </tr>
+              <?php
             } // if  
         ?>  
       </table>    
@@ -475,4 +550,5 @@
     </section>      
     
 </body>
-
+<?php mysqli_close($connect); ?>
+</html>
