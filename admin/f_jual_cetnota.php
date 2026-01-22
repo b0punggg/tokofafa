@@ -136,7 +136,7 @@
     exit; // Keluar langsung setelah print, jangan lanjut ke mode online
     
   } else {
-    // MODE ONLINE: Gunakan client-side printing dengan fallback
+    // MODE ONLINE: Gunakan print langsung tanpa membuka window baru
     // Buat URL untuk HTML print
     $print_url_params = http_build_query([
         'nof' => implode(';', [
@@ -152,144 +152,110 @@
     
     header('Content-Type: application/json');
     
+    // Gunakan iframe tersembunyi untuk print langsung tanpa membuka window baru
     $script_content = '<script>
 (function() {
   try {
     var printUrl = ' . json_encode($print_url) . ';
-    var printWindow = window.open(printUrl, "_blank", "width=300,height=600");
     
-    if (!printWindow) {
-      alert("Popup diblokir! Silakan izinkan popup untuk situs ini.");
-      return;
-    }
-    
-    function triggerPrint() {
-      // Coba beberapa metode print langsung tanpa dialog
-      
-      // Metode 1: Coba print server lokal (port 3000)
-      fetch("http://localhost:3000/print/url", {
+    // Metode 1: Coba print server lokal terlebih dahulu (untuk print langsung tanpa dialog)
+    fetch("http://localhost:3000/print/url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: printUrl,
+        printerName: "POS58 Printer"
+      }),
+      signal: AbortSignal.timeout(1000)
+    })
+    .then(function(response) {
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error("Print server tidak tersedia");
+    })
+    .then(function(data) {
+      if (data.success) {
+        console.log("✅ Nota dikirim langsung ke printer thermal tanpa dialog");
+        return true;
+      }
+      throw new Error("Print gagal");
+    })
+    .catch(function(error) {
+      // Metode 2: Coba print server alternatif
+      return fetch("http://localhost:8080/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           url: printUrl,
-          printerName: "POS58 Printer" // Ganti dengan nama printer thermal Anda (cek di Windows Settings > Printers)
+          printer: "POS58 Printer"
         }),
-        signal: AbortSignal.timeout(1000) // Timeout 1 detik
+        signal: AbortSignal.timeout(1000)
       })
       .then(function(response) {
         if (response.ok) {
-          return response.json();
-        }
-        throw new Error("Print server tidak tersedia");
-      })
-      .then(function(data) {
-        if (data.success) {
-          console.log("✅ Nota dikirim ke print server lokal");
-          setTimeout(function() { 
-            if (printWindow && !printWindow.closed) {
-              printWindow.close(); 
-            }
-          }, 500);
+          console.log("✅ Nota dikirim ke print server alternatif");
           return true;
         }
-        throw new Error("Print gagal");
-      })
-      .catch(function(error) {
-        // Metode 2: Coba print server alternatif (port 8080)
-        return fetch("http://localhost:8080/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: printUrl,
-            printer: "POS58 Printer"
-          }),
-          signal: AbortSignal.timeout(1000)
-        })
-        .then(function(response) {
-          if (response.ok) {
-            console.log("✅ Nota dikirim ke print server alternatif");
-            setTimeout(function() { 
-              if (printWindow && !printWindow.closed) {
-                printWindow.close(); 
-              }
-            }, 500);
-            return true;
-          }
-          throw new Error("Print server alternatif tidak tersedia");
-        });
-      })
-      .catch(function(error) {
-        // Metode 3: Gunakan WebUSB/Web Serial API untuk printer thermal langsung
-        // Catatan: Hanya bekerja jika printer mendukung WebUSB/Web Serial
-        if (navigator.serial || navigator.usb) {
-          console.log("🖨️ Mencoba print langsung via WebUSB/Web Serial");
-          // Implementasi WebUSB/Web Serial akan ditambahkan jika printer mendukung
-        }
+        throw new Error("Print server alternatif tidak tersedia");
+      });
+    })
+    .catch(function(error) {
+      // Metode 3: Gunakan iframe tersembunyi untuk print langsung tanpa membuka window baru
+      // Ini adalah metode yang digunakan sebelumnya untuk print otomatis
+      var iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      iframe.style.opacity = "0";
+      iframe.style.pointerEvents = "none";
+      iframe.src = printUrl;
+      document.body.appendChild(iframe);
+      
+      // Tunggu iframe selesai load, lalu langsung print tanpa dialog
+      var printAttempted = false;
+      function doPrint() {
+        if (printAttempted) return;
+        printAttempted = true;
         
-        // Metode 4: Fallback - gunakan window.print() dengan auto-print
-        // Catatan: Browser modern tetap akan menampilkan dialog
-        console.log("⚠️ Print server tidak tersedia, menggunakan browser print");
-        
-        // Coba gunakan iframe untuk print tanpa popup
-        var iframe = document.createElement("iframe");
-        iframe.style.position = "fixed";
-        iframe.style.right = "0";
-        iframe.style.bottom = "0";
-        iframe.style.width = "0";
-        iframe.style.height = "0";
-        iframe.style.border = "0";
-        iframe.src = printUrl;
-        document.body.appendChild(iframe);
-        
-        iframe.onload = function() {
+        try {
+          // Coba print langsung (beberapa browser akan langsung print tanpa dialog jika printer sudah dipilih)
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+          
+          // Hapus iframe setelah beberapa detik
           setTimeout(function() {
-            try {
-              iframe.contentWindow.print();
-              // Tutup iframe setelah print
-              setTimeout(function() {
-                document.body.removeChild(iframe);
-                if (printWindow && !printWindow.closed) {
-                  printWindow.close();
-                }
-              }, 1000);
-            } catch(e) {
-              console.error("Error printing via iframe:", e);
-              // Fallback ke window.print()
-              if (printWindow && !printWindow.closed) {
-                printWindow.print();
-              }
+            if (iframe && iframe.parentNode) {
+              document.body.removeChild(iframe);
             }
-          }, 500);
-        };
-        
-        // Fallback timeout untuk iframe
-        setTimeout(function() {
-          if (iframe.parentNode) {
+          }, 2000);
+        } catch(e) {
+          console.error("Error printing via iframe:", e);
+          // Jika gagal, hapus iframe
+          if (iframe && iframe.parentNode) {
             document.body.removeChild(iframe);
           }
-          if (printWindow && !printWindow.closed) {
-            printWindow.print();
-          }
-        }, 3000);
-      });
-    }
-    
-    // Tunggu window selesai load
-    if (printWindow.addEventListener) {
-      printWindow.addEventListener("load", triggerPrint);
-    } else if (printWindow.onload) {
-      printWindow.onload = triggerPrint;
-    }
-    
-    // Fallback timeout
-    setTimeout(function() {
-      if (printWindow && !printWindow.closed) {
-        triggerPrint();
+        }
       }
-    }, 2000);
+      
+      // Tunggu iframe load
+      iframe.onload = function() {
+        setTimeout(doPrint, 300);
+      };
+      
+      // Fallback timeout
+      setTimeout(function() {
+        if (!printAttempted) {
+          doPrint();
+        }
+      }, 2000);
+    });
     
   } catch(e) {
-    console.error("❌ Error opening print window:", e);
+    console.error("❌ Error dalam print:", e);
   }
 })();
 </script>';

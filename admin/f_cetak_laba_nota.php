@@ -67,14 +67,28 @@
         $tgl1     = $pesan[0];
         $tgl2     = $pesan[1];
         $kd_toko  = $_SESSION['id_toko'];
+        // Escape input untuk mencegah SQL injection
+        $kd_toko = mysqli_real_escape_string($connect, $kd_toko);
+        $tgl1 = mysqli_real_escape_string($connect, $tgl1);
+        $tgl2 = mysqli_real_escape_string($connect, $tgl2);
+        
         $nm_toko  = "";
         $cektoko=mysqli_query($connect,"SELECT * FROM toko WHERE kd_toko='$kd_toko'");
-        $sql=mysqli_fetch_assoc($cektoko);
-        $nm_toko=mysqli_escape_string($connect,$sql['nm_toko']);
-        $al_toko=mysqli_escape_string($connect,$sql['al_toko']);
+        if ($cektoko && $cektoko !== false) {
+          $sql=mysqli_fetch_assoc($cektoko);
+          if ($sql) {
+            $nm_toko=mysqli_escape_string($connect,$sql['nm_toko']);
+            $al_toko=mysqli_escape_string($connect,$sql['al_toko']);
+          }
+          mysqli_free_result($cektoko);
+        }
         unset($cektoko,$sql); 
-          $cek=mysqli_query($connect,"SELECT * FROM mas_jual where mas_jual.kd_toko='$kd_toko' and mas_jual.tgl_jual>='$tgl1' and mas_jual.tgl_jual<='$tgl2' ORDER BY mas_jual.no_urut ASC");	  	
-          if(mysqli_num_rows($cek)>=1){
+        
+          $cek=mysqli_query($connect,"SELECT * FROM mas_jual where mas_jual.kd_toko='$kd_toko' and mas_jual.tgl_jual>='$tgl1' and mas_jual.tgl_jual<='$tgl2' ORDER BY mas_jual.no_urut ASC");
+        if (!$cek) {
+          echo "<div style='padding:20px;color:red;'>Error: " . mysqli_error($connect) . "</div>";
+        }
+        if($cek && mysqli_num_rows($cek)>=1){
             ?>
              
     	      <table cellspacing="0" style="width: 100%; font-size: 8pt;">
@@ -100,7 +114,8 @@
     	        <?php
               $tot_as_th_d=0;$tot_as_ms_d=0;$tot_laba_th_d=0;$tot_laba_ms_d=0;$hrg_beli_d=0;$uang_ms_d=0;$aset_ms_d=0;$laba_ms_d=0;$tot_jual_d=0;$laba_th=0;
               $ceks=mysqli_query($connect,"SELECT * FROM mas_jual where mas_jual.kd_toko='$kd_toko' and mas_jual.tgl_jual>='$tgl1' and mas_jual.tgl_jual<='$tgl2' AND ket_bayar='BELUM' ORDER BY mas_jual.no_urut ASC");
-              while($databays=mysqli_fetch_assoc($ceks)){
+              if ($ceks && $ceks !== false) {
+                while($databays=mysqli_fetch_assoc($ceks)){
                 $hrg_beli_d=($databays['tot_jual']-$databays['tot_disc'])-$databays['tot_laba'];
                 $uang_ms_d =($databays['tot_jual']-$databays['tot_disc']-$databays['saldo_hutang']);
                 if ($uang_ms_d<=$hrg_beli_d) {
@@ -116,6 +131,8 @@
                 $tot_laba_th_d=$tot_laba_th_d+$databays['tot_laba'];
                 $tot_jual_d=$tot_jual_d+($databays['tot_jual']-$databays['tot_disc']);      
                 
+                }
+                mysqli_free_result($ceks);
               }
               unset($ceks,$databays);
               //laba masuk bulan ini
@@ -127,19 +144,25 @@
                $tglcari  = $endyear.'-'.$endbln.'-'.'01';
                $labamsk  = 0;
 
+               $endbln = mysqli_real_escape_string($connect, $endbln);
+               $endyear = mysqli_real_escape_string($connect, $endyear);
+               $tglcari = mysqli_real_escape_string($connect, $tglcari);
+               
                $cek3=mysqli_query($connect,"SELECT sum(mas_jual_hutang.laba) as labamsk
                FROM mas_jual_hutang 
                WHERE MONTH(mas_jual_hutang.tgl_tran)='$endbln' AND YEAR(mas_jual_hutang.tgl_tran)='$endyear' 
                AND mas_jual_hutang.byr_hutang>0 AND mas_jual_hutang.tgl_jual < '$tglcari' AND mas_jual_hutang.kd_toko='$kd_toko'
                ORDER BY mas_jual_hutang.tgl_tran,mas_jual_hutang.no_fakjual ASC");
-               if (mysqli_num_rows($cek3)>=1){
+               if ($cek3 && $cek3 !== false && mysqli_num_rows($cek3)>=1){
                  $dtcek3=mysqli_fetch_assoc($cek3);
                  $labamsk=$dtcek3['labamsk'];
+                 mysqli_free_result($cek3);
                }
                unset($cek3,$dtcek3);
 
     	        $no=0;$totbeli=0;$no_fakjual='';$tgl_fakjual='0000-00-00';$disc=0;$jumlah=0;$totlaba=0;$totongkir=0;$mar=0;
-    	      	while($databay=mysqli_fetch_assoc($cek)){
+    	      	if ($cek && $cek !== false) {
+    	      	  while($databay=mysqli_fetch_assoc($cek)){
       	      	  $no++;	
       	          $jumlah=$databay['tot_jual']-$databay['tot_disc'];
                   $totbeli=$totbeli+$jumlah;
@@ -189,6 +212,7 @@
                   </tr>   
               <?php 
                   }     
+    	      	  }
     	      	}
               
               // untuk data retur
@@ -200,7 +224,8 @@
                     ORDER BY retur_jual.no_urutretur ASC ");
 
                     $totsub=0;$ret=0;$totlabaret=0;
-                    while($dret=mysqli_fetch_assoc($sqlret)){
+                    if ($sqlret && $sqlret !== false) {
+                      while($dret=mysqli_fetch_assoc($sqlret)){
                       $no++;
                       if($dret['discrp'] > 0){
                         $ditem=$dret['discrp'];
@@ -240,6 +265,8 @@
                           <td style="text-align:right;font-size: 8pt;border-right: 1px solid"><?php echo '0,00' ?>&nbsp;</td>
                         </tr>
                       <?php
+                      }
+                      mysqli_free_result($sqlret);
                     }
               ?>
     	        <tr cellspacing="2" class="yz-theme-l2">
@@ -286,6 +313,16 @@
 
     	      </table>
     	    <?php  	
+          } else {
+            // Tampilkan pesan jika tidak ada data
+            ?>
+            <div style="padding:20px;text-align:center;">
+              <h3>Tidak ada data penjualan untuk periode <?=gantitgl($tgl1)?> sampai <?=gantitgl($tgl2)?></h3>
+              <?php if (!$cek) { ?>
+                <p style="color:red;">Error: <?=mysqli_error($connect)?></p>
+              <?php } ?>
+            </div>
+            <?php
           }?>
     </div>
     <div class="w3-row w3-margin-top">
@@ -297,18 +334,42 @@
 </body>             
 	<?php
 	function hitjmlbrg($no_fakjual,$tgl_jual,$kd_toko){
-      $connect1 = opendtcek(1);
+      $connect1 = opendtcek();
+      // Escape input untuk mencegah SQL injection
+      $no_fakjual = mysqli_real_escape_string($connect1, $no_fakjual);
+      $tgl_jual = mysqli_real_escape_string($connect1, $tgl_jual);
+      $kd_toko = mysqli_real_escape_string($connect1, $kd_toko);
+      
       $cek=mysqli_query($connect1,"SELECT COUNT(*) AS jumlah FROM dum_jual where no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko'");
-      $getjml = mysqli_fetch_array($cek);
-      return mysqli_escape_string($connect1,gantitides($getjml['jumlah']));
-      mysqli_close($connect1);unset($cek,$getjml);
+      if ($cek && $cek !== false) {
+        $getjml = mysqli_fetch_array($cek);
+        $result = mysqli_escape_string($connect1,gantitides($getjml['jumlah']));
+        mysqli_free_result($cek);
+        mysqli_close($connect1);
+        unset($cek,$getjml);
+        return $result;
+      }
+      mysqli_close($connect1);
+      return '0,00';
 	}
 	function carisaldo($no_fakjual,$tgl_jual,$kd_toko){
-      $connect2 = opendtcek(1);
+      $connect2 = opendtcek();
+      // Escape input untuk mencegah SQL injection
+      $no_fakjual = mysqli_real_escape_string($connect2, $no_fakjual);
+      $tgl_jual = mysqli_real_escape_string($connect2, $tgl_jual);
+      $kd_toko = mysqli_real_escape_string($connect2, $kd_toko);
+      
       $cek=mysqli_query($connect2,"SELECT saldo_awal FROM mas_hutang_jual where no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko' ORDER BY no_urut ASC LIMIT 1");
-      $getsld = mysqli_fetch_array($cek);
-      return mysqli_escape_string($connect2,$getsld['saldo_awal']);
-      mysqli_close($connect2);unset($cek,$getsld);
+      if ($cek && $cek !== false) {
+        $getsld = mysqli_fetch_array($cek);
+        $result = mysqli_escape_string($connect2,$getsld['saldo_awal']);
+        mysqli_free_result($cek);
+        mysqli_close($connect2);
+        unset($cek,$getsld);
+        return $result;
+      }
+      mysqli_close($connect2);
+      return '0';
 	}
 ?>
 </page>

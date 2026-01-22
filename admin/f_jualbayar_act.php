@@ -10,7 +10,7 @@
   error_reporting(0);
   ini_set('display_errors', 0);
 
-include 'config.php';
+include_once 'config.php';
 date_default_timezone_set('Asia/Jakarta');
 session_start();
 $kd_toko      = $_SESSION['id_toko'];
@@ -860,12 +860,119 @@ if ($d && $pil_cetak =="CETAK-SM"){
   $alamat=$datacari['al_pel'];
   unset($sqlcari,$datacari);
   $jam=date('d-m-Y / H:m:s');
-  ?>
-   <a id="gocet" style="display:none" href="f_jual_cetak_sm.php?nof=<?=$no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$kd_pel.';'.$nm_toko.';'.$al_toko.';'.$nm_pel.';'.$alamat.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$disctot.';'.$ongkir.';'.$saldohut.';'.$tgl_jt.';'.$jam.';'.$_SESSION['nm_user'].';'.$voucher?>" target="_blank" >webpage print</a>
-
   
+  // Ambil data member untuk print
+  $kd_member_print = '';
+  $nm_member_print = '';
+  $poin_earned_print = 0;
+  $poin_saldo_print = 0;
+  
+  // Cari kd_member dari mas_jual
+  $cek_member_print = mysqli_query($conbayar, "SELECT kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+  if ($cek_member_print && mysqli_num_rows($cek_member_print) > 0) {
+    $dt_member_print = mysqli_fetch_assoc($cek_member_print);
+    $kd_member_print = isset($dt_member_print['kd_member']) ? $dt_member_print['kd_member'] : '';
+    $poin_earned_print = isset($dt_member_print['poin_earned']) ? floatval($dt_member_print['poin_earned']) : 0;
+    
+    if (!empty($kd_member_print)) {
+      $sqlmember_print=mysqli_query($conbayar,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member_print' LIMIT 1");
+      if ($sqlmember_print && mysqli_num_rows($sqlmember_print) > 0) {
+        $datamember_print=mysqli_fetch_assoc($sqlmember_print);
+        $nm_member_print = isset($datamember_print['nm_member']) ? $datamember_print['nm_member'] : '';
+        $poin_saldo_print = isset($datamember_print['poin']) ? floatval($datamember_print['poin']) : 0;
+      }
+      if ($sqlmember_print) {
+        mysqli_free_result($sqlmember_print);
+      }
+      unset($sqlmember_print,$datamember_print);
+    }
+  }
+  if ($cek_member_print) {
+    mysqli_free_result($cek_member_print);
+  }
+  unset($cek_member_print,$dt_member_print);
+  
+  $print_url = 'f_jual_cetak_sm.php?nof=' . urlencode($no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$kd_pel.';'.$nm_toko.';'.$al_toko.';'.$nm_pel.';'.$alamat.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$disctot.';'.$ongkir.';'.$saldohut.';'.$tgl_jt.';'.$jam.';'.$_SESSION['nm_user'].';'.$voucher.';'.$kd_member_print.';'.$nm_member_print.';'.$poin_earned_print.';'.$poin_saldo_print);
+  ?>
   <script>
-    document.getElementById("gocet").click();
+    // Print langsung tanpa membuka window baru menggunakan iframe tersembunyi
+    (function() {
+      var printUrl = <?=json_encode($print_url)?>;
+      
+      // Coba print server lokal terlebih dahulu (untuk print langsung tanpa dialog)
+      fetch("http://localhost:3000/print/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: printUrl,
+          printerName: "POS58 Printer"
+        }),
+        signal: AbortSignal.timeout(1000)
+      })
+      .then(function(response) {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error("Print server tidak tersedia");
+      })
+      .then(function(data) {
+        if (data.success) {
+          console.log("✅ Nota dikirim langsung ke printer thermal tanpa dialog");
+          return true;
+        }
+        throw new Error("Print gagal");
+      })
+      .catch(function(error) {
+        // Jika print server tidak tersedia, gunakan iframe tersembunyi untuk print langsung
+        var iframe = document.createElement("iframe");
+        iframe.style.position = "fixed";
+        iframe.style.right = "0";
+        iframe.style.bottom = "0";
+        iframe.style.width = "0";
+        iframe.style.height = "0";
+        iframe.style.border = "0";
+        iframe.style.opacity = "0";
+        iframe.style.pointerEvents = "none";
+        iframe.src = printUrl;
+        document.body.appendChild(iframe);
+        
+        var printAttempted = false;
+        function doPrint() {
+          if (printAttempted) return;
+          printAttempted = true;
+          
+          try {
+            // Print langsung tanpa membuka window baru
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            
+            // Hapus iframe setelah beberapa detik
+            setTimeout(function() {
+              if (iframe && iframe.parentNode) {
+                document.body.removeChild(iframe);
+              }
+            }, 2000);
+          } catch(e) {
+            console.error("Error printing via iframe:", e);
+            if (iframe && iframe.parentNode) {
+              document.body.removeChild(iframe);
+            }
+          }
+        }
+        
+        // Tunggu iframe load
+        iframe.onload = function() {
+          setTimeout(doPrint, 300);
+        };
+        
+        // Fallback timeout
+        setTimeout(function() {
+          if (!printAttempted) {
+            doPrint();
+          }
+        }, 2000);
+      });
+    })();
   </script>
   <?php 
 }  
