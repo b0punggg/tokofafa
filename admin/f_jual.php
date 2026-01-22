@@ -135,7 +135,35 @@
           success: function(response){ 
             // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
             
+            // Hapus form bayar yang lama sebelum membuat yang baru untuk menghindari duplicate ID
+            var oldFormBayar = document.getElementById('form-bayar');
+            if (oldFormBayar && oldFormBayar.parentNode) {
+              oldFormBayar.parentNode.removeChild(oldFormBayar);
+            }
+            
+            // Hapus semua elemen dengan ID duplikat sebelum menambahkan yang baru
+            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+                               'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
+                               'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
+                               'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
+                               'tgl_jual', 'tgl_jtnota', 'nm_pel_byr', 'poin_member', 'btn-fpel', 
+                               'boxpelbay_1', 'viewidmemberbayar', 'btn-fmember', 'btn-baypil', 'tabbay'];
+            duplicateIds.forEach(function(id) {
+              var elements = document.querySelectorAll('#' + id);
+              // Hapus semua kecuali yang pertama (jika ada lebih dari satu)
+              for (var i = 1; i < elements.length; i++) {
+                if (elements[i] && elements[i].parentNode) {
+                  elements[i].parentNode.removeChild(elements[i]);
+                }
+              }
+            });
+            
             $("#viewbrgjual").html(response.hasil);
+            
+            // Delay pengecekan duplicate IDs setelah content di-load
+            setTimeout(function() {
+              checkDuplicateFormIds();
+            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
             alert(xhr.responseText); // munculkan alert
@@ -145,15 +173,67 @@
 
       function carisatbrg(){
         // Bersihkan konten lama terlebih dahulu untuk menghindari duplikasi id
-        $("#tabkem").empty();
+        var tabkemContainer = document.getElementById('tabkem');
+        if (tabkemContainer) {
+          // Hapus SEMUA elemen di dalam tabkem terlebih dahulu
+          while (tabkemContainer.firstChild) {
+            tabkemContainer.removeChild(tabkemContainer.firstChild);
+          }
+        }
         
         // Hapus semua elemen dengan ID yang mungkin duplikat sebelum load content baru
         // Hapus dari seluruh dokumen, tidak hanya dari tabkem
+        // Gunakan selector yang lebih spesifik untuk menghindari false positive
+        // Pattern: tmb1, tmb11, tmb12, tmb13, tmb14, tmb15, tmb16, tmb17, tmb18, tmb19, tmb110
+        // Pattern: tmb2, tmb21, tmb22, tmb23, tmb24, dll
+        // Kita perlu lebih spesifik: hanya cocok dengan tmb1, tmb2, ..., tmb10 (bukan tmb11, tmb12, dll)
         for (var i = 1; i <= 10; i++) {
-          var oldElements = document.querySelectorAll('[id^="tmb' + i + '_"], [id^="nm_satu' + i + '_"], [id="tmb' + i + '"], [id="nm_satu' + i + '"]');
+          // Selector yang lebih spesifik: cocok dengan tmb1, tmb1_, tmb1xxx, tapi tidak tmb11, tmb12, dll
+          // Gunakan regex-like selector dengan querySelectorAll dan filter manual
+          var allElements = document.querySelectorAll('[id*="tmb' + i + '"], [id*="nm_satu' + i + '"]');
+          var oldElements = Array.from(allElements).filter(function(el) {
+            var id = el.id || '';
+            // Cocok jika ID dimulai dengan tmb1, tmb2, ..., tmb10 (bukan tmb11, tmb12, dll)
+            // Atau jika ID dimulai dengan nm_satu1, nm_satu2, ..., nm_satu10
+            var tmbPattern = new RegExp('^tmb' + i + '(?![0-9])'); // tmb1 diikuti bukan angka
+            var nmPattern = new RegExp('^nm_satu' + i + '(?![0-9])'); // nm_satu1 diikuti bukan angka
+            return tmbPattern.test(id) || nmPattern.test(id);
+          });
+          
+          // Hapus semua elemen kecuali yang berada di container lain yang aktif
           oldElements.forEach(function(el) {
             if (el && el.parentNode) {
-              el.parentNode.removeChild(el);
+              // Hapus jika elemen berada di tabkem
+              if (tabkemContainer && tabkemContainer.contains(el)) {
+                try {
+                  el.parentNode.removeChild(el);
+                } catch(e) {
+                  // Ignore error jika elemen sudah dihapus
+                }
+                return;
+              }
+              
+              // Skip jika elemen berada di container lain yang aktif (bukan tabkem)
+              var isInOtherActiveContainer = false;
+              var otherContainers = ['viewidpel', 'viewidpelbayar', 'viewnmbrg', 'viewnmbrgsm'];
+              for (var k = 0; k < otherContainers.length; k++) {
+                var container = document.getElementById(otherContainers[k]);
+                if (container && container.contains(el)) {
+                  var style = window.getComputedStyle(container);
+                  if (style.display !== 'none') {
+                    isInOtherActiveContainer = true;
+                    break;
+                  }
+                }
+              }
+              // Hapus jika tidak berada di container lain yang aktif
+              if (!isInOtherActiveContainer) {
+                try {
+                  el.parentNode.removeChild(el);
+                } catch(e) {
+                  // Ignore error jika elemen sudah dihapus
+                }
+              }
             }
           });
         }
@@ -171,8 +251,46 @@
           }
         });
         
-        // Tunggu sebentar untuk memastikan elemen benar-benar dihapus
+        // Tunggu sebentar untuk memastikan elemen benar-benar dihapus sebelum AJAX call
         setTimeout(function() {
+          // Pastikan tabkem benar-benar kosong
+          $("#tabkem").empty();
+          
+          // Hapus lagi semua elemen duplikat yang mungkin masih ada
+          for (var i = 1; i <= 10; i++) {
+            var oldElements = document.querySelectorAll('[id^="tmb' + i + '_"], [id^="nm_satu' + i + '_"], [id="tmb' + i + '"], [id="nm_satu' + i + '"]');
+            oldElements.forEach(function(el) {
+              if (el && el.parentNode) {
+                var tabkemContainer = document.getElementById('tabkem');
+                // Hapus jika elemen berada di tabkem atau tidak berada di container aktif lainnya
+                if (tabkemContainer && tabkemContainer.contains(el)) {
+                  try {
+                    el.parentNode.removeChild(el);
+                  } catch(e) {}
+                } else {
+                  var isInOtherActiveContainer = false;
+                  var otherContainers = ['viewidpel', 'viewidpelbayar', 'viewnmbrg', 'viewnmbrgsm'];
+                  for (var k = 0; k < otherContainers.length; k++) {
+                    var container = document.getElementById(otherContainers[k]);
+                    if (container && container.contains(el)) {
+                      var style = window.getComputedStyle(container);
+                      if (style.display !== 'none') {
+                        isInOtherActiveContainer = true;
+                        break;
+                      }
+                    }
+                  }
+                  if (!isInOtherActiveContainer) {
+                    try {
+                      el.parentNode.removeChild(el);
+                    } catch(e) {}
+                  }
+                }
+              }
+            });
+          }
+          
+          // Sekarang baru lakukan AJAX call
           $.ajax({
             url: 'f_jual_carisat.php', // File tujuan
             type: 'POST', // Tentukan type nya POST atau GET
@@ -184,20 +302,58 @@
               }
             },
             success: function(response){ 
-              // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
+              // Pastikan tabkem benar-benar kosong sebelum menambahkan content baru
+              var tabkemContainer = document.getElementById('tabkem');
+              if (tabkemContainer) {
+                // Hapus SEMUA elemen di dalam tabkem
+                while (tabkemContainer.firstChild) {
+                  tabkemContainer.removeChild(tabkemContainer.firstChild);
+                }
+              }
               
-              $("#tabkem").html(response.hasil);
+              // Hapus semua elemen dengan ID yang mungkin duplikat yang berada di tabkem
+              // Gunakan selector yang lebih spesifik
+              for (var i = 1; i <= 10; i++) {
+                var allElements = document.querySelectorAll('[id*="tmb' + i + '"], [id*="nm_satu' + i + '"]');
+                var elementsToRemove = Array.from(allElements).filter(function(el) {
+                  var id = el.id || '';
+                  // Cocok jika ID dimulai dengan tmb1, tmb2, ..., tmb10 (bukan tmb11, tmb12, dll)
+                  var tmbPattern = new RegExp('^tmb' + i + '(?![0-9])'); // tmb1 diikuti bukan angka
+                  var nmPattern = new RegExp('^nm_satu' + i + '(?![0-9])'); // nm_satu1 diikuti bukan angka
+                  var matches = tmbPattern.test(id) || nmPattern.test(id);
+                  
+                  // Hapus jika cocok dan berada di tabkem
+                  if (matches && tabkemContainer && tabkemContainer.contains(el)) {
+                    return true;
+                  }
+                  return false;
+                });
+                
+                // Hapus elemen yang terpilih
+                elementsToRemove.forEach(function(el) {
+                  if (el && el.parentNode) {
+                    try {
+                      el.parentNode.removeChild(el);
+                    } catch(e) {}
+                  }
+                });
+              }
+              
+              // Sekarang tambahkan content baru
+              if (tabkemContainer) {
+                tabkemContainer.innerHTML = response.hasil;
+              }
               
               // Delay pengecekan duplicate IDs setelah content di-load
               setTimeout(function() {
                 checkDuplicateFormIds();
-              }, 100);
+              }, 200);
             },
             error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
               alert(xhr.responseText); // munculkan alert
             }
           });
-        }, 50);
+        }, 100);
       }
 
       function getdiscpromo(kd_brg, hrg_jual){
@@ -424,7 +580,35 @@
           success: function(response){ 
             // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
             
+            // Hapus form bayar yang lama sebelum membuat yang baru untuk menghindari duplicate ID
+            var oldFormBayar = document.getElementById('form-bayar');
+            if (oldFormBayar && oldFormBayar.parentNode) {
+              oldFormBayar.parentNode.removeChild(oldFormBayar);
+            }
+            
+            // Hapus semua elemen dengan ID duplikat sebelum menambahkan yang baru
+            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+                               'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
+                               'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
+                               'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
+                               'tgl_jual', 'tgl_jtnota', 'nm_pel_byr', 'poin_member', 'btn-fpel', 
+                               'boxpelbay_1', 'viewidmemberbayar', 'btn-fmember', 'btn-baypil', 'tabbay'];
+            duplicateIds.forEach(function(id) {
+              var elements = document.querySelectorAll('#' + id);
+              // Hapus semua kecuali yang pertama (jika ada lebih dari satu)
+              for (var i = 1; i < elements.length; i++) {
+                if (elements[i] && elements[i].parentNode) {
+                  elements[i].parentNode.removeChild(elements[i]);
+                }
+              }
+            });
+            
             $("#viewcekkd").html(response.hasil);
+            
+            // Delay pengecekan duplicate IDs setelah content di-load
+            setTimeout(function() {
+              checkDuplicateFormIds();
+            }, 100);
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
             alert(xhr.responseText); // munculkan alert
@@ -830,17 +1014,26 @@
            
             // Check if response is valid
             if (!response || !response.hasil) {
-              console.error('Invalid response:', response);
+              console.error('❌ Invalid response:', response);
+              alert('Error: Tidak ada response dari server. Silakan coba lagi.');
               setTimeout(function() {
                 window.location.reload();
-              }, 1000);
+              }, 2000);
               return;
             }
            
             console.log('📦 Response received from f_jualbayar_act.php');
+            console.log('📄 Response preview:', response.hasil.substring(0, 500));
             
             // Extract and execute scripts manually
             var htmlContent = response.hasil || '';
+            
+            // Pastikan HTML content tidak kosong
+            if (!htmlContent || htmlContent.trim() === '') {
+              console.error('❌ HTML content is empty!');
+              alert('Error: Response kosong dari server.');
+              return;
+            }
             var scripts = [];
             var hasPrintScript = false;
             var popupScripts = [];
@@ -854,8 +1047,10 @@
                   console.log('🖨️ Found cetaknota script in response');
                   // Print scripts should execute immediately, before popup
                   scripts.unshift(scriptContent); // Add to beginning
-                } else if (scriptContent.indexOf('popnew_ok') !== -1) {
+                } else if (scriptContent.indexOf('popnew_ok') !== -1 || scriptContent.indexOf('popnew_error') !== -1 || scriptContent.indexOf('popnew_warning') !== -1) {
+                  // Deteksi semua jenis popup (ok, error, warning)
                   popupScripts.push(scriptContent);
+                  console.log('📢 Found popup script:', scriptContent.indexOf('popnew_ok') !== -1 ? 'OK' : (scriptContent.indexOf('popnew_error') !== -1 ? 'ERROR' : 'WARNING'));
                 } else {
                   scripts.push(scriptContent);
                 }
@@ -864,6 +1059,34 @@
             });
             
             console.log('📊 Scripts extracted - Print:', hasPrintScript, 'Popup:', popupScripts.length, 'Other:', scripts.length);
+            if (popupScripts.length > 0) {
+              console.log('📋 Popup scripts found:', popupScripts.map(function(s) { return s.substring(0, 100); }));
+            }
+            
+            // Jika tidak ada script yang diekstrak, coba eksekusi langsung dari HTML
+            if (scripts.length === 0 && popupScripts.length === 0 && !hasPrintScript) {
+              console.warn('⚠️ No scripts extracted, trying to execute directly from HTML');
+              // Coba eksekusi semua script langsung dari HTML
+              var allScripts = htmlContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+              if (allScripts && allScripts.length > 0) {
+                console.log('📝 Found ' + allScripts.length + ' script tag(s) in HTML, executing...');
+                allScripts.forEach(function(scriptTag, idx) {
+                  try {
+                    var scriptContent = scriptTag.replace(/<script[^>]*>([\s\S]*?)<\/script>/i, '$1');
+                    if (scriptContent && scriptContent.trim()) {
+                      console.log('▶️ Executing script #' + (idx + 1) + ' directly:', scriptContent.substring(0, 100));
+                      eval(scriptContent);
+                      console.log('✅ Script #' + (idx + 1) + ' executed');
+                    }
+                  } catch(e) {
+                    console.error('❌ Direct script execution error:', e);
+                  }
+                });
+              } else {
+                console.error('❌ No script tags found in HTML content!');
+                console.log('HTML content:', htmlContent);
+              }
+            }
             
             // Execute print scripts FIRST (before popup) to ensure printing happens
             if (hasPrintScript) {
@@ -959,9 +1182,12 @@
               setTimeout(function() {
                 popupScripts.forEach(function(script) {
                   try {
+                    console.log('▶️ Executing popup script:', script.substring(0, 100));
                     eval(script);
+                    console.log('✅ Popup script executed');
                   } catch(e) {
-                    console.error('Popup script error:', e);
+                    console.error('❌ Popup script error:', e);
+                    console.error('Script content:', script);
                   }
                 });
               }, 500);
@@ -974,16 +1200,26 @@
               console.log('✅ Print process initiated, no auto-reload');
             } else {
               // No print script - execute normally
-              // Execute popup scripts first
-              popupScripts.forEach(function(script) {
-                try {
-                  eval(script);
-                } catch(e) {
-                  console.error('Popup script error:', e);
-                }
-              });
+              // Execute popup scripts FIRST (immediately, before other scripts)
+              if (popupScripts.length > 0) {
+                console.log('📢 Executing ' + popupScripts.length + ' popup script(s) immediately...');
+                popupScripts.forEach(function(script, idx) {
+                  try {
+                    var scriptPreview = script.substring(0, 150).replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    console.log('▶️ Executing popup script #' + (idx + 1) + ':', scriptPreview);
+                    // Eksekusi langsung tanpa delay
+                    eval(script);
+                    console.log('✅ Popup script #' + (idx + 1) + ' executed');
+                  } catch(e) {
+                    console.error('❌ Popup script #' + (idx + 1) + ' error:', e);
+                    console.error('Script content:', script);
+                  }
+                });
+              } else {
+                console.warn('⚠️ No popup scripts found!');
+              }
               
-              // Execute other scripts
+              // Execute other scripts (kosongkan2, aktif, dll)
               scripts.forEach(function(script) {
                 try {
                   eval(script);
@@ -996,10 +1232,21 @@
               var cleanHtml = htmlContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
               $("#viewsimpanbyr").html(cleanHtml);
               
-              // Only reload if no print script (for other operations)
-              setTimeout(function() {
-                window.location.reload();
-              }, 1500);
+              // Tunda reload untuk memberi waktu popup muncul (minimal 3 detik)
+              // Hanya reload jika tidak ada popup error (untuk menghindari reload saat error)
+              var hasError = popupScripts.some(function(script) {
+                return script.indexOf('popnew_error') !== -1;
+              });
+              
+              if (!hasError) {
+                // Reload setelah popup muncul (minimal 3 detik untuk memastikan popup terlihat)
+                setTimeout(function() {
+                  console.log('🔄 Reloading page after popup...');
+                  window.location.reload();
+                }, 3000);
+              } else {
+                console.log('⚠️ Error detected, skipping auto-reload to allow user to see error message');
+              }
             }
 
           },
@@ -1827,29 +2074,125 @@
       // Bersihkan elemen duplikat terlebih dahulu dari semua container AJAX
       var containers = ['tabkem', 'viewidpel', 'viewidpelbayar', 'viewnmbrg', 'viewnmbrgsm'];
       
-      // Bersihkan elemen dengan ID tmb1-tmb10, tmb2, tmb23 dan nm_satu1-nm_satu3 yang duplikat
-      // Check untuk tmb1-tmb10
-      for (var i = 1; i <= 10; i++) {
-        var elements = document.querySelectorAll('[id^="tmb' + i + '_"], [id^="nm_satu' + i + '_"], [id="tmb' + i + '"], [id="nm_satu' + i + '"]');
+      // Bersihkan form bayar yang duplikat terlebih dahulu
+      var formBayarElements = document.querySelectorAll('#form-bayar');
+      if (formBayarElements.length > 1) {
+        // Hapus semua kecuali yang terakhir (yang terbaru)
+        for (var fb = 0; fb < formBayarElements.length - 1; fb++) {
+          if (formBayarElements[fb] && formBayarElements[fb].parentNode) {
+            formBayarElements[fb].parentNode.removeChild(formBayarElements[fb]);
+          }
+        }
+      }
+      
+      // Bersihkan elemen dengan ID duplikat dari form bayar
+      var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+                          'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
+                          'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
+                          'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
+                          'tgl_jual', 'tgl_jtnota', 'nm_pel_byr', 'poin_member', 'btn-fpel', 
+                          'boxpelbay_1', 'viewidmemberbayar', 'btn-fmember', 'btn-baypil', 'tabbay',
+                          'poin_earned_display', 'poin_earned_hidden', 'poin_member_display', 
+                          'poin_member_available', 'poin_info', 'poin_redeem_hidden', 'disc_member_hidden'];
+      duplicateIds.forEach(function(id) {
+        var elements = document.querySelectorAll('#' + id);
         if (elements.length > 1) {
           // Hapus semua kecuali yang terakhir (yang terbaru)
-          for (var j = 0; j < elements.length - 1; j++) {
-            if (elements[j] && elements[j].parentNode) {
-              // Pastikan elemen tidak berada di container yang aktif
-              var isInActiveContainer = false;
-              for (var k = 0; k < containers.length; k++) {
-                var container = document.getElementById(containers[k]);
-                if (container && container.contains(elements[j])) {
-                  // Skip jika container masih terlihat (display != none)
-                  var style = window.getComputedStyle(container);
-                  if (style.display !== 'none') {
-                    isInActiveContainer = true;
-                    break;
+          for (var i = 0; i < elements.length - 1; i++) {
+            if (elements[i] && elements[i].parentNode) {
+              elements[i].parentNode.removeChild(elements[i]);
+            }
+          }
+        }
+      });
+      
+      // Bersihkan elemen dengan ID tmb1-tmb10, tmb2, tmb23 dan nm_satu1-nm_satu3 yang duplikat
+      // Check untuk tmb1-tmb10 - HAPUS SEMUA yang duplikat, hanya simpan yang terakhir
+      for (var i = 1; i <= 10; i++) {
+        // Gunakan selector yang lebih spesifik untuk menghindari false positive
+        // Misalnya: mencari tmb1 tidak boleh cocok dengan tmb11, tmb12, dll
+        var allElements = document.querySelectorAll('[id*="tmb' + i + '"], [id*="nm_satu' + i + '"]');
+        var elements = Array.from(allElements).filter(function(el) {
+          var id = el.id || '';
+          // Cocok jika ID dimulai dengan tmb1, tmb2, ..., tmb10 (bukan tmb11, tmb12, dll)
+          var tmbPattern = new RegExp('^tmb' + i + '(?![0-9])'); // tmb1 diikuti bukan angka
+          var nmPattern = new RegExp('^nm_satu' + i + '(?![0-9])'); // nm_satu1 diikuti bukan angka
+          return tmbPattern.test(id) || nmPattern.test(id);
+        });
+        
+        if (elements.length > 1) {
+          // Urutkan berdasarkan posisi di DOM (yang lebih baru biasanya di akhir)
+          var elementsArray = Array.from(elements);
+          // Sort berdasarkan posisi di DOM tree (yang lebih dalam/baru di akhir)
+          elementsArray.sort(function(a, b) {
+            var depthA = 0, depthB = 0;
+            var tempA = a, tempB = b;
+            while (tempA.parentNode && tempA.parentNode !== document.body) {
+              depthA++;
+              tempA = tempA.parentNode;
+            }
+            while (tempB.parentNode && tempB.parentNode !== document.body) {
+              depthB++;
+              tempB = tempB.parentNode;
+            }
+            return depthA - depthB;
+          });
+          
+          // Tentukan elemen mana yang harus dipertahankan (yang terbaru)
+          // Elemen yang berada di tabkem (container aktif) biasanya yang terbaru
+          var keepIndex = -1;
+          var tabkemContainer = document.getElementById('tabkem');
+          
+          // Cari elemen yang berada di tabkem dan terlihat
+          for (var idx = elementsArray.length - 1; idx >= 0; idx--) {
+            if (tabkemContainer && tabkemContainer.contains(elementsArray[idx])) {
+              var style = window.getComputedStyle(tabkemContainer);
+              if (style.display !== 'none') {
+                keepIndex = idx;
+                break;
+              }
+            }
+          }
+          
+          // Jika tidak ada di tabkem, cari yang memiliki suffix unik terbaru (yang lebih panjang biasanya lebih baru)
+          if (keepIndex === -1) {
+            var maxSuffixLength = -1;
+            for (var idx = 0; idx < elementsArray.length; idx++) {
+              var id = elementsArray[idx].id || '';
+              var suffixMatch = id.match(/_\d+_\d+$/); // Pattern untuk suffix unik: _timestamp_random
+              if (suffixMatch && suffixMatch[0].length > maxSuffixLength) {
+                maxSuffixLength = suffixMatch[0].length;
+                keepIndex = idx;
+              }
+            }
+          }
+          
+          // Jika masih tidak ditemukan, gunakan yang terakhir
+          if (keepIndex === -1) {
+            keepIndex = elementsArray.length - 1;
+          }
+          
+          // Hapus semua kecuali yang dipilih untuk dipertahankan
+          for (var j = 0; j < elementsArray.length; j++) {
+            if (j !== keepIndex && elementsArray[j] && elementsArray[j].parentNode) {
+              try {
+                // Pastikan elemen tidak berada di container aktif lainnya
+                var isInActiveContainer = false;
+                for (var k = 0; k < containers.length; k++) {
+                  var container = document.getElementById(containers[k]);
+                  if (container && container.contains(elementsArray[j])) {
+                    var style = window.getComputedStyle(container);
+                    if (style.display !== 'none' && container.id !== 'tabkem') {
+                      isInActiveContainer = true;
+                      break;
+                    }
                   }
                 }
-              }
-              if (!isInActiveContainer) {
-                elements[j].parentNode.removeChild(elements[j]);
+                if (!isInActiveContainer) {
+                  elementsArray[j].parentNode.removeChild(elementsArray[j]);
+                }
+              } catch(e) {
+                // Ignore error jika elemen sudah dihapus
               }
             }
           }

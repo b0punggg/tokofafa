@@ -192,9 +192,17 @@ mysqli_close($connect1);
 unset($datahit);unset($ceksql);
 //---------------------------------
 
-$update=0;$d=false;        
+$update=0;$d=false;
+$error_msg=''; // Variabel untuk menyimpan error message        
 $defmodal=($tot_sale-$tot_discitem)-$totlaba; 
-$cek=mysqli_query($conbayar,"SELECT * FROM mas_jual WHERE kd_toko='$kd_toko' AND no_fakjual='$no_fakjual'");
+
+// Escape variabel untuk query cek
+$kd_toko_cek = mysqli_real_escape_string($conbayar, $kd_toko);
+$no_fakjual_cek = mysqli_real_escape_string($conbayar, $no_fakjual);
+$tgl_jual_cek = mysqli_real_escape_string($conbayar, $tgl_jual);
+
+// Perbaiki query cek: tambahkan tgl_jual untuk memastikan deteksi yang tepat
+$cek=mysqli_query($conbayar,"SELECT * FROM mas_jual WHERE kd_toko='$kd_toko_cek' AND no_fakjual='$no_fakjual_cek' AND tgl_jual='$tgl_jual_cek'");
 
 //ke atas ok
 
@@ -202,7 +210,25 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
   $data=mysqli_fetch_assoc($cek);  
   $no_urutx=$data['no_urut'];
   $simpandt=opendtcek();
-  $d=mysqli_query($simpandt,"UPDATE mas_jual set tot_jual='$tot_sale',tot_disc='$tot_discitem',tot_laba='$totlaba',ket_bayar='$ket_bayar',kd_bayar='$kd_bayar',bayar_uang='$bayar',susuk_uang='$susuk',cetak='0',ongkir='$ongkir',saldo_hutang='$saldohut',tgl_jt='$tgl_jt',kd_pel='$kd_pel',trf='$tf' WHERE no_urut='$no_urutx'");
+  
+  // Escape variabel untuk keamanan
+  $ket_bayar_esc = mysqli_real_escape_string($simpandt, $ket_bayar);
+  $kd_bayar_esc = mysqli_real_escape_string($simpandt, $kd_bayar);
+  $kd_pel_esc = mysqli_real_escape_string($simpandt, $kd_pel);
+  $kd_member_esc = mysqli_real_escape_string($simpandt, $kd_member);
+  $tf_esc = mysqli_real_escape_string($simpandt, $tf);
+  $tgl_jt_esc = mysqli_real_escape_string($simpandt, $tgl_jt);
+  
+  $d=mysqli_query($simpandt,"UPDATE mas_jual set tot_jual='$tot_sale',tot_disc='$tot_discitem',tot_laba='$totlaba',ket_bayar='$ket_bayar_esc',kd_bayar='$kd_bayar_esc',bayar_uang='$bayar',susuk_uang='$susuk',cetak='0',ongkir='$ongkir',saldo_hutang='$saldohut',tgl_jt='$tgl_jt_esc',kd_pel='$kd_pel_esc',trf='$tf_esc',kd_member='$kd_member_esc',poin_earned='$poin_earned' WHERE no_urut='$no_urutx'");
+  // Pastikan $d adalah boolean true/false
+  $d = ($d !== false);
+  
+  // Log error jika UPDATE gagal dan simpan error untuk ditampilkan
+  if (!$d) {
+    $error_msg = mysqli_error($simpandt);
+    error_log("GAGAL UPDATE mas_jual: " . $error_msg . " | no_fakjual: $no_fakjual | tgl_jual: $tgl_jual | no_urut: $no_urutx");
+  }
+  
   unset($data);
 
   if ($kd_bayar=='TEMPO'){
@@ -214,8 +240,10 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
       $d1=mysqli_query($simpandt,"UPDATE mas_jual_hutang SET tgl_jt='$tgl_jt',totjual='$byr_tot',saldo_awal='$byr_tot',byr_hutang='$bayar',
       saldo_hutang='$saldohut',ket='$ket_bayar',kd_pel='$kd_pel',trf='$tf' WHERE no_urut='$no_uruts'"); 
       // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-      if ($d && $d1) {
+      if ($d && $d1 !== false) {
         $d = true;
+      } else {
+        $d = false;
       }
     }
     unset($carih,$dat);
@@ -265,8 +293,10 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
             saldo_hutang='$saldohut',ket='$ket_bayar',kd_pel='$kd_pel',modal='$modalmsk',laba='$labamsk',trf='$tf' WHERE no_urut='$no_urut'"); 
             $d2=mysqli_query($conbayar,"UPDATE mas_jual SET ket_bayar='$ket_bayar',saldo_hutang='$saldohut',trf='$tf' WHERE no_fakjual='$no_fakjual'"); 
             // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-            if ($d && $d1 && $d2) {
+            if ($d && $d1 !== false && $d2 !== false) {
               $d = true;
+            } else {
+              $d = false;
             }
 
             $xx=mysqli_query($conbayar,"SELECT SUM(modal) as jmodal FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual'");
@@ -280,8 +310,10 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
             $d1=mysqli_query($conbayar,"UPDATE mas_jual_hutang SET tgl_jt='$tgl_jt',totjual='$byr_tot',saldo_awal='$saldoawal',byr_hutang='$bayard',saldo_hutang='$sld_hut',ket='$ket_bayar',kd_pel='$kd_pel',modal='$modalmsk',laba='$labamsk',trf='$tf' WHERE no_urut='$no_urut'");    
             $d2=mysqli_query($conbayar,"UPDATE mas_jual SET ket_bayar='$ket_bayar',saldo_hutang='$sld_hut',trf='$tf' WHERE no_fakjual='$no_fakjual'"); 
             // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-            if ($d && $d1 && $d2) {
+            if ($d && $d1 !== false && $d2 !== false) {
               $d = true;
+            } else {
+              $d = false;
             }
 
             $saldoawal=$saldoawal-$bayard;
@@ -291,7 +323,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
       $update=1;  
       $simpanup='simpanup;'.$no_fakjual;  
     } else {
-      // jika tidak ditemukan insert data baru
+      // jika tidak ditemukan mas_jual_hutang untuk TEMPO, insert data baru
+      // Catatan: mas_jual sudah di-UPDATE di baris 205, jadi tidak perlu INSERT lagi di sini
       $saldohut=$byr_tot-$bayar;
       if($defmodal>=$bayar){
         $modalmsk=$bayar;
@@ -301,149 +334,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
         $labamsk =$bayar-$defmodal;
       }  
       $d1=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang values('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
-      $d2=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
-      // Pastikan $d di-set berdasarkan hasil query utama
-      if ($d1 && $d2) {
-        $d = true;
-      } else {
-        $d = false;
-      }
-      
-      // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar
-      if($kd_member != ''){
-        // Kurangi poin yang ditukar terlebih dahulu
-        if($poin_redeem > 0){
-          mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
-          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
-          $datapoin = mysqli_fetch_assoc($cekpoin);
-          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
-          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
-          mysqli_free_result($cekpoin);
-          unset($datapoin);
-        }
-        // Tambah poin yang didapat dari transaksi
-        if($poin_earned > 0){
-          mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
-          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
-          $datapoin = mysqli_fetch_assoc($cekpoin);
-          $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
-          mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
-          mysqli_free_result($cekpoin);
-          unset($datapoin);
-        }
-      }    
-    }  
-  } else {
-    // jika edit menjadi cash hapus data lama
-    $d=mysqli_query($conbayar,"DELETE FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko'");
-  }     
-  mysqli_close($simpandt);
-}if(mysqli_num_rows($cek)>=1){ //** data ditemukan
-  $data=mysqli_fetch_assoc($cek);  
-  $no_urutx=$data['no_urut'];
-  $simpandt=opendtcek();
-  $d=mysqli_query($simpandt,"UPDATE mas_jual set tot_jual='$tot_sale',tot_disc='$tot_discitem',tot_laba='$totlaba',ket_bayar='$ket_bayar',kd_bayar='$kd_bayar',bayar_uang='$bayar',susuk_uang='$susuk',cetak='0',ongkir='$ongkir',saldo_hutang='$saldohut',tgl_jt='$tgl_jt',kd_pel='$kd_pel',trf='$tf' WHERE no_urut='$no_urutx'");
-  unset($data);
-
-  if ($kd_bayar=='TEMPO'){
-    //**CEK DAHULU PADA MAS_JUAL_HUTANG apakah angsuran TEMPO/TUNAI
-    $carih=mysqli_query($simpandt,"SELECT * FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko' ORDER BY no_urut ASC LIMIT 1");
-    if(mysqli_num_rows($carih)>0){
-      $dat=mysqli_fetch_assoc($carih);
-      $no_uruts=$dat['no_urut'];
-      $d1=mysqli_query($simpandt,"UPDATE mas_jual_hutang SET tgl_jt='$tgl_jt',totjual='$byr_tot',saldo_awal='$byr_tot',byr_hutang='$bayar',
-      saldo_hutang='$saldohut',ket='$ket_bayar',kd_pel='$kd_pel',trf='$tf' WHERE no_urut='$no_uruts'"); 
       // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-      if ($d && $d1) {
-        $d = true;
-      }
-    }
-    unset($carih,$dat);
-
-    $carihut=mysqli_query($conbayar,"SELECT * from mas_jual_hutang WHERE no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko' ORDER BY no_urut ASC");
-    if (mysqli_num_rows($carihut)>=1) {
-      //echo 'ketemu';
-      //**Jika sudah ada pembayaran harus UPDATE pembayaran
-      // cek apakah tagihan total > pembayaran angsuran yg sdh dilakukan    
-        $x=0;$saldoawal=0;$bayard=0;$byrmasuk=0;$modal=0;$setor=0;$totmodal=0; 
-        
-        if ($saldohut<0){$saldohut=0;}
-
-        if ($saldohut==0){
-          $ket_bayar="LUNAS";
-        } else {
-          $ket_bayar="BELUM";
-        }
-        $saldoawal=$saldohut;
-        while ($dcarihut=mysqli_fetch_assoc($carihut)){
-          $setor    = $setor+$dcarihut['byr_hutang'];
-          $no_urut  = $dcarihut['no_urut'];
-          if($setor <= $defmodal){
-              $modalmsk = $dcarihut['byr_hutang'];
-              $labamsk  = 0;
-              $totmodal = $totmodal+$modalmsk; 
-              // echo '$setor'.$setor.'<br>';
-              // echo '$defmodal'.$defmodal.'<br>';
-              // echo '$modalsmk'.$modalmsk.'<br>';
-          }else{   
-              if($totmodal <= $defmodal){
-                  $modalmsk = $defmodal-$totmodal;
-                  $labamsk  = $dcarihut['byr_hutang']-$modalmsk;
-              }else{
-                  $modalmsk = 0;
-                  $labamsk  = $dcarihut['byr_hutang'];
-              }
-              $totmodal = $totmodal+$modalmsk;
-              // echo '$setor'.$setor.'<br>';
-              // echo '$defmodal'.$defmodal.'<br>';
-              // echo '$modalsmk'.$modalmsk.'<br>';
-          }
-          $x++;
-          
-          if ($x==1){
-            $d1=mysqli_query($conbayar,"UPDATE mas_jual_hutang SET tgl_jt='$tgl_jt',totjual='$byr_tot',saldo_awal='$byr_tot',byr_hutang='$bayar',
-            saldo_hutang='$saldohut',ket='$ket_bayar',kd_pel='$kd_pel',modal='$modalmsk',laba='$labamsk',trf='$tf' WHERE no_urut='$no_urut'"); 
-            $d2=mysqli_query($conbayar,"UPDATE mas_jual SET ket_bayar='$ket_bayar',saldo_hutang='$saldohut',trf='$tf' WHERE no_fakjual='$no_fakjual'"); 
-            // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-            if ($d && $d1 && $d2) {
-              $d = true;
-            }
-
-            $xx=mysqli_query($conbayar,"SELECT SUM(modal) as jmodal FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual'");
-            $dtr=mysqli_fetch_assoc($xx);
-            $modal    = $dtr['jmodal'];
-            unset($xx,$dtr);
-          } else {    
-            $bayard=$dcarihut['byr_hutang'];
-            
-            $sld_hut=$saldoawal-$bayard;  
-            $d1=mysqli_query($conbayar,"UPDATE mas_jual_hutang SET tgl_jt='$tgl_jt',totjual='$byr_tot',saldo_awal='$saldoawal',byr_hutang='$bayard',saldo_hutang='$sld_hut',ket='$ket_bayar',kd_pel='$kd_pel',modal='$modalmsk',laba='$labamsk',trf='$tf' WHERE no_urut='$no_urut'");    
-            $d2=mysqli_query($conbayar,"UPDATE mas_jual SET ket_bayar='$ket_bayar',saldo_hutang='$sld_hut',trf='$tf' WHERE no_fakjual='$no_fakjual'"); 
-            // Pastikan $d tetap true jika query utama sudah berhasil sebelumnya
-            if ($d && $d1 && $d2) {
-              $d = true;
-            }
-
-            $saldoawal=$saldoawal-$bayard;
-          }
-          
-        }
-      $update=1;  
-      $simpanup='simpanup;'.$no_fakjual;  
-    } else {
-      // jika tidak ditemukan insert data baru
-      $saldohut=$byr_tot-$bayar;
-      if($defmodal>=$bayar){
-        $modalmsk=$bayar;
-        $labamsk =0;
-      }else{
-        $modalmsk=$defmodal;
-        $labamsk =$bayar-$defmodal;
-      }  
-      $d1=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang values('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
-      $d2=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
-      // Pastikan $d di-set berdasarkan hasil query utama
-      if ($d1 && $d2) {
+      if ($d && $d1 !== false) {
         $d = true;
       } else {
         $d = false;
@@ -475,7 +367,13 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
     }  
   } else {
     // jika edit menjadi cash hapus data lama
-    $d=mysqli_query($conbayar,"DELETE FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko'");
+    $d_delete=mysqli_query($conbayar,"DELETE FROM mas_jual_hutang WHERE no_fakjual='$no_fakjual' and tgl_jual='$tgl_jual' and kd_toko='$kd_toko'");
+    // Pastikan $d tetap true jika query utama sudah berhasil
+    if ($d && $d_delete !== false) {
+      $d = true;
+    } else {
+      $d = false;
+    }
   }     
   mysqli_close($simpandt);
 } else {
@@ -486,10 +384,63 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
   } else {
     $ket_bayar="BELUM";
   }
-  $d=mysqli_query($conbayar,"INSERT INTO mas_jual values('','$tgl_jual','$kd_toko','$no_fakjual','$tot_sale','$tot_discitem','$totlaba','$ket_bayar','$kd_bayar','$bayar','$susuk','$kd_pel','$kd_member','$poin_earned','$ongkir','$saldohut','$tgl_jt','$tf','$tghi')");
+  // Validasi variabel penting
+  if (empty($tgl_jual) || empty($kd_toko) || empty($no_fakjual)) {
+    $error_msg = "Variabel penting kosong: tgl_jual=$tgl_jual, kd_toko=$kd_toko, no_fakjual=$no_fakjual";
+    error_log("VALIDASI GAGAL: " . $error_msg);
+    $d = false;
+  } else {
+    // Escape variabel untuk keamanan
+    $tgl_jual_esc = mysqli_real_escape_string($conbayar, $tgl_jual);
+    $kd_toko_esc = mysqli_real_escape_string($conbayar, $kd_toko);
+    $no_fakjual_esc = mysqli_real_escape_string($conbayar, $no_fakjual);
+    $kd_pel_esc = mysqli_real_escape_string($conbayar, $kd_pel);
+    $kd_member_esc = mysqli_real_escape_string($conbayar, $kd_member);
+    $ket_bayar_esc = mysqli_real_escape_string($conbayar, $ket_bayar);
+    $kd_bayar_esc = mysqli_real_escape_string($conbayar, $kd_bayar);
+    $tf_esc = mysqli_real_escape_string($conbayar, $tf);
+    $tgl_jt_esc = mysqli_real_escape_string($conbayar, $tgl_jt);
+    
+    // Pastikan nilai numerik tidak NULL
+    $tot_sale = isset($tot_sale) ? $tot_sale : 0;
+    $tot_discitem = isset($tot_discitem) ? $tot_discitem : 0;
+    $totlaba = isset($totlaba) ? $totlaba : 0;
+    $bayar = isset($bayar) ? $bayar : 0;
+    $susuk = isset($susuk) ? $susuk : 0;
+    $poin_earned = isset($poin_earned) ? $poin_earned : 0;
+    $ongkir = isset($ongkir) ? $ongkir : 0;
+    $saldohut = isset($saldohut) ? $saldohut : 0;
+    
+    // Gunakan INSERT dengan nama kolom eksplisit untuk menghindari error "Column count doesn't match"
+    // Struktur berdasarkan backup yang berhasil + kolom baru (kd_member, poin_earned)
+    // Urutan: tgl_jual, kd_toko, no_fakjual, tot_jual, tot_disc, tot_laba, ket_bayar, kd_bayar, bayar_uang, susuk_uang, kd_pel, cetak, kd_member, poin_earned, ongkir, saldo_hutang, tgl_jt, trf, execut
+    $d=mysqli_query($conbayar,"INSERT INTO mas_jual (tgl_jual,kd_toko,no_fakjual,tot_jual,tot_disc,tot_laba,ket_bayar,kd_bayar,bayar_uang,susuk_uang,kd_pel,cetak,kd_member,poin_earned,ongkir,saldo_hutang,tgl_jt,trf,execut) VALUES('$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','0','$kd_member_esc','$poin_earned','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
+    
+    // Jika masih error, coba dengan struktur lama tanpa kd_member dan poin_earned
+    if (!$d) {
+      $error_msg_temp = mysqli_error($conbayar);
+      error_log("INSERT dengan kd_member gagal, mencoba struktur lama: " . $error_msg_temp);
+      // Coba INSERT tanpa kd_member dan poin_earned (struktur lama)
+      $d=mysqli_query($conbayar,"INSERT INTO mas_jual (tgl_jual,kd_toko,no_fakjual,tot_jual,tot_disc,tot_laba,ket_bayar,kd_bayar,bayar_uang,susuk_uang,kd_pel,cetak,ongkir,saldo_hutang,tgl_jt,trf,execut) VALUES('$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','0','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
+      if ($d) {
+        // Jika berhasil dengan struktur lama, update kd_member dan poin_earned secara terpisah
+        if (!empty($kd_member_esc) || $poin_earned > 0) {
+          mysqli_query($conbayar,"UPDATE mas_jual SET kd_member='$kd_member_esc',poin_earned='$poin_earned' WHERE no_fakjual='$no_fakjual_esc' AND tgl_jual='$tgl_jual_esc' AND kd_toko='$kd_toko_esc'");
+        }
+      }
+    }
+    // Pastikan $d adalah boolean true/false
+    $d = ($d !== false);
+    
+    // Log error jika INSERT gagal dan simpan error untuk ditampilkan
+    if (!$d) {
+      $error_msg = mysqli_error($conbayar);
+      error_log("GAGAL INSERT mas_jual: " . $error_msg . " | no_fakjual: $no_fakjual | tgl_jual: $tgl_jual | Query: INSERT INTO mas_jual values('','$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','$kd_member_esc','$poin_earned','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
+    }
+  }
 
-  // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar
-  if($kd_member != ''){
+  // Proses poin: tambah poin yang didapat dan kurangi poin yang ditukar (hanya jika INSERT berhasil)
+  if($d && $kd_member != ''){
     // Kurangi poin yang ditukar terlebih dahulu
     if($poin_redeem > 0){
       mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
@@ -521,13 +472,20 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
       $modalmsk=$defmodal;
       $labamsk =$bayar-$defmodal;
     }
-    $d=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang VALUES('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
+    $d_hutang=mysqli_query($conbayar,"INSERT INTO mas_jual_hutang VALUES('','$kd_pel','$no_fakjual','$tgl_jual','$tgl_jual','$byr_tot','$byr_tot','$bayar','$saldohut','$ket_bayar','$kd_toko','$tgl_jt','$modalmsk','$labamsk','$tf','$no_urutretur')");
+    // Pastikan $d tetap true jika semua query berhasil
+    if ($d && $d_hutang !== false) {
+      $d = true;
+    } else {
+      $d = false;
+    }
   }
 }
 unset($cek);
 //bawah ok
 
-if ($pil_cetak =="CETAK"){
+// Hanya cetak jika penyimpanan berhasil
+if ($d && $pil_cetak =="CETAK"){
   $open = chr(27).chr(112).chr(48).chr(25).chr(250); //open cash drawer
   $cutPaper = chr(29) . "V" . chr(48) . chr(0); //cut paper
 
@@ -709,7 +667,8 @@ if ($pil_cetak =="CETAK"){
 //   }
 }
 
-if ($pil_cetak =="CETAK-CK"){
+// Hanya cetak jika penyimpanan berhasil
+if ($d && $pil_cetak =="CETAK-CK"){
 
   $open = chr(27).chr(112).chr(48).chr(25).chr(250); //open cash drawer
   $cutPaper = chr(29) . "V" . chr(48) . chr(0); //cut paper
@@ -886,7 +845,8 @@ if ($pil_cetak =="CETAK-CK"){
 //   }
 }
 
-if ($pil_cetak =="CETAK-SM"){
+// Hanya cetak jika penyimpanan berhasil
+if ($d && $pil_cetak =="CETAK-SM"){
   $sqlcari=mysqli_query($conbayar,"SELECT * from toko where kd_toko='$kd_toko'");
   $datacari=mysqli_fetch_assoc($sqlcari);
   $nm_toko=$datacari['nm_toko'];
@@ -920,7 +880,20 @@ if ($d)
    ?><script type="text/javascript">popnew_ok('<?= $msg_cetak; ?>');</script><?php
   }
 } else { 
-  ?><script type="text/javascript">popnew_ok('Data gagal disimpan');</script><?php
+  // Tampilkan error detail untuk debugging
+  $error_detail = !empty($error_msg) ? " Error SQL: " . htmlspecialchars($error_msg, ENT_QUOTES) : "";
+  $debug_info = "no_fakjual: " . htmlspecialchars($no_fakjual, ENT_QUOTES) . " | tgl_jual: " . htmlspecialchars($tgl_jual, ENT_QUOTES) . " | kd_toko: " . htmlspecialchars($kd_toko, ENT_QUOTES);
+  // Escape untuk JavaScript dengan json_encode untuk menghindari syntax error
+  $debug_info_js = json_encode($debug_info);
+  $error_msg_js = !empty($error_msg) ? json_encode($error_msg) : '""';
+  $error_detail_js = json_encode($error_detail);
+  ?><script type="text/javascript">
+    console.error('Gagal menyimpan data.', <?=$debug_info_js?>);
+    <?php if (!empty($error_msg)) { ?>
+    console.error('Error SQL:', <?=$error_msg_js?>);
+    <?php } ?>
+    popnew_error('Data gagal disimpan.' + <?=$error_detail_js?> + ' Silakan cek console browser (F12) untuk detail error atau hubungi administrator.');
+  </script><?php
 }    
 ?><script> kosongkan2();aktif();</script><?php
   $html = ob_get_contents(); 
