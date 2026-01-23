@@ -509,7 +509,7 @@ if ($d && $pil_cetak =="CETAK"){
   $tgltime=gantitgl($tgl_jual)." ".$dd[1];
   unset($sqlcari,$datacari);
 //   if($id_user=='23'){
-    $bayar=gantiti(round($bayar,0));$susuk=gantiti(round($susuk,0));
+  $bayar=round($bayar,0);$susuk=round($susuk,0);
     $saldohut=gantiti(round($saldohut,0));$ongkir=round($ongkir,0);$disctot=round($disctot,0);$voucher=round($voucher,0);
     $dtc=$no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$nm_pel.';'.$alamat.';'.$tgltime.';'.$disctot.';'.$voucher.';'.$ongkir.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$saldohut.';'.gantitgl($tgl_jt);
     ?><script type="text/javascript">cetaknota('<?=$dtc?>','<?=$copy?>')</script><?php  
@@ -693,9 +693,9 @@ if ($d && $pil_cetak =="CETAK-CK"){
   $tgltime=gantitgl($tgl_jual)." ".$dd[1];
   unset($sqlcari,$datacari);
 //   if($id_user=="13"){
-   $bayar=gantiti(round($bayar,0));$susuk=gantiti(round($susuk,0));
-    $saldohut=gantiti(round($saldohut,0));$ongkir=round($ongkir,0);$disctot=round($disctot,0);$voucher=round($voucher,0);
-    $dtc=$no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$nm_pel.';'.$alamat.';'.$tgltime.';'.$disctot.';'.$voucher.';'.$ongkir.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$saldohut.';'.gantitgl($tgl_jt);
+  $bayar=round($bayar,0);$susuk=round($susuk,0);
+  $saldohut=round($saldohut,0);$ongkir=round($ongkir,0);$disctot=round($disctot,0);$voucher=round($voucher,0);
+  $dtc=$no_fakjual.';'.$tgl_jual.';'.$kd_toko.';'.$nm_pel.';'.$alamat.';'.$tgltime.';'.$disctot.';'.$voucher.';'.$ongkir.';'.$kd_bayar.';'.$bayar.';'.$susuk.';'.$saldohut.';'.gantitgl($tgl_jt);
     ?><script type="text/javascript">cetaknota('<?=$dtc?>','<?=$copy?>')</script><?php  
       
 //   }else{
