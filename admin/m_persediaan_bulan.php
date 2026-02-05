@@ -173,6 +173,13 @@
               <button onclick="cariPersediaanBarang()" class="btn btn-success" style="font-size: 10pt;"><i class="fa fa-search"></i> Cari Persediaan Barang</button>
               <button onclick="kosongkan()" class="btn btn-warning" style="font-size: 10pt;"><i class="fa fa-undo"></i> Reset</button>
             </div>
+            <div class="col-sm-12 w3-margin-top">
+  <button onclick="cetakPDF()" class="btn btn-danger" style="font-size:10pt">
+    <i class="fa fa-file-pdf-o"></i> Cetak PDF
+  </button>
+
+  
+
           </div>
         </div>
       </div>
@@ -209,5 +216,31 @@
     $("#bulan").val(("0" + (d.getMonth() + 1)).slice(-2));
     $("#tahun").val(d.getFullYear());
   })
+  function validasiCetak(){
+  var bulan = $("#bulan").val();
+  var tahun = $("#tahun").val();
+
+  if(!bulan || !tahun){
+    alert("Pilih bulan dan tahun terlebih dahulu");
+    return false;
+  }
+  return true;
+}
+
+function cetakPDF(){
+  if(!validasiCetak()) return;
+
+  var bulan = $("#bulan").val();
+  var tahun = $("#tahun").val();
+  var stok = $("#cek_stok_kosong").is(':checked') ? 1 : 0;
+
+  window.open(
+    "cetak_persediaan_pdf.php?bulan="+bulan+
+    "&tahun="+tahun+
+    "&stok="+stok,
+    "_blank"
+  );
+}
+
 </script>
 
