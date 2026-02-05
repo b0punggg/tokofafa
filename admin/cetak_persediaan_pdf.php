@@ -38,16 +38,16 @@ unset($qtoko, $rtoko);
 // ==============================
 // PARAMETER
 // ==============================
+$semua = isset($_GET['semua']) ? (int)$_GET['semua'] : 0;
 $bulan = isset($_GET['bulan']) ? $_GET['bulan'] : '';
 $tahun = isset($_GET['tahun']) ? $_GET['tahun'] : '';
 $stok  = isset($_GET['stok']) ? (int)$_GET['stok'] : 0; // 1 = sertakan stok kosong
 
-if($bulan=='' || $tahun==''){
-  exit("Parameter bulan/tahun tidak lengkap");
+if($semua != 1 && ($bulan=='' || $tahun=='')){
+  exit("Parameter bulan/tahun tidak lengkap. Atau gunakan opsi Cetak semua data.");
 }
 
-// Pastikan bulan 2 digit
-if(strlen($bulan) == 1){
+if(strlen($bulan) == 1 && $bulan !== ''){
   $bulan = '0'.$bulan;
 }
 
@@ -61,55 +61,81 @@ $nama_bulan = array(
 );
 
 // ==============================
-// QUERY DATA (mengikuti m_persediaan_bulan_cari.php)
+// QUERY DATA
 // ==============================
-if($stok == 1){
-  // Sertakan stok kosong
-  $where_beli = "beli_brg.kd_toko='$kd_toko' 
-    AND beli_brg.stok_jual >= 0 
-    AND MONTH(beli_brg.tgl_fak)='$bulan' 
-    AND YEAR(beli_brg.tgl_fak)='$tahun'";
-  $having_clause = "HAVING stok_juals >= 0";
+if($semua == 1){
+  // Data keseluruhan (tanpa filter bulan/tahun)
+  if($stok == 1){
+    $tampil_stok = '';
+    $having_clause = "HAVING stok_juals >= 0";
+  } else {
+    $tampil_stok = " AND beli_brg.stok_jual > 0 ";
+    $having_clause = "HAVING stok_juals > 0";
+  }
+  $sql = "
+  SELECT
+    sub.kd_brg,
+    m.nm_brg,
+    sub.kd_sup,
+    sub.id_bag,
+    s.nm_sup,
+    b.nm_bag,
+    sub.stok_juals,
+    sub.hrg_beli,
+    (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+  FROM (
+    SELECT 
+      beli_brg.kd_brg,
+      beli_brg.kd_sup,
+      SUM(beli_brg.stok_jual) AS stok_juals,
+      AVG(beli_brg.hrg_beli) AS hrg_beli,
+      MAX(beli_brg.id_bag) AS id_bag
+    FROM beli_brg
+    WHERE beli_brg.kd_toko='$kd_toko' $tampil_stok
+    GROUP BY beli_brg.kd_brg
+    $having_clause
+  ) AS sub
+  LEFT JOIN mas_brg m ON sub.kd_brg = m.kd_brg AND m.kd_toko = '$kd_toko'
+  LEFT JOIN supplier s ON sub.kd_sup = s.kd_sup
+  LEFT JOIN bag_brg b ON sub.id_bag = b.no_urut
+  ORDER BY COALESCE(m.nm_brg, sub.kd_brg) ASC";
 } else {
-  // Hanya stok > 0
-  $where_beli = "beli_brg.kd_toko='$kd_toko' 
-    AND beli_brg.stok_jual > 0 
-    AND MONTH(beli_brg.tgl_fak)='$bulan' 
-    AND YEAR(beli_brg.tgl_fak)='$tahun'";
-  $having_clause = "HAVING stok_juals > 0";
+  // Filter per bulan/tahun
+  if($stok == 1){
+    $where_beli = "beli_brg.kd_toko='$kd_toko' AND beli_brg.stok_jual >= 0 AND MONTH(beli_brg.tgl_fak)='$bulan' AND YEAR(beli_brg.tgl_fak)='$tahun'";
+    $having_clause = "HAVING stok_juals >= 0";
+  } else {
+    $where_beli = "beli_brg.kd_toko='$kd_toko' AND beli_brg.stok_jual > 0 AND MONTH(beli_brg.tgl_fak)='$bulan' AND YEAR(beli_brg.tgl_fak)='$tahun'";
+    $having_clause = "HAVING stok_juals > 0";
+  }
+  $sql = "
+  SELECT
+    sub.kd_brg,
+    m.nm_brg,
+    sub.kd_sup,
+    sub.id_bag,
+    s.nm_sup,
+    b.nm_bag,
+    sub.stok_juals,
+    sub.hrg_beli,
+    (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+  FROM (
+    SELECT 
+      beli_brg.kd_brg,
+      beli_brg.kd_sup,
+      SUM(beli_brg.stok_jual) AS stok_juals,
+      AVG(beli_brg.hrg_beli) AS hrg_beli,
+      MAX(beli_brg.id_bag) AS id_bag
+    FROM beli_brg
+    WHERE $where_beli
+    GROUP BY beli_brg.kd_brg
+    $having_clause
+  ) AS sub
+  LEFT JOIN mas_brg m ON sub.kd_brg = m.kd_brg AND m.kd_toko = '$kd_toko'
+  LEFT JOIN supplier s ON sub.kd_sup = s.kd_sup
+  LEFT JOIN bag_brg b ON sub.id_bag = b.no_urut
+  ORDER BY COALESCE(m.nm_brg, sub.kd_brg) ASC";
 }
-
-$sql = "
-SELECT
-  sub.kd_brg,
-  m.nm_brg,
-  sub.kd_sup,
-  sub.id_bag,
-  s.nm_sup,
-  b.nm_bag,
-  sub.stok_juals,
-  sub.hrg_beli,
-  (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
-FROM (
-  SELECT 
-    beli_brg.kd_brg,
-    beli_brg.kd_sup,
-    SUM(beli_brg.stok_jual) AS stok_juals,
-    AVG(beli_brg.hrg_beli) AS hrg_beli,
-    MAX(beli_brg.id_bag) AS id_bag
-  FROM beli_brg
-  WHERE $where_beli
-  GROUP BY beli_brg.kd_brg
-  $having_clause
-) AS sub
-LEFT JOIN mas_brg m 
-  ON sub.kd_brg = m.kd_brg
-  AND m.kd_toko = '$kd_toko'
-LEFT JOIN supplier s
-  ON sub.kd_sup = s.kd_sup
-LEFT JOIN bag_brg b
-  ON sub.id_bag = b.no_urut
-ORDER BY COALESCE(m.nm_brg, sub.kd_brg) ASC";
 
 $q = mysqli_query($connect, $sql);
 if(!$q){
@@ -143,8 +169,13 @@ if(!$q){
       <h3 style="margin:0; padding:0;"><?php echo htmlspecialchars($nm_toko); ?></h3>
       <div style="margin-bottom:8px;"><?php echo htmlspecialchars($al_toko); ?></div>
       <h4 style="margin:0; padding:4px 0;">
-        Laporan Persediaan Barang Bulan 
-        <?php echo $nama_bulan[$bulan].' '.$tahun; ?>
+        <?php 
+        if($semua == 1){ 
+          echo "Laporan Persediaan Barang (Semua)"; 
+        } else { 
+          echo "Laporan Persediaan Barang Bulan ".$nama_bulan[$bulan].' '.$tahun; 
+        } 
+        ?>
       </h4>
     </div>
 
@@ -169,7 +200,7 @@ if(!$q){
           ?>
           <tr>
             <td colspan="8" class="no-border" style="text-align:center;padding:12px;">
-              Tidak ada data persediaan untuk periode ini.
+              <?php echo $semua == 1 ? "Tidak ada data persediaan." : "Tidak ada data persediaan untuk periode ini."; ?>
             </td>
           </tr>
           <?php
