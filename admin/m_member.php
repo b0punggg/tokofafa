@@ -3,6 +3,7 @@
 <div class="loader1" style="z-index: 10023"><div class="loader2"><div class="loader3"></div></div></div>
 <?php 
  include 'starting.php';
+ include 'cekmasuk.php';
  $connect=opendtcek();
 ?>
 
@@ -111,6 +112,13 @@
                   <div class="col-sm-8">
                     <input class="form-control hrf_arial" id="nm_member" type="text" name="nm_member" autofocus required style="border: 1px solid black;font-size: 10pt;">
                   </div>
+               </div>
+               <div class="form-group row" style="margin-top: -10px">
+               <label for="nm_toko" class="col-sm-4 col-form-label"><b>Nama Toko</b></label>
+<div class="col-sm-8">
+  <input class="form-control hrf_arial" id="nm_toko" type="text" name="nm_toko"
+         style="border: 1px solid black;font-size: 10pt;">
+</div>
                </div> 
              	</div>
               <script>cekid();</script>

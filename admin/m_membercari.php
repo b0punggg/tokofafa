@@ -28,14 +28,15 @@
 	      <th width="5%">No.</th>
 	      <th width="10%">ID MEMBER</th>
 	      <th width="20%">NAMA MEMBER</th>
-	      <th width="35%">ALAMAT</th>
+        <th width="15%">NAMA TOKO</th>
+	      <th width="30%">ALAMAT</th>
 	      <th width="10%">NO. TELP/HP</th>
 	      <th width="10%">POIN</th>
 	      <th colspan="2" width="10%">OPSI</th>
 	    </tr>
 	    <?php
 	    include "config.php";
-	    session_start();
+	    if(!session_id()) session_start();
 	    	
         $connect=opendtcek();
         $page = (isset($_POST['page']))? $_POST['page'] : 1;
@@ -82,6 +83,9 @@
 	        <td align="right"><?php echo $no.'.' ?></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['kd_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['nm_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
+          <td align="left"><input class="w3-input" type="text"
+     value="<?php echo htmlspecialchars($data['nm_toko']); ?>" readonly
+     style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['al_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['no_telp']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="right" style="font-weight: bold; color: #ff6b00;">
