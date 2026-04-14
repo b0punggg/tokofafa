@@ -31,6 +31,7 @@
         <th width="15%">NAMA TOKO</th>
 	      <th width="30%">ALAMAT</th>
 	      <th width="10%">NO. TELP/HP</th>
+	      <th width="10%">TGL DAFTAR</th>
 	      <th width="10%">POIN</th>
 	      <th colspan="2" width="10%">OPSI</th>
 	    </tr>
@@ -88,6 +89,14 @@
      style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['al_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['no_telp']; ?>" readonly style="border: none;background-color: transparent;" ></td>
+	        <td align="center"><?php
+	          $td = isset($data['tgl_daftar']) ? $data['tgl_daftar'] : '';
+	          if ($td !== '' && $td !== null && $td !== '0000-00-00') {
+	            echo htmlspecialchars(date('d-m-Y', strtotime($td)));
+	          } else {
+	            echo '-';
+	          }
+	        ?></td>
 	        <td align="right" style="font-weight: bold; color: #ff6b00;">
 	          <?php 
 	          $poin_member = isset($data['poin']) ? floatval($data['poin']) : 0;
