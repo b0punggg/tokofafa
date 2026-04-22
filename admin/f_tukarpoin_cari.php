@@ -36,15 +36,16 @@
 	    session_start(); 
      	    
 	    $con1=opendtcek();
+      $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($con1, $_SESSION['id_toko']) : '';
 	    
 	    // Ambil semua data member tanpa pagination
 	    $params = isset($keyword) ? mysqli_real_escape_string($con1, $keyword) : '';
 	    $param = '%'.$params.'%';
 	    
 	    if($params != ""){
-	      $sql1 = mysqli_query($con1, "SELECT * FROM member WHERE nm_member LIKE '$param' OR kd_member LIKE '$param' ORDER BY nm_member ASC");
+	      $sql1 = mysqli_query($con1, "SELECT * FROM member WHERE kd_toko='$kd_toko' AND (nm_member LIKE '$param' OR kd_member LIKE '$param') ORDER BY nm_member ASC");
 	    } else {
-	      $sql1 = mysqli_query($con1, "SELECT * from member ORDER BY nm_member ASC LIMIT 20");
+	      $sql1 = mysqli_query($con1, "SELECT * from member WHERE kd_toko='$kd_toko' ORDER BY nm_member ASC LIMIT 20");
 	    }
 	    
 	    $no=0;

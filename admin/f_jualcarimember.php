@@ -35,9 +35,10 @@
 	    session_start(); 
      	    
 	    $con1=opendtcek();
+      $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($con1, $_SESSION['id_toko']) : '';
 	    
 	    // Ambil semua data member tanpa pagination (sama seperti pelanggan)
-	    $sql1 = mysqli_query($con1, "SELECT * from member ORDER BY nm_member ASC");
+	    $sql1 = mysqli_query($con1, "SELECT * from member WHERE kd_toko='$kd_toko' ORDER BY nm_member ASC");
 	    
 	    $no=0;
 	    while($databrg = mysqli_fetch_array($sql1)){ // Ambil semua data dari hasil eksekusi $sql

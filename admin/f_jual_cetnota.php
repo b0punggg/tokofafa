@@ -64,7 +64,7 @@
   
   // Ambil data member jika ada
   if (!empty($kd_member)) {
-    $sqlmember=mysqli_query($connect,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+    $sqlmember=mysqli_query($connect,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko' LIMIT 1");
     if (mysqli_num_rows($sqlmember) > 0) {
       $datamember=mysqli_fetch_assoc($sqlmember);
       $nm_member = $datamember['nm_member'];

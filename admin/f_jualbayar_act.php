@@ -54,20 +54,39 @@ if(mysqli_num_rows($cekret)>=1){
 }
 
 $copy = 1; // Default value
-$nofak_awal = 1; // Default value
+$kode_seting_toko = 1; // Nilai counter saat ini pada tabel seting
 
 $sq_set=mysqli_query($conbayar,"SELECT * FROM seting");
 while($dt_set=mysqli_fetch_assoc($sq_set)){
-  
   if ($dt_set['nm_per']=='COPY'){
     $copy=$dt_set['kode'];  
   }
   if ($dt_set['nm_per']==$kd_toko){
-    $nofak_awal=$dt_set['kode']+1;  
+    $kode_seting_toko=(int)$dt_set['kode'];  
   }
 }
-mysqli_query($conbayar,"UPDATE seting SET kode='$nofak_awal' WHERE nm_per='$kd_toko'");
 mysqli_free_result($sq_set);unset($dt_set);
+
+// Cegah lompat nomor nota:
+// - Alur normal (tanpa panding): counter dinaikkan saat bayar.
+// - Alur panding: counter sudah dinaikkan saat panding, jadi saat bayar tidak dinaikkan lagi.
+$counter_nota = 0;
+$pecah_nota = explode('-', $no_fakjual);
+$suffix_nota = end($pecah_nota); // format umum: {id_user}{counter}
+$id_user_str = (string)$id_user;
+if ($suffix_nota !== false && strpos($suffix_nota, $id_user_str) === 0){
+  $counter_nota = (int)substr($suffix_nota, strlen($id_user_str));
+}
+
+if ($counter_nota <= 0){
+  // Fallback jika format nomor nota tidak sesuai ekspektasi
+  $counter_nota = (int)$kode_seting_toko;
+}
+
+if ($counter_nota >= (int)$kode_seting_toko){
+  $nofak_awal = $counter_nota + 1;
+  mysqli_query($conbayar,"UPDATE seting SET kode='$nofak_awal' WHERE nm_per='$kd_toko'");
+}
 
 //update simpan pada dum_jual
 mysqli_query($conbayar,"UPDATE dum_jual set bayar='SUDAH',tgl_jt='$tgl_jt',kd_pel='$kd_pel',kd_bayar='$kd_bayar',trf='$tf' WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko'");
@@ -345,8 +364,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
       if($kd_member != ''){
         // Kurangi poin yang ditukar terlebih dahulu
         if($poin_redeem > 0){
-          mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
-          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
           $datapoin = mysqli_fetch_assoc($cekpoin);
           $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
           mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
@@ -355,8 +374,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
         }
         // Tambah poin yang didapat dari transaksi
         if($poin_earned > 0){
-          mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
-          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+          mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
+          $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
           $datapoin = mysqli_fetch_assoc($cekpoin);
           $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
           mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
@@ -443,8 +462,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
   if($d && $kd_member != ''){
     // Kurangi poin yang ditukar terlebih dahulu
     if($poin_redeem > 0){
-      mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member'");
-      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+      mysqli_query($conbayar,"UPDATE member SET poin = poin - $poin_redeem WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
+      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
       $datapoin = mysqli_fetch_assoc($cekpoin);
       $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
       mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','0','$poin_redeem','$poin_saldo','Penukaran Poin Transaksi - $no_fakjual','$kd_toko','$tghi')");
@@ -453,8 +472,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
     }
     // Tambah poin yang didapat dari transaksi
     if($poin_earned > 0){
-      mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member'");
-      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+      mysqli_query($conbayar,"UPDATE member SET poin = poin + $poin_earned WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
+      $cekpoin = mysqli_query($conbayar,"SELECT poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
       $datapoin = mysqli_fetch_assoc($cekpoin);
       $poin_saldo = isset($datapoin['poin']) ? $datapoin['poin'] : 0;
       mysqli_query($conbayar,"INSERT INTO member_poin_history values('','$kd_member','$no_fakjual','$tgl_jual','$poin_earned','0','$poin_saldo','Transaksi Penjualan - $no_fakjual','$kd_toko','$tghi')");
@@ -875,7 +894,7 @@ if ($d && $pil_cetak =="CETAK-SM"){
     $poin_earned_print = isset($dt_member_print['poin_earned']) ? floatval($dt_member_print['poin_earned']) : 0;
     
     if (!empty($kd_member_print)) {
-      $sqlmember_print=mysqli_query($conbayar,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member_print' LIMIT 1");
+      $sqlmember_print=mysqli_query($conbayar,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member_print' AND kd_toko='$kd_toko' LIMIT 1");
       if ($sqlmember_print && mysqli_num_rows($sqlmember_print) > 0) {
         $datamember_print=mysqli_fetch_assoc($sqlmember_print);
         $nm_member_print = isset($datamember_print['nm_member']) ? $datamember_print['nm_member'] : '';

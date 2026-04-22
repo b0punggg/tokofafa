@@ -5,6 +5,7 @@
 <?php
     session_start();
     include 'config.php';
+    require_once 'f_cetak_jual_item_helper.php';
     $connect=opendtcek();
 ?>
 <style>

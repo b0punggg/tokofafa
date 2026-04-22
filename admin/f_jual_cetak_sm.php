@@ -60,7 +60,7 @@ th, td {
       $poin_earned = isset($dt_member['poin_earned']) ? floatval($dt_member['poin_earned']) : 0;
       
       // Ambil nama member dan poin saldo jika ada kd_member
-      $sqlmember=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+      $sqlmember=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko' LIMIT 1");
       if ($sqlmember && mysqli_num_rows($sqlmember) > 0) {
         $datamember=mysqli_fetch_assoc($sqlmember);
         $nm_member = isset($datamember['nm_member']) ? $datamember['nm_member'] : '';
@@ -124,7 +124,7 @@ th, td {
         if(!empty($kd_member)){ 
           // Jika nm_member masih kosong, ambil lagi dari database
           if (empty($nm_member)) {
-            $sqlmember2=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' LIMIT 1");
+            $sqlmember2=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko' LIMIT 1");
             if ($sqlmember2 && mysqli_num_rows($sqlmember2) > 0) {
               $datamember2=mysqli_fetch_assoc($sqlmember2);
               $nm_member = isset($datamember2['nm_member']) ? $datamember2['nm_member'] : '';

@@ -20,7 +20,7 @@
   }
   
   // Cek poin member saat ini
-  $cekpoin = mysqli_query($connect,"SELECT poin FROM member WHERE kd_member='$kd_member'");
+  $cekpoin = mysqli_query($connect,"SELECT poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
   if(mysqli_num_rows($cekpoin) > 0){
     $datapoin = mysqli_fetch_assoc($cekpoin);
     $poin_sekarang = floatval($datapoin['poin']);
@@ -33,7 +33,7 @@
     
     // Update poin member
     $poin_baru = $poin_sekarang - $poin_tukar;
-    $update = mysqli_query($connect,"UPDATE member SET poin = '$poin_baru' WHERE kd_member='$kd_member'");
+    $update = mysqli_query($connect,"UPDATE member SET poin = '$poin_baru' WHERE kd_member='$kd_member' AND kd_toko='$kd_toko'");
     
     if($update){
       // Simpan riwayat penukaran poin

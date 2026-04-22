@@ -40,6 +40,7 @@
 	    if(!session_id()) session_start();
 	    	
         $connect=opendtcek();
+        $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($connect, $_SESSION['id_toko']) : '';
         $page = (isset($_POST['page']))? $_POST['page'] : 1;
 
 	    $limit = 10; // Jumlah data per halamannya
@@ -54,23 +55,24 @@
 	    	//echo $params;
           if ($params=="") {	 
           	  $sql = mysqli_query($connect, "SELECT * FROM member
+          	  	     WHERE kd_toko='$kd_toko'
           	  	     ORDER BY nm_member ASC LIMIT $limit_start, $limit");
 
-	          $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member ORDER BY nm_member");
+	          $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' ORDER BY nm_member");
           }
           else {
 	          $sql =mysqli_query($connect, "SELECT * FROM member
-	          	  WHERE nm_member LIKE '$param'  ORDER BY nm_member ASC LIMIT $limit_start, $limit");
-		      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE nm_member LIKE '$param' ");	
+	          	  WHERE kd_toko='$kd_toko' AND nm_member LIKE '$param'  ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+		      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' AND nm_member LIKE '$param' ");	
           }	
 	      $get_jumlah = mysqli_fetch_array($sql2);
 
 	    }else{ // Jika user belum mengklik tombol search (PROSES TANPA AJAX)
 	      // $id_apt=$_SESSION['id_apt'];
-          $sql = mysqli_query($connect, "SELECT * from member ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+          $sql = mysqli_query($connect, "SELECT * from member WHERE kd_toko='$kd_toko' ORDER BY nm_member ASC LIMIT $limit_start, $limit");
 
 	      // Buat query untuk menghitung semua jumlah data
-	      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member ORDER BY nm_member");
+	      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' ORDER BY nm_member");
 	      $get_jumlah = mysqli_fetch_array($sql2);
 	    }
 	    $no=$limit_start;
