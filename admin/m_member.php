@@ -45,29 +45,20 @@
 		    url: 'm_membercari.php', // File tujuan
 		    type: 'POST', // Tentukan type nya POST atau GET
 		    data: {keyword: $("#keyktmember").val(), page: page_number, search: search}, 
-		    dataType: "text",
+		    dataType: "json",
 		    beforeSend: function(e) {
 		      if(e && e.overrideMimeType) {
-		        e.overrideMimeType("text/html;charset=UTF-8");
+		        e.overrideMimeType("application/json;charset=UTF-8");
 		      }
 		    },
 		    success: function(response){
-		      // Terima respons dalam 2 format:
-		      // 1) JSON: {"hasil":"...html..."}
-		      // 2) HTML mentah (fallback)
-		      var html = response;
-		      try {
-		        var parsed = JSON.parse(response);
-		        if (parsed && typeof parsed.hasil !== "undefined") {
-		          html = parsed.hasil;
-		        }
-		      } catch (err) {
-		        // Respons bukan JSON, gunakan sebagai HTML mentah.
-		      }
-		      $("#viewdtmember").html(html);
+		      // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
+		      
+		      $("#viewdtmember").html(response.hasil);
 		    },
-		    error: function () { // Ketika terjadi error
-		      popnew_error("Gagal memuat data member");
+		    error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
+		      alert(xhr.responseText); // munculkan alert
+		    
 		    }
 		  });
 	    }
