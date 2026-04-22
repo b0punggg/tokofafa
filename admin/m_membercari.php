@@ -1,5 +1,5 @@
 <?php
-	$keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX	
+	$keyword = isset($_POST['keyword']) ? $_POST['keyword'] : '';
 	ob_start();
 ?>
 <style>
@@ -40,43 +40,55 @@
 	    if(!session_id()) session_start();
 	    	
         $connect=opendtcek();
-        $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($connect, $_SESSION['id_toko']) : '';
-        $page = (isset($_POST['page']))? $_POST['page'] : 1;
+        $kd_toko = '';
+        if($connect){
+          $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($connect, $_SESSION['id_toko']) : '';
+        }
+        $page = (isset($_POST['page'])) ? max(1, intval($_POST['page'])) : 1;
 
 	    $limit = 10; // Jumlah data per halamannya
 
 	    $limit_start = ($page - 1) * $limit;
-	    // echo '$limit_start='.$limit_start;
+      $sql = false;
+      $sql2 = false;
+      $get_jumlah = array('jumlah' => 0);
 
-	    if(isset($_POST['search']) && $_POST['search'] == true){ // Jika ada data search yg 
-	    	// $id_apt=$_SESSION['id_apt'];
-	    	$params = mysqli_real_escape_string($connect, $keyword);
-	    	$param='%'.$params.'%';  	
-	    	//echo $params;
-          if ($params=="") {	 
-          	  $sql = mysqli_query($connect, "SELECT * FROM member
-          	  	     WHERE kd_toko='$kd_toko'
-          	  	     ORDER BY nm_member ASC LIMIT $limit_start, $limit");
-
-	          $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' ORDER BY nm_member");
+      if(!$connect){
+        echo '<tr><td colspan="9" align="center">Koneksi database gagal</td></tr>';
+      } else {
+        $kolom = array();
+        $cek_kolom = mysqli_query($connect, "SHOW COLUMNS FROM member");
+        if($cek_kolom){
+          while($row_kolom = mysqli_fetch_assoc($cek_kolom)){
+            $kolom[$row_kolom['Field']] = true;
           }
-          else {
-	          $sql =mysqli_query($connect, "SELECT * FROM member
-	          	  WHERE kd_toko='$kd_toko' AND nm_member LIKE '$param'  ORDER BY nm_member ASC LIMIT $limit_start, $limit");
-		      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' AND nm_member LIKE '$param' ");	
-          }	
-	      $get_jumlah = mysqli_fetch_array($sql2);
+          mysqli_free_result($cek_kolom);
+        }
 
-	    }else{ // Jika user belum mengklik tombol search (PROSES TANPA AJAX)
-	      // $id_apt=$_SESSION['id_apt'];
-          $sql = mysqli_query($connect, "SELECT * from member WHERE kd_toko='$kd_toko' ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+        $filter_where = array();
+        if(isset($kolom['kd_toko']) && $kd_toko !== ''){
+          $filter_where[] = "kd_toko='$kd_toko'";
+        }
+        if(isset($_POST['search']) && $_POST['search'] == true){
+          $params = mysqli_real_escape_string($connect, $keyword);
+          if($params !== ''){
+            $filter_where[] = "nm_member LIKE '%$params%'";
+          }
+        }
 
-	      // Buat query untuk menghitung semua jumlah data
-	      $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member WHERE kd_toko='$kd_toko' ORDER BY nm_member");
-	      $get_jumlah = mysqli_fetch_array($sql2);
-	    }
+        $where_sql = '';
+        if(count($filter_where) > 0){
+          $where_sql = " WHERE ".implode(" AND ", $filter_where);
+        }
+
+        $sql = mysqli_query($connect, "SELECT * FROM member $where_sql ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+        $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member $where_sql");
+        if($sql2){
+          $get_jumlah = mysqli_fetch_array($sql2);
+        }
+      }
 	    $no=$limit_start;
-	    while($data = mysqli_fetch_array($sql)){ // Ambil semua data dari hasil eksekusi $sql
+	    while($sql && ($data = mysqli_fetch_array($sql))){ // Ambil semua data dari hasil eksekusi $sql
 	      //$no++;
 	      $id=mysqli_escape_string($connect,$data['nm_member']);
 	      if($id<>'-NONE-'){
@@ -87,7 +99,7 @@
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['kd_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['nm_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
           <td align="left"><input class="w3-input" type="text"
-     value="<?php echo htmlspecialchars($data['nm_toko']); ?>" readonly
+     value="<?php echo htmlspecialchars(isset($data['nm_toko']) ? $data['nm_toko'] : '-'); ?>" readonly
      style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['al_member']; ?>" readonly style="border: none;background-color: transparent;" ></td>
 	        <td align="left"><input class="w3-input" type="text" value="<?php echo $data['no_telp']; ?>" readonly style="border: none;background-color: transparent;" ></td>
@@ -124,6 +136,13 @@
 	    <?php
 	      }
 	    }
+      if($connect && !$sql){
+        ?>
+        <tr>
+          <td colspan="9" align="center">Query member gagal: <?php echo htmlspecialchars(mysqli_error($connect)); ?></td>
+        </tr>
+        <?php
+      }
 	    ?>
 	  </table>
 	</div>
@@ -234,10 +253,10 @@ $('table.arrow-nav').keydown(function(e){
 <!--  -->		
 
 <?php
-    mysqli_close($connect);	    
+    if($connect){
+      mysqli_close($connect);
+    }
 	$html = ob_get_contents(); // Masukan isi dari view.php ke dalam variabel $html
 	ob_end_clean();
-	// Buat array dengan index hasil dan value nya $html
-	// Lalu konversi menjadi JSON
-	echo json_encode(array('hasil'=>$html));
+	echo $html;
 ?>
