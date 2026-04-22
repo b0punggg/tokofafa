@@ -1,5 +1,5 @@
 <?php
-	$keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX	
+	$keyword = isset($_POST['keyword']) ? $_POST['keyword'] : '';
 	ob_start();
 ?>
 <style>
@@ -32,16 +32,52 @@
 	    </tr>
 	    <?php
 	    include "config.php";
-	    session_start(); 
+	    if(!session_id()) session_start();
      	    
 	    $con1=opendtcek();
       $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($con1, $_SESSION['id_toko']) : '';
-	    
-	    // Ambil semua data member tanpa pagination (sama seperti pelanggan)
-	    $sql1 = mysqli_query($con1, "SELECT * from member WHERE kd_toko='$kd_toko' ORDER BY nm_member ASC");
+      $nm_toko_sesi = isset($_SESSION['nm_toko']) ? mysqli_real_escape_string($con1, $_SESSION['nm_toko']) : '';
+      $params = mysqli_real_escape_string($con1, $keyword);
+
+      $sql1 = false;
+      if($con1){
+        $kolom = array();
+        $cek_kolom = mysqli_query($con1, "SHOW COLUMNS FROM member");
+        if($cek_kolom){
+          while($row_kolom = mysqli_fetch_assoc($cek_kolom)){
+            $kolom[$row_kolom['Field']] = true;
+          }
+          mysqli_free_result($cek_kolom);
+        }
+
+        $filter_where = array();
+        if($kd_toko === ''){
+          // Safety: tanpa otoritas toko, jangan tampilkan data.
+          $filter_where[] = "1=0";
+        } else if(isset($kolom['kd_toko'])){
+          // Data normal pakai kd_toko, data lama boleh ikut jika nm_toko cocok toko login.
+          if(isset($kolom['nm_toko']) && $nm_toko_sesi !== ''){
+            $filter_where[] = "(kd_toko='$kd_toko' OR ((kd_toko='' OR kd_toko IS NULL) AND UPPER(TRIM(nm_toko))=UPPER(TRIM('$nm_toko_sesi'))))";
+          } else {
+            $filter_where[] = "kd_toko='$kd_toko'";
+          }
+        } else if(isset($kolom['id_toko'])){
+          $filter_where[] = "id_toko='$kd_toko'";
+        } else {
+          $filter_where[] = "1=0";
+        }
+
+        if($params !== ''){
+          $filter_where[] = "nm_member LIKE '%$params%'";
+        }
+
+        $where_sql = " WHERE ".implode(" AND ", $filter_where);
+        // Ambil semua data member tanpa pagination (sama seperti pelanggan)
+        $sql1 = mysqli_query($con1, "SELECT * from member $where_sql ORDER BY nm_member ASC");
+      }
 	    
 	    $no=0;
-	    while($databrg = mysqli_fetch_array($sql1)){ // Ambil semua data dari hasil eksekusi $sql
+	    while($sql1 && ($databrg = mysqli_fetch_array($sql1))){ // Ambil semua data dari hasil eksekusi $sql
 	      $no++;
 	      
 	    ?>
@@ -93,6 +129,13 @@
 	      </tr>
 	    <?php
 	    }
+      if($con1 && !$sql1){
+        ?>
+        <tr>
+          <td colspan="3" style="text-align:center">Query member gagal: <?php echo htmlspecialchars(mysqli_error($con1)); ?></td>
+        </tr>
+        <?php
+      }
 	    ?>
 	  </table>
 </div>
