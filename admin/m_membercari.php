@@ -1,5 +1,5 @@
 <?php
-	$keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX	
+	$keyword = isset($_POST['keyword']) ? $_POST['keyword'] : ''; // Ambil data keyword yang dikirim dengan AJAX	
 	ob_start();
 ?>
 <style>
@@ -41,7 +41,7 @@
 	    	
         $connect=opendtcek();
         $kd_toko = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($connect, $_SESSION['id_toko']) : '';
-        $page = (isset($_POST['page']))? $_POST['page'] : 1;
+        $page = (isset($_POST['page'])) ? max(1, intval($_POST['page'])) : 1;
 
 	    $limit = 10; // Jumlah data per halamannya
 
