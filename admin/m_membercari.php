@@ -57,6 +57,7 @@
         echo '<tr><td colspan="9" align="center">Koneksi database gagal</td></tr>';
       } else {
         $kolom = array();
+        $filter_toko_aktif = false;
         $cek_kolom = mysqli_query($connect, "SHOW COLUMNS FROM member");
         if($cek_kolom){
           while($row_kolom = mysqli_fetch_assoc($cek_kolom)){
@@ -67,7 +68,13 @@
 
         $filter_where = array();
         if(isset($kolom['kd_toko']) && $kd_toko !== ''){
-          $filter_where[] = "kd_toko='$kd_toko'";
+          // Kompatibel data lama: sebagian member lama belum terisi kd_toko
+          $filter_where[] = "(kd_toko='$kd_toko' OR kd_toko='' OR kd_toko IS NULL)";
+          $filter_toko_aktif = true;
+        } else if(isset($kolom['id_toko']) && $kd_toko !== ''){
+          // Fallback jika server lama masih memakai nama kolom id_toko
+          $filter_where[] = "(id_toko='$kd_toko' OR id_toko='' OR id_toko IS NULL)";
+          $filter_toko_aktif = true;
         }
         if(isset($_POST['search']) && $_POST['search'] == true){
           $params = mysqli_real_escape_string($connect, $keyword);
@@ -85,6 +92,26 @@
         $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member $where_sql");
         if($sql2){
           $get_jumlah = mysqli_fetch_array($sql2);
+        }
+
+        // Fallback terakhir: jika tidak ada data karena filter toko, coba tanpa filter toko
+        if($filter_toko_aktif && isset($get_jumlah['jumlah']) && intval($get_jumlah['jumlah']) === 0){
+          $filter_fallback = array();
+          if(isset($_POST['search']) && $_POST['search'] == true){
+            $params_fb = mysqli_real_escape_string($connect, $keyword);
+            if($params_fb !== ''){
+              $filter_fallback[] = "nm_member LIKE '%$params_fb%'";
+            }
+          }
+          $where_fb = '';
+          if(count($filter_fallback) > 0){
+            $where_fb = " WHERE ".implode(" AND ", $filter_fallback);
+          }
+          $sql = mysqli_query($connect, "SELECT * FROM member $where_fb ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+          $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member $where_fb");
+          if($sql2){
+            $get_jumlah = mysqli_fetch_array($sql2);
+          }
         }
       }
 	    $no=$limit_start;
