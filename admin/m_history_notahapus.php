@@ -4,6 +4,10 @@
 <?php
  include 'starting.php';
  include 'cekmasuk.php';
+ if($bag!="Administrator"){
+   echo "<script>window.location='dasbor.php';</script>";
+   exit;
+ }
  $connect=opendtcek();
 ?>
 

@@ -641,7 +641,6 @@
           <a href="f_backup.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Bakcup Data</a>
           <a href="f_stokopname.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Stok Opname</a>
           <a href="f_cekdatafile.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa  fa-bullseye">&nbsp;</i>Cek Data</a>
-          <a href="m_history_notahapus.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>History Hapus Nota</a>
           <a href="f_cetbarcode.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Cetak Barcode</a>
           <a href="f_setbag.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Set Bagian</a>
           <a href="javascript:void(0)" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px" onclick="document.getElementById('fpilprint2').style.display='block';closemenu()"><i class="fa fa-bullseye">&nbsp;</i>Pilih Printer</a>

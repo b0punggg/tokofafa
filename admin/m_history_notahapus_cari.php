@@ -1,4 +1,9 @@
 <?php
+  include 'cekmasuk.php';
+  if($bag!="Administrator"){
+    echo json_encode(array('hasil' => '<div class="w3-panel w3-pale-red w3-border w3-round" style="margin:8px"><b>Akses ditolak.</b> Menu ini hanya untuk Administrator.</div>'));
+    exit;
+  }
   $keyword = isset($_POST['keyword']) ? $_POST['keyword'] : '';
   $status  = isset($_POST['status']) ? $_POST['status'] : 'ALL';
   ob_start();
