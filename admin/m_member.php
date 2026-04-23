@@ -40,6 +40,7 @@
 
 	 	function carimember(page_number, search){
 		  $(this).html("ketik pencarian").attr("disabled", "disabled");
+      updateExportMemberLinks();
 		  
 		  $.ajax({
 		    url: 'm_membercari.php', // File tujuan
@@ -72,10 +73,25 @@
 		  });
 	    }
 
+    function updateExportMemberLinks(){
+      var keyword = document.getElementById('keyktmember') ? document.getElementById('keyktmember').value : '';
+      var encodedKeyword = encodeURIComponent(keyword);
+      var excelBtn = document.getElementById('btn-export-member-excel');
+      var pdfBtn = document.getElementById('btn-export-member-pdf');
+
+      if(excelBtn){
+        excelBtn.href = 'm_member_export_excel.php?keyword=' + encodedKeyword;
+      }
+      if(pdfBtn){
+        pdfBtn.href = 'm_member_export_pdf.php?keyword=' + encodedKeyword;
+      }
+    }
+
   $(document).ready(function(){
     $( '.idmember' ).mask('IDMEM-00000000');
     $( '.telp' ).mask('0000 00000000000');
     $( '.hp' ).mask('000 00000000000');
+    updateExportMemberLinks();
   });
     </script> 
 
@@ -168,10 +184,12 @@
               </div>
               <div class="w3-half">
                 <div class="input-group" style="margin-top: 15px">
-                  <input onkeyup="if(event.keyCode==13){carimember(1, true);}" style="font-size: 10pt;height: 30px" type="text" class="form-control hrf_arial" placeholder="ketik  pencarian [nama member]" id="keyktmember">&nbsp;
+                  <input onkeyup="updateExportMemberLinks();if(event.keyCode==13){carimember(1, true);}" style="font-size: 10pt;height: 30px" type="text" class="form-control hrf_arial" placeholder="ketik  pencarian [nama member]" id="keyktmember">&nbsp;
                   <span class="input-group-btn w3-margin-bottom">
                     <button onclick="carimember(1, true);" class="btn btn-primary" type="button" id="btn-ktmember" style="font-size: 10pt;" title="Cari"><i class="fa fa-search"></i></button>
-                    <a style="font-size: 10pt;" title="Reset cari" onclick="document.getElementById('keyktmember').value='';document.getElementById('btn-ktmember').click();" href="#" class="btn btn-warning"><i class="fa fa-undo"></i></a>
+                    <a style="font-size: 10pt;" title="Reset cari" onclick="document.getElementById('keyktmember').value='';updateExportMemberLinks();document.getElementById('btn-ktmember').click();" href="#" class="btn btn-warning"><i class="fa fa-undo"></i></a>
+                    <a id="btn-export-member-excel" style="font-size: 10pt;" title="Download Excel" href="m_member_export_excel.php" class="btn btn-success" target="_blank"><i class="fa fa-file-excel-o"></i></a>
+                    <a id="btn-export-member-pdf" style="font-size: 10pt;" title="Download PDF" href="m_member_export_pdf.php" class="btn btn-danger" target="_blank"><i class="fa fa-file-pdf-o"></i></a>
                   </span>
                 </div>    
               </div>
