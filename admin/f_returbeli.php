@@ -10,24 +10,36 @@
   <body >
      <script>
       
+      function getAjaxHtml(response){
+        try {
+          var parsed = JSON.parse(response);
+          if(parsed && typeof parsed.hasil !== "undefined"){
+            return parsed.hasil;
+          }
+        } catch (e) {}
+        return response;
+      }
+
       function caribrgretur(page_number, search){
         // $(this).html("ketik pencarian").attr("disabled", "disabled");
         $.ajax({
           url: 'f_returbeli_listretur.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword: $("#no_tran").val(), page: page_number, search: search}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-            $("#listbrgretur").html(response.hasil);
+            $("#listbrgretur").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal memuat list retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal memuat list retur pembelian");
           }
         });
       }
@@ -38,18 +50,20 @@
           url: 'f_returbeli_carisup.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword: $("#kd_sup").val(), page: page_number, search: search}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-            $("#viewidsup").html(response.hasil);
+            $("#viewidsup").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal memuat supplier:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal memuat data supplier");
           }
         });
       }
@@ -60,18 +74,20 @@
           url: 'f_returbeli_caribrg.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword1: $("#nm_brg").val(),keyword2: $("#kd_sup").val(), page: page_number, search: search}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-            $("#viewkdbrgretur").html(response.hasil);
+            $("#viewkdbrgretur").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal memuat barang retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal memuat data barang retur");
           }
         });
       }
@@ -83,19 +99,20 @@
           url: 'f_returbeli_carisat.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword:$("#kd_brg").val()}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-            
-            $("#viewsatretur").html(response.hasil);
+            $("#viewsatretur").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal memuat satuan retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal memuat data satuan");
           }
         });
       } 
@@ -107,18 +124,20 @@
           url: 'f_returbeli_hapusbr.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword:nourut}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewuni").html(response.hasil);
+            $("#viewuni").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal hapus item retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal menghapus item retur");
           }
         });
       }  
@@ -130,18 +149,20 @@
           url: 'f_returbeli_cekstok.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword1:nourut, keyword2: kdbrg, keyword3: kdsat}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewjmlstok").html(response.hasil);
+            $("#viewjmlstok").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal cek stok retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal mengecek stok barang");
           }
         });
       } 
@@ -153,18 +174,20 @@
           url: 'f_returbeli_simpan.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword1:notran, keyword2: tgltran, keyword3:kembali}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewuni").html(response.hasil);
+            $("#viewuni").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal simpan retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal menyimpan retur pembelian");
           }
         });
       } 
@@ -176,18 +199,20 @@
           url: 'f_returbeli_batal.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword1:notran, keyword2: tgltran}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewuni").html(response.hasil);
+            $("#viewuni").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal batal retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal membatalkan retur pembelian");
           }
         });
       } 
@@ -199,18 +224,20 @@
           url: 'f_returbeli_databaru.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword:notran}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewuni1").html(response.hasil);
+            $("#viewuni1").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal buat data baru retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal membuat data retur baru");
           }
         });
       } 
@@ -222,18 +249,20 @@
           url: 'f_returbeli_carinoretur.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
           data: {keyword:$("#keycari").val(),page:page_number, search:search}, 
-          dataType: "json",
+          dataType: "text",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
               e.overrideMimeType("application/json;charset=UTF-8");
             }
           },
           success: function(response){ 
-            // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");          
-            $("#viewcarinoretur").html(response.hasil);
+            $("#viewcarinoretur").html(getAjaxHtml(response));
           },
           error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-            alert(xhr.responseText); // munculkan alert
+            if (window.console) {
+              console.error("Gagal memuat daftar no retur:", xhr.status, xhr.responseText);
+            }
+            popnew_error("Gagal memuat daftar retur");
           }
         });
       }  
