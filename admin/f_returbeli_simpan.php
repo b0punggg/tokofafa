@@ -2,6 +2,7 @@
 ob_start();
 include 'config.php';
 session_start();
+mysqli_report(MYSQLI_REPORT_OFF);
 
 $consim=opendtcek();
 if(!$consim){
@@ -12,6 +13,7 @@ $kd_toko=$_SESSION['id_toko'];
 $no_tran=mysqli_real_escape_string($consim,$_POST['keyword1']);
 $tgl_tran=mysqli_real_escape_string($consim,$_POST['keyword2']);
 $kembali=mysqli_real_escape_string($consim,$_POST['keyword3']);
+try {
 
 $returMasCols = array();
 $returCols = array();
@@ -156,6 +158,10 @@ if ($d) {
  ?> <script>popnew_ok("Simpan berhasil");kosongkan();carinoretur(1,true);</script> <?php   	
 }else {
   $errMsg = ($lastSqlError!='') ? addslashes($lastSqlError) : 'Simpan gagal';
+  ?> <script>popnew_error("Simpan gagal: <?=$errMsg?>");kosongkan();carinoretur(1,true);</script> <?php
+}
+} catch (Throwable $e) {
+  $errMsg = addslashes($e->getMessage());
   ?> <script>popnew_error("Simpan gagal: <?=$errMsg?>");kosongkan();carinoretur(1,true);</script> <?php
 }
 ?>
