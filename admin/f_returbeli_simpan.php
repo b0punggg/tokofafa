@@ -8,6 +8,23 @@ $kd_toko=$_SESSION['id_toko'];
 $no_tran=mysqli_real_escape_string($consim,$_POST['keyword1']);
 $tgl_tran=mysqli_real_escape_string($consim,$_POST['keyword2']);
 $kembali=mysqli_real_escape_string($consim,$_POST['keyword3']);
+
+$returMasCols = array();
+$returCols = array();
+$cekColsMas = mysqli_query($consim, "SHOW COLUMNS FROM retur_beli_mas");
+if($cekColsMas){
+  while($rowColsMas = mysqli_fetch_assoc($cekColsMas)){
+    $returMasCols[$rowColsMas['Field']] = true;
+  }
+  mysqli_free_result($cekColsMas);
+}
+$cekColsRetur = mysqli_query($consim, "SHOW COLUMNS FROM retur_beli");
+if($cekColsRetur){
+  while($rowColsRetur = mysqli_fetch_assoc($cekColsRetur)){
+    $returCols[$rowColsRetur['Field']] = true;
+  }
+  mysqli_free_result($cekColsRetur);
+}
 // echo '$no_tran='.$no_tran.'<br>';
 // echo '$tgl_tran='.$tgl_tran.'<br>';
 // echo '$kembali='.$kembali.'<br>';
@@ -41,12 +58,24 @@ if (mysqli_num_rows($cekmas)>=1){
 	    $jml_brg_klr=$x[2]+$jml_retur;
 
 	    //proses simpan pengembalian
-	    $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'"); 
+      if(isset($returCols['kembali'])){
+	      $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'"); 
+      }
 	    //$d=mysqli_query($consim,"UPDATE beli_brg SET jml_stok='$stok_akhir' where no_urut='$no_item'");
 	    //$d=mysqli_query($consim,"UPDATE mas_brg SET jml_brg='$jml_brgakhr',brg_klr='$jml_brg_klr' where kd_brg='$kd_brg'");
 	  }	
 	  //proses simpan pada retur_beli_mas
-	  $d=mysqli_query($consim,"UPDATE retur_beli_mas SET tot_qty='$no',tot_hrg_beli='$totawal',tot_potongan='$totpot',tot_tax='$tottax',tot_retur='$subtot',tot_kembali='$kembali' WHERE no_urut='$no_urutmas'");
+    $setMas = array();
+    if(isset($returMasCols['tot_qty'])){ $setMas[] = "tot_qty='$no'"; }
+    if(isset($returMasCols['tot_hrg_beli'])){ $setMas[] = "tot_hrg_beli='$totawal'"; }
+    if(isset($returMasCols['tot_potongan'])){ $setMas[] = "tot_potongan='$totpot'"; }
+    if(isset($returMasCols['tot_tax'])){ $setMas[] = "tot_tax='$tottax'"; }
+    if(isset($returMasCols['tot_retur'])){ $setMas[] = "tot_retur='$subtot'"; }
+    if(isset($returMasCols['tot_kembali'])){ $setMas[] = "tot_kembali='$kembali'"; }
+    if(isset($returMasCols['kembali'])){ $setMas[] = "kembali='$kembali'"; }
+    if(count($setMas) > 0){
+	    $d=mysqli_query($consim,"UPDATE retur_beli_mas SET ".implode(',', $setMas)." WHERE no_urut='$no_urutmas'");
+    }
 	}     
 	unset($cek,$datcek);
 } else {
@@ -75,12 +104,32 @@ if (mysqli_num_rows($cekmas)>=1){
 	    $jml_brg_klr=$x[2]+$jml_retur;
 
 	    //proses simpan pengembalian
+      if(isset($returCols['kembali'])){
 	    $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'"); 
+      }
 	    $d=mysqli_query($consim,"UPDATE beli_brg SET stok_jual='$stok_akhir' where no_urut='$no_item'");
 	    $d=mysqli_query($consim,"UPDATE mas_brg SET jml_brg='$jml_brgakhir',brg_klr='$jml_brg_klr' where kd_brg='$kd_brg'");
 	  }	
 	  //proses simpan pada retur_beli_mas
-	  $d=mysqli_query($consim,"INSERT INTO retur_beli_mas VALUES('','$tgl_tran','$no_tran','$kd_sup','$no','$totawal','$totpot','$tottax','$subtot','$kembali','$kd_toko')");
+    $insertCols = array();
+    $insertVals = array();
+    if(isset($returMasCols['tgl_retur'])){ $insertCols[] = 'tgl_retur'; $insertVals[] = "'$tgl_tran'"; }
+    if(isset($returMasCols['no_retur'])){ $insertCols[] = 'no_retur'; $insertVals[] = "'$no_tran'"; }
+    if(isset($returMasCols['kd_sup'])){ $insertCols[] = 'kd_sup'; $insertVals[] = "'$kd_sup'"; }
+    if(isset($returMasCols['tot_qty'])){ $insertCols[] = 'tot_qty'; $insertVals[] = "'$no'"; }
+    if(isset($returMasCols['tot_hrg_beli'])){ $insertCols[] = 'tot_hrg_beli'; $insertVals[] = "'$totawal'"; }
+    if(isset($returMasCols['tot_potongan'])){ $insertCols[] = 'tot_potongan'; $insertVals[] = "'$totpot'"; }
+    if(isset($returMasCols['tot_tax'])){ $insertCols[] = 'tot_tax'; $insertVals[] = "'$tottax'"; }
+    if(isset($returMasCols['tot_retur'])){ $insertCols[] = 'tot_retur'; $insertVals[] = "'$subtot'"; }
+    if(isset($returMasCols['tot_kembali'])){ $insertCols[] = 'tot_kembali'; $insertVals[] = "'$kembali'"; }
+    if(isset($returMasCols['kembali'])){ $insertCols[] = 'kembali'; $insertVals[] = "'$kembali'"; }
+    if(isset($returMasCols['kd_toko'])){ $insertCols[] = 'kd_toko'; $insertVals[] = "'$kd_toko'"; }
+
+    if(count($insertCols) > 0){
+      $d=mysqli_query($consim,"INSERT INTO retur_beli_mas (".implode(',', $insertCols).") VALUES(".implode(',', $insertVals).")");
+    } else {
+      $d=false;
+    }
 	}
 }
 unset($cekmas,$datmas);

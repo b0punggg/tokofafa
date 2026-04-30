@@ -12,25 +12,32 @@
 
 <div id="main" style="font-size: 10pt">
   <script>		
+    function getAjaxHtml(response){
+      try {
+        var parsed = JSON.parse(response);
+        if(parsed && typeof parsed.hasil !== "undefined"){
+          return parsed.hasil;
+        }
+      } catch (e) {}
+      return response;
+    }
   	
     function resetinput(kd_toko){
       $.ajax({
         url: 'f_returjualreset.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword1:$("#no_returjual").val(),keyword2:kd_toko}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#viewdelretur").html(response.hasil);
+          $("#viewdelretur").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal memuat data reset retur");
         }
       });
     }
@@ -40,19 +47,17 @@
         url: 'f_returjualcari.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword:$("#keycariretur").val(),page:page_number,search:search}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#viewcarinotaretur").html(response.hasil);
+          $("#viewcarinotaretur").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal memuat list nota jual");
         }
       });
     }
@@ -62,19 +67,17 @@
         url: 'f_returjual_act.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword1:no_urut,keyword2:$("#tgl_retur").val(),keyword3:$("#no_returjual").val()}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#viewtake").html(response.hasil);
+          $("#viewtake").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal mengambil data retur");
         }
       });
     }
@@ -86,19 +89,17 @@
         url: 'f_returjualstart.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword1:kd_toko,keyword2:id_user}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#viewstart").html(response.hasil);
+          $("#viewstart").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal memulai retur jual");
         }
       });
     }
@@ -108,17 +109,17 @@
         url: 'f_returjualup.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword1:no_urut,keyword2:no_item,keyword3:qty,keyword4:netto}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          $("#viewupretur").html(response.hasil);
+          $("#viewupretur").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal update item retur");
         }
       });
     }
@@ -128,17 +129,17 @@
         url: 'f_returjualhapus.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword:no_urut}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          $("#viewdelretur").html(response.hasil);
+          $("#viewdelretur").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          alert(xhr.responseText); // munculkan alert
+          popnew_error("Gagal menghapus item retur");
         }
       });
     }  
@@ -148,30 +149,20 @@
         url: 'f_returjcari.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword1:$("#tgl_retur1").val(), keyword2:no_ret, page:page_number,search:search}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#retjual").html(response.hasil);
+          $("#retjual").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          console.error("Error:", thrownError);
-          console.error("Response:", xhr.responseText);
-          try {
-            var response = JSON.parse(xhr.responseText);
-            if(response.hasil) {
-              $("#retjual").html(response.hasil);
-            } else {
-              popnew_error("Terjadi kesalahan saat memuat data");
-            }
-          } catch(e) {
-            popnew_error("Terjadi kesalahan saat memuat data");
+          if (window.console) {
+            console.error("Gagal memuat data retur:", xhr.status, xhr.responseText);
           }
+          $("#retjual").html(getAjaxHtml(xhr.responseText || ""));
         }
       });
     }
@@ -182,30 +173,20 @@
         url: 'f_returjuallist.php', // File tujuan
         type: 'POST', // Tentukan type nya POST atau GET
         data: {keyword:$("#keycarilist").val(),page:page_number,search:search}, 
-        dataType: "json",
+        dataType: "text",
         beforeSend: function(e) {
           if(e && e.overrideMimeType) {
             e.overrideMimeType("application/json;charset=UTF-8");
           }
         },
         success: function(response){ 
-          // $("#btn-ktcari").html("fa fa-search").removeAttr("disabled");
-          
-          $("#viewlistretur").html(response.hasil);
+          $("#viewlistretur").html(getAjaxHtml(response));
         },
         error: function (xhr, ajaxOptions, thrownError) { // Ketika terjadi error
-          console.error("Error:", thrownError);
-          console.error("Response:", xhr.responseText);
-          try {
-            var response = JSON.parse(xhr.responseText);
-            if(response.hasil) {
-              $("#viewlistretur").html(response.hasil);
-            } else {
-              popnew_error("Terjadi kesalahan saat memuat data");
-            }
-          } catch(e) {
-            popnew_error("Terjadi kesalahan saat memuat data");
+          if (window.console) {
+            console.error("Gagal memuat list retur:", xhr.status, xhr.responseText);
           }
+          $("#viewlistretur").html(getAjaxHtml(xhr.responseText || ""));
         }
       });
     }
