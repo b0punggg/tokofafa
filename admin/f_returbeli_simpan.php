@@ -32,6 +32,21 @@ if($cekColsRetur){
   mysqli_free_result($cekColsRetur);
 }
 $lastSqlError = '';
+
+if(!function_exists('num_only')){
+  function num_only($v){
+    if (is_numeric($v)) {
+      return floatval($v);
+    }
+    if (is_string($v)) {
+      $v = trim($v);
+      if ($v === '') return 0;
+      $v = str_replace(array('.', ','), array('', '.'), $v);
+      return is_numeric($v) ? floatval($v) : 0;
+    }
+    return 0;
+  }
+}
 // echo '$no_tran='.$no_tran.'<br>';
 // echo '$tgl_tran='.$tgl_tran.'<br>';
 // echo '$kembali='.$kembali.'<br>';
@@ -49,12 +64,16 @@ if($cekmas===false){
   } else if (mysqli_num_rows($cek)>=1){
 	  while ($datcek=mysqli_fetch_assoc($cek)){
 	  	//konstanta total
-	    $disc=$datcek['hrg_beli']-($datcek['hrg_beli']*($datcek['disc']/100));
-		$tax=($datcek['hrg_beli']*($datcek['tax']/100));
-		$subtot=$subtot+round(($disc+$tax)*$datcek['qty_brg'],2);
-		$totpot=$totpot+($datcek['hrg_beli']*($datcek['disc']/100));
+      $hrg_beli_num = num_only(isset($datcek['hrg_beli']) ? $datcek['hrg_beli'] : 0);
+      $disc_num = num_only(isset($datcek['disc']) ? $datcek['disc'] : 0);
+      $tax_num = num_only(isset($datcek['tax']) ? $datcek['tax'] : 0);
+      $qty_num = num_only(isset($datcek['qty_brg']) ? $datcek['qty_brg'] : 0);
+	    $disc=$hrg_beli_num-($hrg_beli_num*($disc_num/100));
+		$tax=($hrg_beli_num*($tax_num/100));
+		$subtot=$subtot+round(($disc+$tax)*$qty_num,2);
+		$totpot=$totpot+($hrg_beli_num*($disc_num/100));
 		$tottax=$tottax+$tax;$totretur=$totretur+$subtot;
-		$totawal=$totawal+$datcek['hrg_beli'];
+		$totawal=$totawal+$hrg_beli_num;
 		$no++;
 
 	    //proses cek pada beli_brg dan mas_brg
@@ -62,11 +81,13 @@ if($cekmas===false){
 	    $no_urut=$datcek['no_urut'];
 	    $no_item=$datcek['no_item'];
 	    $kd_sup=$datcek['kd_sup'];
-	    $jml_retur=$datcek['qty_brg']*konjumbrg($datcek['kd_sat'],$kd_brg);
-	    $stok_akhir=caristokbeli($no_item,$kd_brg)-$jml_retur;
+      $konj = num_only(konjumbrg($datcek['kd_sat'],$kd_brg));
+      if($konj == 0){ $konj = 1; }
+	    $jml_retur=$qty_num*$konj;
+	    $stok_akhir=num_only(caristokbeli($no_item,$kd_brg))-$jml_retur;
 	    $x=explode(';',caristokmas($kd_brg));
-	    $jml_brgakhir=$x[0]-$jml_retur;
-	    $jml_brg_klr=$x[2]+$jml_retur;
+	    $jml_brgakhir=num_only(isset($x[0]) ? $x[0] : 0)-$jml_retur;
+	    $jml_brg_klr=num_only(isset($x[2]) ? $x[2] : 0)+$jml_retur;
 
 	    //proses simpan pengembalian
       if(isset($returCols['kembali'])){
@@ -98,12 +119,16 @@ if($cekmas===false){
   } else if (mysqli_num_rows($cek)>=1){
 	  while ($datcek=mysqli_fetch_assoc($cek)){
 	  	//konstanta total
-	    $disc=$datcek['hrg_beli']-($datcek['hrg_beli']*($datcek['disc']/100));
-		$tax=($datcek['hrg_beli']*($datcek['tax']/100));
-		$subtot=$subtot+round(($disc+$tax)*$datcek['qty_brg'],2);
-		$totpot=$totpot+($datcek['hrg_beli']*($datcek['disc']/100));
+      $hrg_beli_num = num_only(isset($datcek['hrg_beli']) ? $datcek['hrg_beli'] : 0);
+      $disc_num = num_only(isset($datcek['disc']) ? $datcek['disc'] : 0);
+      $tax_num = num_only(isset($datcek['tax']) ? $datcek['tax'] : 0);
+      $qty_num = num_only(isset($datcek['qty_brg']) ? $datcek['qty_brg'] : 0);
+	    $disc=$hrg_beli_num-($hrg_beli_num*($disc_num/100));
+		$tax=($hrg_beli_num*($tax_num/100));
+		$subtot=$subtot+round(($disc+$tax)*$qty_num,2);
+		$totpot=$totpot+($hrg_beli_num*($disc_num/100));
 		$tottax=$tottax+$tax;$totretur=$totretur+$subtot;
-		$totawal=$totawal+$datcek['hrg_beli'];
+		$totawal=$totawal+$hrg_beli_num;
 		$no++;	
 
 	    //proses cek pada beli_brg dan mas_brg
@@ -111,12 +136,14 @@ if($cekmas===false){
 	    $no_urut=$datcek['no_urut'];
 	    $no_item=$datcek['no_item'];
 	    $kd_sup=$datcek['kd_sup'];
-	    $jml_retur=$datcek['qty_brg']*konjumbrg($datcek['kd_sat'],$kd_brg);
-	    $stok_akhir=caristokbeli($no_item,$kd_brg)-$jml_retur;
+      $konj = num_only(konjumbrg($datcek['kd_sat'],$kd_brg));
+      if($konj == 0){ $konj = 1; }
+	    $jml_retur=$qty_num*$konj;
+	    $stok_akhir=num_only(caristokbeli($no_item,$kd_brg))-$jml_retur;
 	    //echo '$stok_akhir='.$stok_akhir.'<br>';
 	    $x=explode(';',caristokmas($kd_brg));
-	    $jml_brgakhir=$x[0]-$jml_retur;
-	    $jml_brg_klr=$x[2]+$jml_retur;
+	    $jml_brgakhir=num_only(isset($x[0]) ? $x[0] : 0)-$jml_retur;
+	    $jml_brg_klr=num_only(isset($x[2]) ? $x[2] : 0)+$jml_retur;
 
 	    //proses simpan pengembalian
       if(isset($returCols['kembali'])){
