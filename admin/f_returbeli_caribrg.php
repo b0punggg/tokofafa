@@ -42,6 +42,9 @@
 	    $limit = 10; // Jumlah data per halamannya
 
 	    $limit_start = ($page - 1) * $limit;
+	    $sql1 = false;
+	    $sql2 = false;
+	    $get_jumlah = array('jumlah' => 0);
 	    // echo '$limit_start='.$limit_start;
 
 	    if(isset($_POST['search']) && $_POST['search'] == true){ // Jika ada data search yg 
@@ -81,23 +84,32 @@
 	          	ORDER BY beli_brg.no_urut  ASC LIMIT $limit_start, $limit");
 		      $sql2 = mysqli_query($connid, "SELECT COUNT(*) AS jumlah FROM beli_brg LEFT JOIN mas_brg ON beli_brg.kd_brg=mas_brg.kd_brg WHERE mas_brg.nm_brg LIKE '$param1' AND beli_brg.kd_sup='$param2' AND beli_brg.kd_toko='$kd_toko' AND beli_brg.kd_sup='$param2' AND beli_brg.stok_jual>0");	
           }	
-	      $get_jumlah = mysqli_fetch_array($sql2);
+	      if($sql2){
+	      	$get_jumlah = mysqli_fetch_array($sql2);
+	      }
 
 	    }else{ // Jika user belum mengklik tombol search (PROSES TANPA AJAX)
 	      // $id_apt=$_SESSION['id_apt'];
           $sql1 = mysqli_query($connid, "SELECT * from supplier  ORDER BY no_urut  ASC LIMIT $limit_start, $limit");
 	      // Buat query untuk menghitung semua jumlah data
 	      $sql2 = mysqli_query($connid, "SELECT COUNT(*) AS jumlah FROM supplier ORDER BY no_urut");
-	      $get_jumlah = mysqli_fetch_array($sql2);
+	      if($sql2){
+	      	$get_jumlah = mysqli_fetch_array($sql2);
+	      }
 	    }
 	    $no=0;$hrg_beli=0;
 	    while($databrg = mysqli_fetch_array($sql1)){ // Ambil semua data dari hasil eksekusi $sql
 	      $no++;
-	      $hrg_beli=$databrg['hrg_beli']/konjumbrg($databrg['kd_sat'],$databrg['kd_brg']);;
+	      $pembagi = konjumbrg($databrg['kd_sat'],$databrg['kd_brg']);
+	      if(!is_numeric($pembagi) || floatval($pembagi) == 0){
+	        $pembagi = 1;
+	      }
+	      $hrg_beli=$databrg['hrg_beli']/floatval($pembagi);
+	      $ket_beli = isset($databrg['ket']) ? strval($databrg['ket']) : '';
           
 	    ?>
 	      <tr>
-	      	<?php if (strpos($databrg['ket'], 'BELIAN BARANG')>0) { ?>
+	      	<?php if ($ket_beli === '' || stripos($ket_beli, 'BELIAN BARANG') !== false) { ?>
 	        <td><input class="w3-input" type="text" onkeydown="if(event.keyCode==13){document.getElementById('<?='btnpilbrg'.$no?>').click();}" onclick="document.getElementById('<?='btnpilbrg'.$no?>').click();" value="<?php echo $databrg['no_fak']; ?>" readonly tabindex="4" style="border: none;background-color: transparent;cursor: pointer"></td>
 
             <td align="middle" onclick="document.getElementById('<?='btnpilbrg'.$no?>').click()" style="cursor: pointer;color: blue"><?php echo $databrg['nm_sup']; ?></td>
