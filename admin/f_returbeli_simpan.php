@@ -4,6 +4,10 @@ include 'config.php';
 session_start();
 
 $consim=opendtcek();
+if(!$consim){
+  echo json_encode(array('hasil'=>'<script>popnew_error("Koneksi database gagal");</script>'));
+  exit;
+}
 $kd_toko=$_SESSION['id_toko'];
 $no_tran=mysqli_real_escape_string($consim,$_POST['keyword1']);
 $tgl_tran=mysqli_real_escape_string($consim,$_POST['keyword2']);
@@ -25,17 +29,22 @@ if($cekColsRetur){
   }
   mysqli_free_result($cekColsRetur);
 }
+$lastSqlError = '';
 // echo '$no_tran='.$no_tran.'<br>';
 // echo '$tgl_tran='.$tgl_tran.'<br>';
 // echo '$kembali='.$kembali.'<br>';
 $hrg_beli=0;$subtot=0;$totpot=0;$tottax=0;$totretur=0;$totawal=0;$jml_brgakhir=0;$jml_brg_klr=0;$no=0;$d=false;
 //apakah sudah disave atau belum
 $cekmas=mysqli_query($consim,"SELECT * FROM retur_beli_mas WHERE kd_toko='$kd_toko' AND no_retur='$no_tran' AND tgl_retur='$tgl_tran'");
-if (mysqli_num_rows($cekmas)>=1){
+if($cekmas===false){
+  $lastSqlError = mysqli_error($consim);
+} else if (mysqli_num_rows($cekmas)>=1){
    $datmas=mysqli_fetch_assoc($cekmas);
    $no_urutmas=$datmas['no_urut'];
    $cek=mysqli_query($consim,"SELECT * FROM retur_beli WHERE kd_toko='$kd_toko' AND no_retur='$no_tran' AND tgl_retur='$tgl_tran'");
-	if (mysqli_num_rows($cek)>=1){
+	if($cek===false){
+    $lastSqlError = mysqli_error($consim);
+  } else if (mysqli_num_rows($cek)>=1){
 	  while ($datcek=mysqli_fetch_assoc($cek)){
 	  	//konstanta total
 	    $disc=$datcek['hrg_beli']-($datcek['hrg_beli']*($datcek['disc']/100));
@@ -59,7 +68,8 @@ if (mysqli_num_rows($cekmas)>=1){
 
 	    //proses simpan pengembalian
       if(isset($returCols['kembali'])){
-	      $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'"); 
+	      $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'");
+        if($d===false){ $lastSqlError = mysqli_error($consim); break; }
       }
 	    //$d=mysqli_query($consim,"UPDATE beli_brg SET jml_stok='$stok_akhir' where no_urut='$no_item'");
 	    //$d=mysqli_query($consim,"UPDATE mas_brg SET jml_brg='$jml_brgakhr',brg_klr='$jml_brg_klr' where kd_brg='$kd_brg'");
@@ -75,12 +85,15 @@ if (mysqli_num_rows($cekmas)>=1){
     if(isset($returMasCols['kembali'])){ $setMas[] = "kembali='$kembali'"; }
     if(count($setMas) > 0){
 	    $d=mysqli_query($consim,"UPDATE retur_beli_mas SET ".implode(',', $setMas)." WHERE no_urut='$no_urutmas'");
+      if($d===false){ $lastSqlError = mysqli_error($consim); }
     }
 	}     
 	unset($cek,$datcek);
 } else {
 	$cek=mysqli_query($consim,"SELECT * FROM retur_beli WHERE kd_toko='$kd_toko' AND no_retur='$no_tran' AND tgl_retur='$tgl_tran'");
-	if (mysqli_num_rows($cek)>=1){
+	if($cek===false){
+    $lastSqlError = mysqli_error($consim);
+  } else if (mysqli_num_rows($cek)>=1){
 	  while ($datcek=mysqli_fetch_assoc($cek)){
 	  	//konstanta total
 	    $disc=$datcek['hrg_beli']-($datcek['hrg_beli']*($datcek['disc']/100));
@@ -106,9 +119,12 @@ if (mysqli_num_rows($cekmas)>=1){
 	    //proses simpan pengembalian
       if(isset($returCols['kembali'])){
 	    $d=mysqli_query($consim,"UPDATE retur_beli SET kembali='$kembali' where no_urut='$no_urut'"); 
+      if($d===false){ $lastSqlError = mysqli_error($consim); break; }
       }
 	    $d=mysqli_query($consim,"UPDATE beli_brg SET stok_jual='$stok_akhir' where no_urut='$no_item'");
+      if($d===false){ $lastSqlError = mysqli_error($consim); break; }
 	    $d=mysqli_query($consim,"UPDATE mas_brg SET jml_brg='$jml_brgakhir',brg_klr='$jml_brg_klr' where kd_brg='$kd_brg'");
+      if($d===false){ $lastSqlError = mysqli_error($consim); break; }
 	  }	
 	  //proses simpan pada retur_beli_mas
     $insertCols = array();
@@ -127,8 +143,10 @@ if (mysqli_num_rows($cekmas)>=1){
 
     if(count($insertCols) > 0){
       $d=mysqli_query($consim,"INSERT INTO retur_beli_mas (".implode(',', $insertCols).") VALUES(".implode(',', $insertVals).")");
+      if($d===false){ $lastSqlError = mysqli_error($consim); }
     } else {
       $d=false;
+      $lastSqlError = 'Kolom tabel retur_beli_mas tidak sesuai.';
     }
 	}
 }
@@ -136,7 +154,10 @@ unset($cekmas,$datmas);
 
 if ($d) {
  ?> <script>popnew_ok("Simpan berhasil");kosongkan();carinoretur(1,true);</script> <?php   	
-}else {?> <script>popnew_error("Simpan gagal");kosongkan();carinoretur(1,true);</script> <?php }
+}else {
+  $errMsg = ($lastSqlError!='') ? addslashes($lastSqlError) : 'Simpan gagal';
+  ?> <script>popnew_error("Simpan gagal: <?=$errMsg?>");kosongkan();carinoretur(1,true);</script> <?php
+}
 ?>
 <?php
   mysqli_close($consim);
