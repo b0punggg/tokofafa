@@ -50,7 +50,9 @@
     include 'config.php';
     $connect=opendtcek();
     ini_set('memory_limit', '1024M'); // or you could use 1G  
-    
+    set_time_limit(0);
+    ini_set('max_execution_time', '0');
+
   //***proses hitung rekap
   $endbln   = $_POST['blnrek'];
   $endyear  = $_POST['thnrek'];
