@@ -470,6 +470,7 @@
           <a href="#" onclick="closemenu();document.getElementById('formcetreturbeli').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Pembelian</a>
           <a href="#" onclick="closemenu();document.getElementById('formcetretur').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Penjualan</a>
           <a href="#" onclick="closemenu();document.getElementById('formcetrekap').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Rekapitulasi</a>
+          <a href="#" onclick="closemenu();document.getElementById('formcetjualmember').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Member</a>
           <a href="#" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px" onclick="closemenu();document.getElementById('form-piut').style.display='block'">
             <i class="fa fa-bullseye">&nbsp;</i>Bayar Piutang</a>
           <a href="#" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px" onclick="closemenu();document.getElementById('form-hut').style.display='block'">
@@ -617,6 +618,7 @@
             <a href="#" onclick="closemenu();document.getElementById('formcetstokop').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Stok Opname</a>
             <a href="#" onclick="closemenu();document.getElementById('formcetretur').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Penjualan</a>
             <a href="#" onclick="closemenu();document.getElementById('formcetreturbeli').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Pembelian</a>
+            <a href="#" onclick="closemenu();document.getElementById('formcetjualmember').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Member</a>
             <a href="#" class="w3-bar-item w3-button w3-border" onclick="closemenu();document.getElementById('form-piut').style.display='block'" style="padding:4px;padding-left:20px">
               <i class="fa fa-bullseye">&nbsp;</i>Bayar Piutang</a>
             <a href="#" class="w3-bar-item w3-button w3-border" onclick="closemenu();document.getElementById('form-hut').style.display='block'" style="padding:4px;padding-left:20px">
@@ -1133,6 +1135,60 @@
                           </select>
                     </div>   
                   </div>
+                  <div class="form-group row" style="margin-top: -10px">
+                    <label for="brand_jual_report" class="col-sm-5 col-form-label">Brand</label>
+                    <div class="col-sm-4">
+                      <select class="form-control" name="kd_brand" id="brand_jual_report" style="border: 1px solid black;font-size:12px ;height: 30px;width: 165px" tabindex="4">
+                        <option value="">SEMUA</option>
+                        <option value="OMG">OMG</option>
+                        <option value="EMINA">EMINA</option>
+                        <option value="WARDAH">WARDAH</option>
+                        <option value="MAKE OVER">MAKE OVER</option>
+                        <option value="KAHF">KAHF</option>
+                        <option value="SKINTIFIC MARINA">SKINTIFIC MARINA</option>
+                        <option value="G2G">G2G</option>
+                        <option value="HANASUI">HANASUI</option>
+                        <option value="SLAVINA">SLAVINA</option>
+                        <option value="SCARLET">SCARLET</option>
+                        <option value="HADALABO">HADALABO</option>
+                        <option value="IMPLORA">IMPLORA</option>
+                        <option value="VIVA">VIVA</option>
+                        <option value="GLOW & LOVELY">GLOW & LOVELY</option>
+                        <option value="PONDS">PONDS</option>
+                        <option value="GARNIER">GARNIER</option>
+                        <option value="CUSSONS">CUSSONS</option>
+                        <option value="NIVEA">NIVEA</option>
+                        <option value="PIXY">PIXY</option>
+                        <option value="MAKARIZO">MAKARIZO</option>
+                        <option value="YOU">YOU</option>
+                        <option value="NYU">NYU</option>
+                        <option value="MIRANDA">MIRANDA</option>
+                        <option value="DAZZLE ME">DAZZLE ME</option>
+                        <option value="ANIMATE">ANIMATE</option>
+                        <option value="MY BABY">MY BABY</option>
+                        <option value="MOELL">MOELL</option>
+                        <option value="NPURE">NPURE</option>
+                        <option value="SCORA">SCORA</option>
+                        <option value="FACETOLOGY">FACETOLOGY</option>
+                        <option value="JHONSONS">JHONSONS</option>
+                        <option value="EUREKA">EUREKA</option>
+                        <option value="EVANGELINE">EVANGELINE</option>
+                        <option value="VITALIS">VITALIS</option>
+                        <option value="GATSBY">GATSBY</option>
+                        <option value="PUCELLE">PUCELLE</option>
+                        <option value="ANDO">ANDO</option>
+                        <option value="PRO ATT">PRO ATT</option>
+                        <option value="CARVIL">CARVIL</option>
+                        <option value="BENING">BENING</option>
+                        <option value="LOGO">LOGO</option>
+                        <option value="NEW ERA">NEW ERA</option>
+                        <option value="SPEED">SPEED</option>
+                        <option value="ARMOD">ARMOD</option>
+                        <option value="LUBRENA">LUBRENA</option>
+                        <option value="VAUSTIN">VAUSTIN</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
                 <div class="col-sm-6 ">
                   <button class="btn w3-card w3-right"><img src="img/printer.png" alt=""></button>
@@ -1144,6 +1200,63 @@
       </div>
     </div>
     <!-- End Form cetak nota penjualan-->
+
+    <!-- Form cetak transaksi member-->
+    <div id="formcetjualmember" class="w3-modal" style="padding-top:60px;margin-left:0px;background-color:rgba(1, 1, 1, 0.3) ">
+      <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="border-style: ridge;border-color: white;width:600px ">
+        <div class="yz-theme-d1" style="font-size: 14px;padding:4px">
+          &nbsp; <i class="fa fa-print"></i>&nbsp;Cetak Transaksi Member
+          <span onclick="document.getElementById('formcetjualmember').style.display='none'" class="w3-display-topright" title="Close Form" style="margin-top: -2px;margin-right: 0px;cursor: pointer"><img style="width: 108%" src="img/tomexit2.png" alt=""></span>
+        </div>
+        <div class="w3-container w3-padding-large">
+          <form action="f_cetak_jual_member.php" method="POST" target="_blank">
+            <div class="row">
+              <div class="col-sm-7">
+                <div class="form-group row">
+                  <label for="tglmember1" class="col-sm-5 col-form-label">Tanggal</label>
+                  <div class="col-sm-7">
+                    <input type="date" id="tglmember1" name="tgl1" placeholder="Tanggal awal" required="">
+                  </div>
+                </div>
+                <div class="form-group row" style="margin-top: -10px">
+                  <label for="tglmember2" class="col-sm-5 col-form-label">s/d Tanggal</label>
+                  <div class="col-sm-7">
+                    <input type="date" id="tglmember2" name="tgl2" placeholder="Tanggal akhir" required="">
+                  </div>
+                </div>
+                <div class="form-group row" style="margin-top: -10px">
+                  <label for="memberreport" class="col-sm-5 col-form-label">Member</label>
+                  <div class="col-sm-7">
+                    <select class="form-control" name="kd_member" id="memberreport" style="border: 1px solid black;font-size:12px ;height: 30px;" tabindex="4">
+                      <option value="">SEMUA MEMBER</option>
+                      <?php
+                      $qmember = mysqli_query($connect, "SELECT kd_member,nm_member FROM member ORDER BY nm_member ASC");
+                      while($dmember = mysqli_fetch_assoc($qmember)){
+                      ?>
+                        <option value="<?=$dmember['kd_member']?>"><?=$dmember['nm_member']?></option>
+                      <?php }
+                      mysqli_free_result($qmember);unset($dmember);
+                      ?>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row" style="margin-top: -10px">
+                  <label for="include_poin_member" class="col-sm-5 col-form-label">Opsi Poin</label>
+                  <div class="col-sm-7" style="padding-top: 6px">
+                    <input type="checkbox" id="include_poin_member" name="include_poin" value="1" checked>
+                    <label for="include_poin_member" style="cursor: pointer">Include poin pada cetak</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-5 ">
+                <button class="btn w3-card w3-right"><img src="img/printer.png" alt=""></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- End Form cetak transaksi member-->
 
     <!-- Form cetak nota bagian penjualan-->
     <div id="formcetjual_bag" class="w3-modal" style="padding-top:60px;margin-left:0px;background-color:rgba(1, 1, 1, 0.3) ">

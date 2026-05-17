@@ -99,7 +99,17 @@
           $where_sql = " WHERE ".implode(" AND ", $filter_where);
         }
 
-        $sql = mysqli_query($connect, "SELECT * FROM member $where_sql ORDER BY nm_member ASC LIMIT $limit_start, $limit");
+        $sort = isset($_POST['sort']) ? $_POST['sort'] : 'abjad';
+        $order_sql = 'nm_member ASC';
+        if (isset($kolom['poin'])) {
+          if ($sort === 'poin_desc') {
+            $order_sql = 'poin DESC, nm_member ASC';
+          } elseif ($sort === 'poin_asc') {
+            $order_sql = 'poin ASC, nm_member ASC';
+          }
+        }
+
+        $sql = mysqli_query($connect, "SELECT * FROM member $where_sql ORDER BY $order_sql LIMIT $limit_start, $limit");
         $sql2 = mysqli_query($connect, "SELECT COUNT(*) AS jumlah FROM member $where_sql");
         if($sql2){
           $get_jumlah = mysqli_fetch_array($sql2);

@@ -45,7 +45,12 @@
 		  $.ajax({
 		    url: 'm_membercari.php', // File tujuan
 		    type: 'POST', // Tentukan type nya POST atau GET
-		    data: {keyword: $("#keyktmember").val(), page: page_number, search: search}, 
+		    data: {
+          keyword: $("#keyktmember").val(),
+          page: page_number,
+          search: search,
+          sort: $("#sort_member").val()
+        }, 
 		    dataType: "text",
 		    beforeSend: function(e) {
 		      if(e && e.overrideMimeType) {
@@ -184,6 +189,11 @@
               </div>
               <div class="w3-half">
                 <div class="input-group" style="margin-top: 15px">
+                  <select id="sort_member" class="form-control hrf_arial" style="font-size: 10pt;height: 30px;max-width: 165px;margin-right: 4px;" onchange="carimember(1, true);" title="Urutkan data">
+                    <option value="abjad">Abjad A–Z</option>
+                    <option value="poin_desc">Poin tertinggi</option>
+                    <option value="poin_asc">Poin terendah</option>
+                  </select>
                   <input onkeyup="updateExportMemberLinks();if(event.keyCode==13){carimember(1, true);}" style="font-size: 10pt;height: 30px" type="text" class="form-control hrf_arial" placeholder="ketik  pencarian [nama member]" id="keyktmember">&nbsp;
                   <span class="input-group-btn w3-margin-bottom">
                     <button onclick="carimember(1, true);" class="btn btn-primary" type="button" id="btn-ktmember" style="font-size: 10pt;" title="Cari"><i class="fa fa-search"></i></button>

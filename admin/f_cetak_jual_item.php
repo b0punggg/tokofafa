@@ -64,6 +64,7 @@
     $tgl1     = isset($pesan[0]) ? $pesan[0] : '';
     $tgl2     = isset($pesan[1]) ? $pesan[1] : '';
     $cr_bay   = isset($pesan[2]) ? $pesan[2] : '';
+    $brand_filter = isset($pesan[3]) ? $pesan[3] : '';
     $kd_toko  = $_SESSION['id_toko'];
     $nm_toko  = "";
     $al_toko  = "";
@@ -77,6 +78,13 @@
     $tgl1 = mysqli_real_escape_string($connect, $tgl1);
     $tgl2 = mysqli_real_escape_string($connect, $tgl2);
     $cr_bay = mysqli_real_escape_string($connect, $cr_bay);
+    $brand_filter = mysqli_real_escape_string($connect, $brand_filter);
+    $allowed_brands = array('OMG','EMINA','WARDAH','MAKE OVER','KAHF','SKINTIFIC MARINA','G2G','HANASUI','SLAVINA','SCARLET','HADALABO','IMPLORA','VIVA','GLOW & LOVELY','PONDS','GARNIER','CUSSONS','NIVEA','PIXY','MAKARIZO','YOU','NYU','MIRANDA','DAZZLE ME','ANIMATE','MY BABY','MOELL','NPURE','SCORA','FACETOLOGY','JHONSONS','EUREKA','EVANGELINE','VITALIS','GATSBY','PUCELLE','ANDO','PRO ATT','CARVIL','BENING', 'LOGO','NEW ERA','SPEED','ARMOD','LUBRENA','VAUSTIN');
+    if(!in_array($brand_filter, $allowed_brands)){
+      $brand_filter = '';
+    }
+    $brand_text = ($brand_filter === '') ? 'SEMUA' : $brand_filter;
+    $brand_sql = ($brand_filter === '') ? '' : " AND UPPER(dum_jual.nm_brg) LIKE UPPER('%$brand_filter%') ";
     
     $cektoko=mysqli_query($connect,"SELECT * FROM toko WHERE kd_toko='$kd_toko'");
     if ($cektoko && $cektoko !== false) {
@@ -100,7 +108,8 @@
         LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
         LEFT JOIN mas_jual ON dum_jual.no_fakjual=mas_jual.no_fakjual
         LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
-        WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TUNAI' AND panding=false ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
+        LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+        WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TUNAI' AND panding=false $brand_sql ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
       if (!$cekjual) {
         echo "Error query cekjual: " . mysqli_error($connect);
       }
@@ -111,7 +120,8 @@
       LEFT JOIN mas_jual ON retur_jual.no_fakjual=mas_jual.no_fakjual
       LEFT JOIN pelanggan ON dum_jual.kd_pel=pelanggan.kd_pel 
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
-      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' 
+      LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' $brand_sql
       ORDER BY retur_jual.no_urutretur ASC ");
       if (!$sqlret) {
         echo "Error query sqlret: " . mysqli_error($connect);
@@ -125,7 +135,8 @@
         LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
         LEFT JOIN mas_jual ON dum_jual.no_fakjual=mas_jual.no_fakjual and dum_jual.tgl_jual=mas_jual.tgl_jual
         LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
-        WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TEMPO' AND panding=false ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
+        LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+        WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' and dum_jual.kd_bayar='TEMPO' AND panding=false $brand_sql ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
       if (!$cekjual) {
         echo "Error query cekjual: " . mysqli_error($connect);
       }
@@ -136,7 +147,8 @@
       LEFT JOIN mas_jual ON retur_jual.no_fakjual=mas_jual.no_fakjual
       LEFT JOIN pelanggan ON dum_jual.kd_pel=pelanggan.kd_pel 
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
-      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' AND dum_jual.kd_bayar='TEMPO'
+      LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' AND dum_jual.kd_bayar='TEMPO' $brand_sql
       ORDER BY retur_jual.no_urutretur ASC ");
       if (!$sqlret) {
         echo "Error query sqlret: " . mysqli_error($connect);
@@ -149,7 +161,8 @@
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
       LEFT JOIN mas_jual ON dum_jual.no_fakjual=mas_jual.no_fakjual and dum_jual.tgl_jual=mas_jual.tgl_jual
       LEFT JOIN bag_brg ON dum_jual.id_bag=bag_brg.no_urut
-      WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' AND panding=false 
+      LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+      WHERE dum_jual.kd_toko='$kd_toko' and dum_jual.tgl_jual>='$tgl1' and dum_jual.tgl_jual<='$tgl2' AND panding=false $brand_sql
       ORDER BY dum_jual.tgl_jual,dum_jual.no_fakjual ASC");
       if (!$cekjual) {
         echo "Error query cekjual: " . mysqli_error($connect);
@@ -161,7 +174,8 @@
       LEFT JOIN pelanggan ON dum_jual.kd_pel=pelanggan.kd_pel 
       LEFT JOIN mas_jual ON retur_jual.no_fakjual=mas_jual.no_fakjual
       LEFT JOIN kemas ON dum_jual.kd_sat=kemas.no_urut
-      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' 
+      LEFT JOIN mas_brg ON dum_jual.kd_brg=mas_brg.kd_brg
+      WHERE retur_jual.tgl_retur>='$tgl1' AND retur_jual.tgl_retur<='$tgl2' AND  retur_jual.kd_toko='$kd_toko' $brand_sql
       ORDER BY retur_jual.no_urutretur ASC ");
       if (!$sqlret) {
         echo "Error query sqlret: " . mysqli_error($connect);
@@ -182,7 +196,8 @@
             <tr><td colspan="<?=$hspan?>" style="text-align: center;font-size: 13pt;border:none"><b><?=$nm_toko?></b></td></tr>
             <tr><td colspan="<?=$hspan?>" style="text-align: center;font-size: 11pt;border:none"><b><?=$al_toko?></b></td></tr>
             <tr><td style="border: none">&nbsp;</td></tr>
-            <tr> <td colspan="<?=$hspan?>" style="text-align: left;font-size: 9pt"><b>Laporan penjualan barang per item dari tanggal <?=gantitgl($tgl1)?> sampai tanggal <?=gantitgl($tgl2)?>, Pembayaran <?=$ket?></b></td></tr>   
+            <tr> <td colspan="<?=$hspan?>" style="text-align: left;font-size: 9pt"><b>Laporan penjualan barang per item dari tanggal <?=gantitgl($tgl1)?> sampai tanggal <?=gantitgl($tgl2)?>, Pembayaran <?=$ket?></b></td></tr>
+            <tr> <td colspan="<?=$hspan?>" style="text-align: left;font-size: 9pt"><b>Filter Brand : <?=$brand_text?></b></td></tr>
             <tr class="yz-theme-l3">
                 <th style="width:3%;" class="w3-padding-small">NO</th>
                 <th style="width:10%">TGL. JUAL</th>
