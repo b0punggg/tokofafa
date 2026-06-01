@@ -64,7 +64,12 @@
     $.ajax({
       url: 'f_stokopname_cari.php', // File tujuan
       type: 'POST', // Tentukan type nya POST atau GET
-      data: {keyword:$("#keycari").val(),page: page_number, search: search}, 
+      data: {
+        keyword: $("#keycari").val(),
+        page: page_number,
+        search: search,
+        filter_stok: $("#filter_stok").val()
+      },
       dataType: "json",
       beforeSend: function(e) {
         if(e && e.overrideMimeType) {
@@ -144,7 +149,11 @@
     $.ajax({
       url: 'f_stokopname_progress.php',
       type: 'POST',
-      data: { tgl_awal: t1, tgl_akhir: t2 },
+      data: {
+        tgl_awal: t1,
+        tgl_akhir: t2,
+        filter_stok: document.getElementById('filter_stok') ? document.getElementById('filter_stok').value : 'semua'
+      },
       dataType: 'json',
       beforeSend: function(e) {
         if (e && e.overrideMimeType) {
@@ -163,7 +172,11 @@
         var pctLabel = pct.toString().replace('.', ',') + '%';
         var html = '<div class="row" style="align-items:center;margin:0">';
         html += '<div class="col-sm-12 col-md-7" style="padding:0">';
-        html += '<strong><i class="fa fa-pie-chart"></i> Progress Stok Opname</strong><br>';
+        html += '<strong><i class="fa fa-pie-chart"></i> Progress Stok Opname</strong>';
+        if (r.filter_label) {
+          html += ' <span class="badge badge-secondary" style="font-size:8pt;vertical-align:middle">' + r.filter_label + '</span>';
+        }
+        html += '<br>';
         html += '<small>Periode ' + r.tgl_awal_txt + ' s/d ' + r.tgl_akhir_txt + '</small><br>';
         html += '<span style="font-size:10pt">';
         html += '<b>' + pctLabel + '</b> &mdash; ';
@@ -313,6 +326,17 @@
       </div>
       <div id="panel-progress-opname" style="margin-top:8px;font-size:9pt">
         <i class="fa fa-spinner fa-spin"></i> Memuat progress...
+      </div>
+    </div>
+
+    <div class="w3-container" style="padding:6px 12px;background:#fff;border:1px solid #ddd;margin-bottom:4px">
+      <div class="form-inline" style="flex-wrap:wrap">
+        <label for="filter_stok" class="mr-2 mb-1" style="font-size:9pt;font-weight:bold"><i class="fa fa-filter"></i> Filter stok:</label>
+        <select id="filter_stok" class="form-control form-control-sm mb-1" style="font-size:9pt;min-width:180px" onchange="caribrgstok(1, true);loadProgressOpname();">
+          <option value="semua">Semua barang</option>
+          <option value="ada_stok">Hanya ada stok</option>
+          <option value="stok_nol">Hanya stok 0</option>
+        </select>
       </div>
     </div>
 
