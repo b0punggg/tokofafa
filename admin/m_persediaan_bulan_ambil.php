@@ -56,7 +56,8 @@ mysqli_query($connect, $create_table);
 // Query sama seperti f_cetak_pilih_stok.php (menggunakan struktur yang sama)
 // Optimize: Filter stok_jual > 0 di WHERE clause untuk mengurangi data yang di-GROUP BY
 $query = "SELECT beli_brg.kd_sup, beli_brg.kd_brg, SUM(beli_brg.stok_jual) AS stok_juals, 
-          AVG(beli_brg.hrg_beli) AS hrg_beli, MAX(beli_brg.id_bag) AS id_bag
+          AVG(beli_brg.hrg_beli) AS hrg_beli, MAX(beli_brg.id_bag) AS id_bag,
+          mas_brg.jum_kem1
           FROM beli_brg
           LEFT JOIN mas_brg ON beli_brg.kd_brg = mas_brg.kd_brg AND mas_brg.kd_toko = beli_brg.kd_toko
           WHERE beli_brg.kd_toko='$kd_toko' AND beli_brg.stok_jual > 0
@@ -86,7 +87,8 @@ while($data = mysqli_fetch_assoc($datain)){
   $kd_brg = mysqli_real_escape_string($connect, $data['kd_brg']);
   $stok_juals = floatval($data['stok_juals']);
   $hrg_beli = floatval($data['hrg_beli']);
-  $nilai_persediaan = $stok_juals * $hrg_beli;
+  $jum_kem1 = isset($data['jum_kem1']) ? $data['jum_kem1'] : 1;
+  $nilai_persediaan = nilai_persediaan_stok_besar($stok_juals, $hrg_beli, $jum_kem1);
   $kd_sup = mysqli_real_escape_string($connect, $data['kd_sup']);
   $id_bag = intval($data['id_bag']);
   

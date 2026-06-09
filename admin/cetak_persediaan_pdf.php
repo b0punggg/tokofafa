@@ -82,7 +82,7 @@ if($semua == 1){
     b.nm_bag,
     sub.stok_juals,
     sub.hrg_beli,
-    (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+    (sub.stok_juals / IF(COALESCE(m.jum_kem1, 0) > 0, m.jum_kem1, 1) * sub.hrg_beli) AS nilai_persediaan
   FROM (
     SELECT 
       beli_brg.kd_brg,
@@ -118,7 +118,7 @@ if($semua == 1){
     b.nm_bag,
     sub.stok_juals,
     sub.hrg_beli,
-    (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+    (sub.stok_juals / IF(COALESCE(m.jum_kem1, 0) > 0, m.jum_kem1, 1) * sub.hrg_beli) AS nilai_persediaan
   FROM (
     SELECT 
       beli_brg.kd_brg,

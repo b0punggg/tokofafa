@@ -113,7 +113,7 @@ if($filter_bulan_tahun == 0){
       bag_brg.nm_bag,
       '$bulan' AS bulan,
       '$tahun' AS tahun,
-      (SUM(beli_brg.stok_jual) * AVG(beli_brg.hrg_beli)) AS nilai_persediaan
+      (SUM(beli_brg.stok_jual) / IF(COALESCE(mas_brg.jum_kem1, 0) > 0, mas_brg.jum_kem1, 1) * AVG(beli_brg.hrg_beli)) AS nilai_persediaan
       FROM beli_brg
       INNER JOIN mas_brg ON beli_brg.kd_brg = mas_brg.kd_brg AND beli_brg.kd_toko = mas_brg.kd_toko
       LEFT JOIN supplier ON beli_brg.kd_sup = supplier.kd_sup
@@ -161,7 +161,7 @@ if($filter_bulan_tahun == 0){
       bag_brg.nm_bag,
       '$bulan' AS bulan,
       '$tahun' AS tahun,
-      (SUM(beli_brg.stok_jual) * AVG(beli_brg.hrg_beli)) AS nilai_persediaan
+      (SUM(beli_brg.stok_jual) / IF(COALESCE(mas_brg.jum_kem1, 0) > 0, mas_brg.jum_kem1, 1) * AVG(beli_brg.hrg_beli)) AS nilai_persediaan
       FROM beli_brg
       INNER JOIN mas_brg ON beli_brg.kd_brg = mas_brg.kd_brg AND beli_brg.kd_toko = mas_brg.kd_toko
       LEFT JOIN supplier ON beli_brg.kd_sup = supplier.kd_sup
@@ -231,7 +231,7 @@ if($filter_bulan_tahun == 0){
       bag_brg.nm_bag,
       '$bulan' AS bulan,
       '$tahun' AS tahun,
-      (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+      (sub.stok_juals / IF(COALESCE(mas_brg.jum_kem1, 0) > 0, mas_brg.jum_kem1, 1) * sub.hrg_beli) AS nilai_persediaan
       FROM (
         SELECT 
           beli_brg.kd_sup,
@@ -244,7 +244,7 @@ if($filter_bulan_tahun == 0){
         GROUP BY beli_brg.kd_brg
         $having_clause
       ) AS sub
-      LEFT JOIN mas_brg ON sub.kd_brg = mas_brg.kd_brg
+      LEFT JOIN mas_brg ON sub.kd_brg = mas_brg.kd_brg AND mas_brg.kd_toko = '$kd_toko'
       LEFT JOIN supplier ON sub.kd_sup = supplier.kd_sup
       LEFT JOIN bag_brg ON sub.id_bag = bag_brg.no_urut
       WHERE (mas_brg.nm_brg LIKE '%$keyword_escaped%' OR sub.kd_brg LIKE '%$keyword_escaped%' OR supplier.nm_sup LIKE '%$keyword_escaped%')
@@ -272,7 +272,7 @@ if($filter_bulan_tahun == 0){
       bag_brg.nm_bag,
       '$bulan' AS bulan,
       '$tahun' AS tahun,
-      (sub.stok_juals * sub.hrg_beli) AS nilai_persediaan
+      (sub.stok_juals / IF(COALESCE(mas_brg.jum_kem1, 0) > 0, mas_brg.jum_kem1, 1) * sub.hrg_beli) AS nilai_persediaan
       FROM (
         SELECT 
           beli_brg.kd_sup,
@@ -285,7 +285,7 @@ if($filter_bulan_tahun == 0){
         GROUP BY beli_brg.kd_brg
         $having_clause
       ) AS sub
-      LEFT JOIN mas_brg ON sub.kd_brg = mas_brg.kd_brg
+      LEFT JOIN mas_brg ON sub.kd_brg = mas_brg.kd_brg AND mas_brg.kd_toko = '$kd_toko'
       LEFT JOIN supplier ON sub.kd_sup = supplier.kd_sup
       LEFT JOIN bag_brg ON sub.id_bag = bag_brg.no_urut
       ORDER BY COALESCE(mas_brg.nm_brg, sub.kd_brg) ASC
@@ -359,7 +359,7 @@ $total_nilai = 0;
       <th style="width: 10%">Bagian</th>
       <th style="width: 10%">Stok (Satuan Kecil)</th>
       <th style="width: 10%">Harga Beli</th>
-      <th style="width: 12%">Nilai Persediaan</th>
+      <th style="width: 12%">Nilai Persediaan<br><small>(stok besar × hrg)</small></th>
       <th style="width: 8%">Aksi</th>
     </tr>
   </thead>
@@ -371,12 +371,8 @@ $total_nilai = 0;
         // Pastikan nilai tidak null
         $hrg_beli_val = isset($data['hrg_beli']) && $data['hrg_beli'] !== null ? floatval($data['hrg_beli']) : 0;
         $stok_juals_val = isset($data['stok_juals']) && $data['stok_juals'] !== null ? floatval($data['stok_juals']) : 0;
-        // Jika nilai_persediaan sudah dihitung di query (dari beli_brg), gunakan itu, jika tidak hitung manual
-        if(isset($data['nilai_persediaan']) && $data['nilai_persediaan'] !== null && $data['nilai_persediaan'] != ''){
-          $nilai_persediaan = floatval($data['nilai_persediaan']);
-        } else {
-          $nilai_persediaan = $hrg_beli_val * $stok_juals_val;
-        }
+        $jum_kem1_row = isset($data['jum_kem1']) ? floatval($data['jum_kem1']) : 1;
+        $nilai_persediaan = nilai_persediaan_stok_besar($stok_juals_val, $hrg_beli_val, $jum_kem1_row);
         $total_nilai += $nilai_persediaan;
         
         // Konversi stok ke satuan kemasan (sama seperti f_cetak_pilih_stok.php)
