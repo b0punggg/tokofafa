@@ -5,6 +5,10 @@
  include 'config.php';
  $connect=opendtcek();
  setlocale(LC_MONETARY , "ID");
+ if (empty($_SESSION['foto'])) {
+   $_SESSION['foto'] = 'keranjang.png';
+ }
+ $foto_user = htmlspecialchars($_SESSION['foto'], ENT_QUOTES, 'UTF-8');
  ?>	
 <head>
 	<meta charset="UTF-8">
@@ -327,7 +331,7 @@
 
       <a id="user_on" href="javascript:void(0);" class="w3-bar-item w3-button w3-right w3-text-white w3-hide-small yz-theme-l2" style="font-size: 14px">
         <?php echo $bag.' '.$_SESSION['nm_user']?>&nbsp;&nbsp;
-        <img class="rounded-circle" style="max-width:26px;border:2px solid white" src="img/<?=$_SESSION['foto']; ?>" alt="">
+        <img class="rounded-circle" style="max-width:26px;border:2px solid white" src="img/<?=$foto_user?>" alt="">
       </a>  
       <div id="listuserl" class="w3-container w3-card-4 w3-text-white" style="display:none;border-radius: 6px;background-color: rgba(0, 0, 0,0.8);position:absolute;right:0;z-index: 1000;border-radius: 7px;border-style: ridge;border-color:white;border-width: 1px">
         <p><i class="fa fa-user w3-margin-top"></i>&nbsp;<?=$_SESSION['nm_user']?></p>
@@ -336,7 +340,7 @@
         ?>&nbsp;</p>
         <hr class="w3-yellow">
         <div style="display:table-cell;">
-           <img class="rounded-circle" style="margin-left:5%;margin-right: 15%; max-width:100px;border:2px solid white;" src="img/<?=$_SESSION['foto']; ?>" alt="">
+           <img class="rounded-circle" style="margin-left:5%;margin-right: 15%; max-width:100px;border:2px solid white;" src="img/<?=$foto_user?>" alt="">
         </div>
         <hr class="w3-yellow">
         <a href="f_pasuser2.php" style="color: white"><i class="fa fa-database w3-text-yellow"></i> &nbsp;User Admin</a>
@@ -360,7 +364,7 @@
       </script>
 
       <!-- on small sreen -->
-      <a href="javascript:void(0);" class="w3-bar-item w3-button w3-right w3-text-white w3-orange w3-hide-medium w3-hide-large" id="user_on_sm" style="font-size: 14px"><img class="rounded-circle" style="width:30px;border:2px solid white" src="img/<?=$_SESSION['foto']; ?>" alt=""></a>  
+      <a href="javascript:void(0);" class="w3-bar-item w3-button w3-right w3-text-white w3-orange w3-hide-medium w3-hide-large" id="user_on_sm" style="font-size: 14px"><img class="rounded-circle" style="width:30px;border:2px solid white" src="img/<?=$foto_user?>" alt=""></a>  
 
       <div id="listuser" class="w3-hide-medium w3-hide-large w3-padding w3-card-4 w3-right w3-text-black" style="display:none;border-radius: 6px;background-color: rgba(0, 0, 0,0.8);position:absolute;right:0;z-index: 1000;border-radius: 7px;border-style: ridge;border-color:white;border-width: 1px">
         <p class="w3-text-white"><i class="fa fa-user "></i>&nbsp; <?=$_SESSION['nm_user']?></p>
@@ -368,7 +372,7 @@
         <p class=" w3-text-white" style="margin-top: -10px"><i class="fa fa-desktop"></i> <?=$_SESSION['id_toko']?></p>
         <hr class="w3-yellow">
         <div style="display:table-cell;">
-           <img class="rounded-circle" style="margin-left:5%; max-width:100px;border:2px solid white;" src="img/<?=$_SESSION['foto']; ?>" alt="">
+           <img class="rounded-circle" style="margin-left:5%; max-width:100px;border:2px solid white;" src="img/<?=$foto_user?>" alt="">
         </div>
         <hr class="w3-yellow">
         <a href="f_pasuser2.php" style="color: white"><i class="fa fa-database w3-text-yellow"></i> &nbsp;User Admin</a>

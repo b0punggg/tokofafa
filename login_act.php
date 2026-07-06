@@ -13,7 +13,7 @@ if( password_verify($pass, $user['pass']) ) {
     $_SESSION['id_user']=$user['id_user'];
 	$_SESSION['masuk']="ok";
 	$_SESSION['kodepemakai']=$user['otoritas'];
-	$_SESSION['foto']=$user['foto'];
+	$_SESSION['foto']=(!empty($user['foto'])) ? $user['foto'] : 'keranjang.png';
 	$_SESSION['id_toko']=$user['kd_toko'];
     $kd_toko=$user['kd_toko'];
     $_SESSION['tgl_set']=date('Y-m-d');

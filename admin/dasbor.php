@@ -1,12 +1,25 @@
-<link rel="shortcut icon" href="img/keranjang.png">
+<?php
+set_time_limit(0);
+ini_set('max_execution_time', '0');
+ini_set('memory_limit', '512M');
+include 'starting.php';
+?>
 <script src="../assets/js/chart.min.js"></script>
 <script src="../assets/js/utils.js"></script>
-<div class="loader1"><div class="loader2"><div class="loader3"></div></div></div>
+<div id="dasbor-loader" class="dasbor-loader-overlay" style="z-index:10023;position:fixed;inset:0;background:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;">
+  <div class="loader1" style="position:relative;left:auto;top:auto;"><div class="loader2"><div class="loader3"></div></div></div>
+</div>
 <style>
   option{color:dodgerblue;}
-</style> 
+</style>
 
 <script>
+  function dasborHideLoader() {
+    var el = document.getElementById('dasbor-loader');
+    if (el) {
+      el.style.display = 'none';
+    }
+  }
   function caristok0 (page_number, search){      
     $.ajax({
       url: 'dasbor_stok0.php', // File tujuan
@@ -50,7 +63,7 @@
   }
 </script>
 
-<?php include 'starting.php'; 
+<?php
 $connect=opendtcek();
 $kd_toko=$_SESSION['id_toko'];
 $oto=$_SESSION['kodepemakai'];
@@ -69,15 +82,17 @@ while($data=mysqli_fetch_assoc($cek)){
   $x++;
   $disc1=$data['disc1']/100;
   $disc2=$data['disc2'];
+  $hrg_asal = 0;
   //konversi satuan terkecil
-  if($data['kd_sat']==$data['kd_kem3']){
+  if($data['kd_sat']==$data['kd_kem3'] && floatval($data['jum_kem3']) > 0){
     $hrg_asal=$data['hrg_beli']/$data['jum_kem3'];
-  }
-  if($data['kd_sat']==$data['kd_kem2']){
+  } elseif($data['kd_sat']==$data['kd_kem2'] && floatval($data['jum_kem2']) > 0){
     $hrg_asal=$data['hrg_beli']/$data['jum_kem2'];
-  }
-  if($data['kd_sat']==$data['kd_kem1']){
+  } elseif($data['kd_sat']==$data['kd_kem1'] && floatval($data['jum_kem1']) > 0){
     $hrg_asal=$data['hrg_beli']/$data['jum_kem1'];
+  }
+  if ($hrg_asal <= 0) {
+    continue;
   }
   // ------------------------  
 
@@ -215,6 +230,9 @@ while($edi=mysqli_fetch_assoc($de)){
 function hitung_ol($kdsat_o,$kdbrg_o,$disc1_o,$disc2_o,$ppn_o,$hrg_o,$hub_o){
   $jumbrg = $disc1=$disc2=$hrg=0;
   $jumbrg = konjumbrg2($kdsat_o,$kdbrg_o,$hub_o);
+  if ($jumbrg <= 0) {
+    return 0;
+  }
   $hrg    = $hrg_o/$jumbrg ;
   if($disc1_o>0){
     $disc1  = ($hrg*$disc1_o)/100;
@@ -272,29 +290,29 @@ $jual=0;$laba=0;$profit=0;$disc=0;$jumlah=0;$ongkir=0;$laba_t_bln=0;
 $cek=mysqli_query($connect,"SELECT SUM(tot_jual) AS totjual,SUM(tot_disc) AS totdisc FROM mas_jual 
   WHERE mas_jual.kd_toko='$kd_toko' AND MONTH(tgl_jual)='$endbln' AND YEAR(tgl_jual)='$endyear' AND kd_bayar='TEMPO'"); 
 $data      = mysqli_fetch_assoc($cek);
-$jualtempo = $data['totjual']-$data['totdisc'];
+$jualtempo = ($data && $data['totjual'] !== null) ? floatval($data['totjual'])-floatval($data['totdisc']) : 0;
 unset($data,$cek);
 
 //jual tunai
 $cek=mysqli_query($connect,"SELECT SUM(tot_jual) AS totjual,SUM(tot_disc) AS totdisc FROM mas_jual 
   WHERE mas_jual.kd_toko='$kd_toko' AND MONTH(tgl_jual)='$endbln' AND YEAR(tgl_jual)='$endyear' AND kd_bayar='TUNAI'"); 
 $data      = mysqli_fetch_assoc($cek);
-$jualcash  = $data['totjual']-$data['totdisc'];
+$jualcash  = ($data && $data['totjual'] !== null) ? floatval($data['totjual'])-floatval($data['totdisc']) : 0;
 unset($data,$cek);
 
 //laba + ongkir
 $cek=mysqli_query($connect,"SELECT SUM(tot_laba) AS totlaba,SUM(ongkir) AS totongkir FROM mas_jual 
   WHERE mas_jual.kd_toko='$kd_toko' AND MONTH(tgl_jual)='$endbln' AND YEAR(tgl_jual)='$endyear'"); 
 $data      = mysqli_fetch_assoc($cek);
-$laba      = $data['totlaba'];
-$ongkir    = $data['totongkir'];
+$laba      = ($data && $data['totlaba'] !== null) ? floatval($data['totlaba']) : 0;
+$ongkir    = ($data && $data['totongkir'] !== null) ? floatval($data['totongkir']) : 0;
 unset($data,$cek);
 
 // piutang pelanggan bulan ini
 $hut_pel=0;
 $cek=mysqli_query($connect,"SELECT SUM(saldo_hutang) AS hut_pel FROM mas_jual where kd_toko='$kd_toko' AND ket_bayar='BELUM' ");
 $data=mysqli_fetch_assoc($cek);
-$hut_pel=$data['hut_pel'];
+$hut_pel=($data && $data['hut_pel'] !== null) ? floatval($data['hut_pel']) : 0;
 unset($cek,$data);
 
 //hutang supplier
@@ -352,10 +370,20 @@ unset($dret,$sqlret);
 
 ?>
 <script>
-  $(document).ready(function(){
-    $(".loader1").fadeOut();
-  })
-</script>     
+  function dasborInitLoaderHide() {
+    if (typeof jQuery !== 'undefined') {
+      jQuery('#dasbor-loader').fadeOut(200, dasborHideLoader);
+    } else {
+      dasborHideLoader();
+    }
+  }
+  if (typeof jQuery !== 'undefined') {
+    jQuery(document).ready(dasborInitLoaderHide);
+  } else {
+    document.addEventListener('DOMContentLoaded', dasborHideLoader);
+  }
+  window.addEventListener('load', dasborHideLoader);
+</script>
 
 <!-- Header -->
 <div class="w3-padding-small w3-margin-bottom" style="background: linear-gradient(165deg, magenta 0%, yellow 36%, white 80%);z-index: 1;margin-top: -7px ">
