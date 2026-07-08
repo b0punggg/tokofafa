@@ -1151,6 +1151,7 @@
                         <option value="KAHF">KAHF</option>
                         <option value="SKINTIFIC MARINA">SKINTIFIC MARINA</option>
                         <option value="G2G">G2G</option>
+                        <option value="GLAD2GLOW">GLAD2GLOW</option>
                         <option value="HANASUI">HANASUI</option>
                         <option value="SLAVINA">SLAVINA</option>
                         <option value="SCARLET">SCARLET</option>
