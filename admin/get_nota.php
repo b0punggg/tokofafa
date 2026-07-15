@@ -93,41 +93,27 @@ mysqli_close($cones);
 
 $nm_pel_asli = trim($nm_pel);
 $has_member = (!empty($kd_member) && !empty($nm_member));
-$poin_saldo_fmt = number_format($poin_saldo, 0, ',', '.');
 
-/*
- * Print bridge (logo Fafa) umumnya hanya mencetak:
- *   Pembeli : {nm_pel}
- *   Alamat  : {alamat}
- * Agar tampil:
- *   Pembeli    : nm_pel
- *   Member     : nm_member   (hanya jika member)
- *   Poin Saldo : poin_saldo
- * tanpa Alamat — masukkan baris Member/Poin ke nm_pel (multi-line),
- * dan kosongkan alamat.
- */
-$nm_pel_print = $nm_pel_asli;
-if ($has_member) {
-  $nm_pel_print = $nm_pel_asli
-    . "\nMember     : " . $nm_member
-    . "\nPoin Saldo : " . $poin_saldo_fmt;
-}
-$alamat_print = ''; // tidak tampilkan alamat di nota
-
-// Gabungkan data toko dan penjualan
+// Print bridge mencetak field terpisah: nm_pel, nm_member, poin_saldo — tanpa Alamat
 $totbelanja=($total-($disctot+$voucher))+$ongkir;
 $disctot_fmt=gantiti($disctot);$voucher_fmt=gantiti($voucher);$ongkir_fmt=gantiti($ongkir);
 $output = [
   "no_fakjual"  => $no_fakjual,
-  "nm_pel"      => $nm_pel_print,
+  "nm_pel"      => $nm_pel_asli,
   "nm_pel_asli" => $nm_pel_asli,
-  "alamat"      => $alamat_print,
+  // kosong + flag: bridge tidak boleh cetak label Alamat
+  "alamat"      => "",
+  "show_alamat" => 0,
   "tgltime"     => $tgltime,
+  "tgl_jual"    => $tgl_jual,
   "belanja"     => $total,
   "total"       => gantiti($totbelanja),
   "disctot"     => $disctot_fmt,
   "voucher"     => $voucher_fmt,
   "ongkir"      => $ongkir_fmt,
+  "disctot_raw" => $disctot,
+  "voucher_raw" => $voucher,
+  "ongkir_raw"  => $ongkir,
   "kd_bayar"    => $kd_bayar,
   "bayar"       => $bayar,
   "susuk"       => $susuk,
