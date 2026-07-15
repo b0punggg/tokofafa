@@ -96,14 +96,14 @@
       $Text .= spasicenter($al_toko,47+$def)."\n\n";
       $Text .= spasistr('',$def)."No.Struk ".spasistr('',5).":".spasistr($no_fakjual,20)."\n";
       $Text .= spasistr('',$def)."Tanggal  ".spasistr('',5).":".spasistr(gantitgl($tgl_jual),10)."\n";
-      //$Text .= spasistr('',$def)."Pembeli  ".spasistr('',5).":".spasistr($nm_pel,10)."\n";
-      // Tampilkan data member jika ada
+      // Tampilkan Pembeli / Member + poin
       if (!empty($kd_member) && !empty($nm_member)) {
+        $Text .= spasistr('',$def)."Pembeli  ".spasistr('',5).":".spasistr($nm_member,30)."\n";
         $Text .= spasistr('',$def)."Member   ".spasistr('',5).":".spasistr($nm_member,30)."\n";
-        if ($poin_earned > 0) {
-          $Text .= spasistr('',$def)."Poin Dapat".spasistr('',3).":".spasistr(number_format($poin_earned, 0, ',', '.')." Poin",30)."\n";
-        }
+        $Text .= spasistr('',$def)."Poin Dapat".spasistr('',3).":".spasistr(number_format($poin_earned, 0, ',', '.')." Poin",30)."\n";
         $Text .= spasistr('',$def)."Poin Saldo".spasistr('',3).":".spasistr(number_format($poin_saldo, 0, ',', '.')." Poin",30)."\n";
+      } else {
+        $Text .= spasistr('',$def)."Pembeli  ".spasistr('',5).":".spasistr($nm_pel,30)."\n";
       }
       $Text .= spasistr('',$def)."-----------------------------------------------\n";
       $Text .= spasistr('',$def)."No.".spasistr('',5)."Nama Barang\n";
