@@ -91,30 +91,37 @@ if($sql && mysqli_num_rows($sql)>0){
 }
 mysqli_close($cones);
 
-// Nama yang tampil di baris Pembeli pada print bridge
-// Bridge saat ini hanya mencetak nm_pel — jika member, ganti dengan nama member + info poin
-$nm_pel_print = trim($nm_pel);
+$nm_pel_asli = trim($nm_pel);
 $has_member = (!empty($kd_member) && !empty($nm_member));
+$poin_saldo_fmt = number_format($poin_saldo, 0, ',', '.');
+
+/*
+ * Print bridge (logo Fafa) umumnya hanya mencetak:
+ *   Pembeli : {nm_pel}
+ *   Alamat  : {alamat}
+ * Agar tampil:
+ *   Pembeli    : nm_pel
+ *   Member     : nm_member   (hanya jika member)
+ *   Poin Saldo : poin_saldo
+ * tanpa Alamat — masukkan baris Member/Poin ke nm_pel (multi-line),
+ * dan kosongkan alamat.
+ */
+$nm_pel_print = $nm_pel_asli;
 if ($has_member) {
-  $nm_pel_print = $nm_member;
-  $poin_parts = array();
-  if ($poin_earned > 0) {
-    $poin_parts[] = '+'.number_format($poin_earned, 0, ',', '.').' poin';
-  }
-  $poin_parts[] = 'saldo '.number_format($poin_saldo, 0, ',', '.');
-  if (!empty($poin_parts)) {
-    $nm_pel_print .= ' ('.implode(', ', $poin_parts).')';
-  }
+  $nm_pel_print = $nm_pel_asli
+    . "\nMember     : " . $nm_member
+    . "\nPoin Saldo : " . $poin_saldo_fmt;
 }
+$alamat_print = ''; // tidak tampilkan alamat di nota
 
 // Gabungkan data toko dan penjualan
 $totbelanja=($total-($disctot+$voucher))+$ongkir;
 $disctot_fmt=gantiti($disctot);$voucher_fmt=gantiti($voucher);$ongkir_fmt=gantiti($ongkir);
 $output = [
-  "no_fakjual"  => $no_fakjual,  
+  "no_fakjual"  => $no_fakjual,
   "nm_pel"      => $nm_pel_print,
-  "nm_pel_asli" => trim($nm_pel),
-  "alamat"      => $alamat,
+  "nm_pel_asli" => $nm_pel_asli,
+  "alamat"      => $alamat_print,
   "tgltime"     => $tgltime,
   "belanja"     => $total,
   "total"       => gantiti($totbelanja),
@@ -127,8 +134,8 @@ $output = [
   "saldohut"    => $saldohut,
   "jtempo"      => $jtempo,
   "kd_member"   => $kd_member,
-  "nm_member"   => $nm_member,
-  "member"      => $nm_member,
+  "nm_member"   => $has_member ? $nm_member : '',
+  "member"      => $has_member ? $nm_member : '',
   "poin_earned" => $poin_earned,
   "poin_dapat"  => $poin_earned,
   "poin_saldo"  => $poin_saldo,

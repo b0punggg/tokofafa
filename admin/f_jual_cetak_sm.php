@@ -109,20 +109,9 @@ th, td {
           <td style="font-size:3px">&nbsp;:&nbsp;</td>
           <td style="font-size:3px"><?=$nm_pel?></td>
         </tr>
-        <?php if($kd_bayar=='TEMPO'){ ?>
-          <tr> 
-            <td style="font-size:3px">Alamat</td>
-            <td style="font-size:3px">&nbsp;:&nbsp;</td>
-            <td style="font-size:3px"><?=strtolower(ucwords($al_pel))?></td>
-          </tr>  <?php
-        } ?>
         <?php 
-        // Debug: tampilkan nilai variabel (akan muncul di HTML source)
-        // echo "<!-- Debug: kd_member='$kd_member', nm_member='$nm_member', poin_earned=$poin_earned, poin_saldo=$poin_saldo -->";
-        
-        // Tampilkan data member jika ada kd_member
+        // Member + Poin Saldo hanya jika ada member (tanpa alamat)
         if(!empty($kd_member)){ 
-          // Jika nm_member masih kosong, ambil lagi dari database
           if (empty($nm_member)) {
             $sqlmember2=mysqli_query($con_sm,"SELECT nm_member, poin FROM member WHERE kd_member='$kd_member' AND kd_toko='$kd_toko' LIMIT 1");
             if ($sqlmember2 && mysqli_num_rows($sqlmember2) > 0) {
@@ -135,7 +124,6 @@ th, td {
             }
             unset($sqlmember2,$datamember2);
           }
-          // Tampilkan nama member atau kd_member jika nm_member kosong
           $display_member = !empty($nm_member) ? ucwords(strtolower($nm_member)) : $kd_member;
         ?>
           <tr> 
@@ -143,17 +131,10 @@ th, td {
             <td style="font-size:3px">&nbsp;:&nbsp;</td>
             <td style="font-size:3px"><?=$display_member?></td>
           </tr>
-          <?php if($poin_earned > 0){ ?>
-          <tr> 
-            <td style="font-size:3px">Poin Dapat</td>
-            <td style="font-size:3px">&nbsp;:&nbsp;</td>
-            <td style="font-size:3px"><?=number_format($poin_earned, 0, ',', '.')?> Poin</td>
-          </tr>
-          <?php } ?>
           <tr> 
             <td style="font-size:3px">Poin Saldo</td>
             <td style="font-size:3px">&nbsp;:&nbsp;</td>
-            <td style="font-size:3px"><?=number_format($poin_saldo, 0, ',', '.')?> Poin</td>
+            <td style="font-size:3px"><?=number_format($poin_saldo, 0, ',', '.')?></td>
           </tr>
         <?php } ?>
       </table>
