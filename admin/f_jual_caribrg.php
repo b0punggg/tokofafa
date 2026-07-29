@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 	$keyword = $_POST['keyword']; // Ambil data keyword yang dikirim dengan AJAX	
 	ob_start();
 	session_start(); 
