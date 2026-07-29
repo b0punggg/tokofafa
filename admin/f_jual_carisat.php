@@ -34,6 +34,10 @@
     include "config.php";
     session_start();
     $connect=opendtcek();
+    if (!$connect) {
+    echo json_encode(array('hasil' => '<div style="color:red;padding:10px">Koneksi database gagal, silakan coba beberapa saat lagi.</div>'));
+    exit;
+}
     $kd_toko=$_SESSION['id_toko'];
     $param=mysqli_escape_string($connect,$keyword); 
     

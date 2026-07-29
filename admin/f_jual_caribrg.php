@@ -5,6 +5,10 @@
      	
 	include "config.php";
     $connect=opendtcek();
+		if (!$connect) {
+    echo json_encode(array('hasil' => '<div style="color:red;padding:10px">Koneksi database gagal, silakan coba beberapa saat lagi.</div>'));
+    exit;
+}
 ?>
 
 <div class="table-responsive" style="overflow-x:auto;overflow-y:auto; border-style: ridge;">
