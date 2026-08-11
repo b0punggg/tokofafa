@@ -323,8 +323,8 @@
               <td align="middle" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo $dq['nm_sat1']; ?></b></td>
               <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['hrg_jual'],0)); ?>&nbsp;</b></td>
               <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['discrp'],0)); ?></b>&nbsp;</td>
-              <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['discitem']*$data['hrg_jual']/100,0)); ?></b>&nbsp;</td>
-              <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['discvo']*$data['hrg_jual']/100,0)); ?></b>&nbsp;</td>
+              <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['discitem']*$dq['hrg_jual']/100,0)); ?></b>&nbsp;</td>
+              <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($dq['discvo']*$dq['hrg_jual']/100,0)); ?></b>&nbsp;</td>
               <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($netret,0)); ?>&nbsp;</b></td>
               <td align="right" style="padding-top: 1px;padding-bottom: 1px;"><b><?php echo gantitides(round($jmlsubret,0)); ?>&nbsp;</b></td>
             </tr>   
