@@ -1144,6 +1144,7 @@
                     <div class="col-sm-4">
                       <select class="form-control" name="kd_brand" id="brand_jual_report" style="border: 1px solid black;font-size:12px ;height: 30px;width: 165px" tabindex="4">
                         <option value="">SEMUA</option>
+                        <option value="BC OMG">BC OMG</option>
                         <option value="OMG">OMG</option>
                         <option value="EMINA">EMINA</option>
                         <option value="WARDAH">WARDAH</option>
