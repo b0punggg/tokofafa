@@ -14,9 +14,9 @@ $id_bag      = $_POST['id_bag'];
 $qty=0;$n_stok_jual=0;$stok=0;$jml=0;$hrg_beliawal=0;$no=0;
 
 //cari satuan terkecil brg konversi yg dimutasi    
-$x           = explode(';', carisatkecil($kd_brg));
-$sat_kecil   = $x[0]; 
-$jum_kecil   = $x[1]; 
+$x           = explode(';', carisatkecil($kd_brg, $kd_tokoasal));
+$sat_kecil   = $x[0] ?? '';
+$jum_kecil   = $x[1] ?? 0; 
 
 //ambil data barang yang diambil
 $cek_it=mysqli_query($connect,"SELECT beli_brg.kd_brg,beli_brg.no_urut,beli_brg.no_fak,beli_brg.kd_bar,beli_brg.kd_sup,beli_brg.stok_jual,beli_brg.hrg_beli,beli_brg.disc1,beli_brg.disc2,beli_brg.kd_sat,beli_brg.ket,beli_brg.ket_mut,beli_brg.ppn,beli_brg.expdate,mas_brg.nm_brg FROM beli_brg 
@@ -44,9 +44,9 @@ $ketmut     = $kd_tokoasal.';'.$no_urut;
 //-------------------------------------
 
 // variable data input mutasi save mutasi_brg
-$jum_kem_a  = konjumbrg($kd_sat,$cari['kd_brg']);
-$hrg_beli_m = $cari['hrg_beli']/konjumbrg($cari['kd_sat'],$cari['kd_brg']);
-$jml_brg    = $qty_brg/$jum_kem_a;
+$jum_kem_a  = konjumbrg($kd_sat, $cari['kd_brg'], $kd_tokoasal);
+$hrg_beli_m = $cari['hrg_beli'] / konjumbrg($cari['kd_sat'], $cari['kd_brg'], $kd_tokoasal);
+$jml_brg    = ($jum_kem_a != 0) ? $qty_brg / $jum_kem_a : 0;
 $stok_jual  = $qty_brg*$jum_kem_a; // satuan terkecil
 $stok_lama  = $cari['stok_jual']-$stok_jual;
 
