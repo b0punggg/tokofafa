@@ -14,7 +14,7 @@ session_start();
 $connect=opendtcek();
 $cek=mysqli_query($connect, "SELECT * FROM beli_brg Where no_urut='$no_urut'");
 $data=mysqli_fetch_assoc($cek);
-$jumkem=konjumbrg($kd_sat,$kd_brg);
+$jumkem = konjumbrg($kd_sat, $kd_brg, $kd_toko);
 $brg_msk_hi=$data['stok_jual'];
 $stok = ($jumkem != 0) ? round($brg_msk_hi/$jumkem,2) : 0;
 // echo '$jumkem='.$jumkem;
