@@ -3,6 +3,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
 include 'config.php';
+include_once 'crew_helper.php';
 
 $cones   = opendtcek();
 $no_fakjual = $tgl_jual = $kd_toko = $nm_pel = $alamat = $tgltime = '';
@@ -31,16 +32,20 @@ if(isset($_GET['dts'])){
 $no_fakjual = mysqli_real_escape_string($cones, $no_fakjual);
 $tgl_jual   = mysqli_real_escape_string($cones, $tgl_jual);
 $kd_toko    = mysqli_real_escape_string($cones, $kd_toko);
+ensureMasJualCrewColumn($cones);
 
 // Ambil data member dari transaksi
 $kd_member = '';
 $nm_member = '';
+$kd_crew = '';
+$nm_crew = '';
 $poin_earned = 0;
 $poin_saldo = 0;
-$cek_member = mysqli_query($cones, "SELECT kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+$cek_member = mysqli_query($cones, "SELECT kd_member, poin_earned, kd_crew FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
 if ($cek_member && mysqli_num_rows($cek_member) > 0) {
   $dt_member = mysqli_fetch_assoc($cek_member);
   $kd_member = isset($dt_member['kd_member']) ? trim($dt_member['kd_member']) : '';
+  $kd_crew = isset($dt_member['kd_crew']) ? trim($dt_member['kd_crew']) : '';
   $poin_earned = isset($dt_member['poin_earned']) ? floatval($dt_member['poin_earned']) : 0;
   if (!empty($kd_member)) {
     $kd_member_esc = mysqli_real_escape_string($cones, $kd_member);
@@ -52,6 +57,17 @@ if ($cek_member && mysqli_num_rows($cek_member) > 0) {
     }
     if ($sqlmember) {
       mysqli_free_result($sqlmember);
+    }
+  }
+  if (!empty($kd_crew)) {
+    $kd_crew_esc = mysqli_real_escape_string($cones, $kd_crew);
+    $sqlcrew = mysqli_query($cones, "SELECT nm_crew FROM crew WHERE kd_crew='$kd_crew_esc' AND kd_toko='$kd_toko' LIMIT 1");
+    if ($sqlcrew && mysqli_num_rows($sqlcrew) > 0) {
+      $datacrew = mysqli_fetch_assoc($sqlcrew);
+      $nm_crew = isset($datacrew['nm_crew']) ? trim($datacrew['nm_crew']) : '';
+    }
+    if ($sqlcrew) {
+      mysqli_free_result($sqlcrew);
     }
   }
 }
@@ -93,6 +109,7 @@ mysqli_close($cones);
 
 $nm_pel_asli = trim($nm_pel);
 $has_member = (!empty($kd_member) && !empty($nm_member));
+$has_crew = (!empty($kd_crew) && !empty($nm_crew));
 
 // Print bridge mencetak field terpisah: nm_pel, nm_member, poin_saldo — tanpa Alamat
 $totbelanja=($total-($disctot+$voucher))+$ongkir;
@@ -127,6 +144,10 @@ $output = [
   "poin_saldo"  => $poin_saldo,
   "poin"        => $poin_saldo,
   "has_member"  => $has_member ? 1 : 0,
+  "kd_crew"     => $kd_crew,
+  "nm_crew"     => $has_crew ? $nm_crew : '',
+  "crew"        => $has_crew ? $nm_crew : '',
+  "has_crew"    => $has_crew ? 1 : 0,
   "items"       => $items
 ];
 echo json_encode([

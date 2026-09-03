@@ -142,7 +142,7 @@
             }
             
             // Hapus semua elemen dengan ID duplikat sebelum menambahkan yang baru
-            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_crew_byr', 'nm_crewbayar', 'kd_bayar2', 
                                'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
                                'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
                                'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
@@ -587,7 +587,7 @@
             }
             
             // Hapus semua elemen dengan ID duplikat sebelum menambahkan yang baru
-            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+            var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_crew_byr', 'nm_crewbayar', 'kd_bayar2', 
                                'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
                                'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
                                'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
@@ -993,6 +993,7 @@
         
         // Ambil data member dan poin sebelum submit
         var kd_member_byr = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+        var kd_crew_byr = document.getElementById('kd_crew_byr') ? document.getElementById('kd_crew_byr').value : '';
         var poin_earned_hidden = document.getElementById('poin_earned_hidden') ? document.getElementById('poin_earned_hidden').value : '0';
         var poin_redeem_hidden = document.getElementById('poin_redeem_hidden') ? document.getElementById('poin_redeem_hidden').value : '0';
         var poin_redeem = document.getElementById('poin_redeem') ? document.getElementById('poin_redeem').value.replace(/\./g, '') : '0';
@@ -1001,7 +1002,7 @@
         $.ajax({
           url: 'f_jualbayar_act.php', // File tujuan
           type: 'POST', // Tentukan type nya POST atau GET
-          data: {tgl_jual:dtgl_jual,no_fakjuals:cno_fakjuals,kd_pel_byr:ckd_pel_byr,kd_member_byr:kd_member_byr,poin_earned_hidden:poin_earned_hidden,poin_redeem_hidden:poin_redeem_hidden,poin_redeem:poin_redeem,kd_bayar:ckd_bayar,byr_awal:nbyr_awal,tot_belanja:ntot_belanja,bayar:nbayar,kembali:nkembali,disctot:ndisctot,tdiscitem1:ntdiscitem1,voucher:nvoucher,disc_member_hidden:disc_member_hidden,ongkir:nongkir,pil_tf:cpil_tf,tgl_jtnota:dtgl_jtnota,pil_cetak:npil_cetak}, 
+          data: {tgl_jual:dtgl_jual,no_fakjuals:cno_fakjuals,kd_pel_byr:ckd_pel_byr,kd_member_byr:kd_member_byr,kd_crew_byr:kd_crew_byr,poin_earned_hidden:poin_earned_hidden,poin_redeem_hidden:poin_redeem_hidden,poin_redeem:poin_redeem,kd_bayar:ckd_bayar,byr_awal:nbyr_awal,tot_belanja:ntot_belanja,bayar:nbayar,kembali:nkembali,disctot:ndisctot,tdiscitem1:ntdiscitem1,voucher:nvoucher,disc_member_hidden:disc_member_hidden,ongkir:nongkir,pil_tf:cpil_tf,tgl_jtnota:dtgl_jtnota,pil_cetak:npil_cetak}, 
           dataType: "json",
           beforeSend: function(e) {
             if(e && e.overrideMimeType) {
@@ -2086,12 +2087,12 @@
       }
       
       // Bersihkan elemen dengan ID duplikat dari form bayar
-      var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_bayar2', 
+      var duplicateIds = ['kd_pel_byr', 'nm_pelbayar', 'kd_member_byr', 'nm_memberbayar', 'kd_crew_byr', 'nm_crewbayar', 'kd_bayar2', 
                           'tgl_jtnotas', 'cek_tf', 'pil_tf', 'byr_awal', 'disctot', 'voucher', 
                           'poin_redeem', 'disc_member', 'ongkir', 'tot_belanja', 'bayar', 'kembali1', 
                           'pil_cetak', 'inocetak', 'tmb-simpan', 'byr_no_fakjual', 'no_fakjuals', 
                           'tgl_jual', 'tgl_jtnota', 'nm_pel_byr', 'poin_member', 'btn-fpel', 
-                          'boxpelbay_1', 'viewidmemberbayar', 'btn-fmember', 'btn-baypil', 'tabbay',
+                          'boxpelbay_1', 'viewidmemberbayar', 'btn-fmember', 'kd_crew_byr', 'nm_crewbayar', 'viewidcrewbayar', 'btn-fcrew', 'btn-baypil', 'tabbay',
                           'poin_earned_display', 'poin_earned_hidden', 'poin_member_display', 
                           'poin_member_available', 'poin_info', 'poin_redeem_hidden', 'disc_member_hidden'];
       duplicateIds.forEach(function(id) {

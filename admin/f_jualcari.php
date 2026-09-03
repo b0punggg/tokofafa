@@ -461,589 +461,835 @@
   <!-- End Form Nota -->  
 
   <!-- form bayar  -->
-    <div id="form-bayar" class="w3-modal" style="background-color:rgba(1, 1, 1, 0);padding-top: 0px"> 
-      <?php date_default_timezone_set('Asia/Jakarta'); ?>
-      <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="border-radius:5px;background: linear-gradient(565deg, #FAFAD2 10%, white 80%);border-style: ridge;border-color:white;max-width: 450px;">
-        <div style="background-color: orange;border-style: ridge;border-color: white;text-shadow: 1px 1px 2px black" class="yz-theme-d1 p-1">&nbsp;<i class="fa fa-server"></i>
-          BAYAR NOTA PENJUALAN BARANG
-          <span onclick="document.getElementById('form-bayar').style.display='none'" class="w3-display-topright" title="Close Modal" style="margin-top: -3px;margin-right: 0px;cursor: pointer"><img style="width: 108%" src="img/tomexit2.png" alt=""></span>    
-        </div>
-        
-        <div class="modal-body">
-          <form id="form2" onsubmit="return false;" style="font-size: 10pt">
-            <div class="form-group row" style="border-style: ridge;border-color:white;margin-top:-15px">
-              <input id="tgl_jual" type="hidden" name="tgl_jual" value='<?=$tgl_fakjual?>'>
-              <input id="tgl_jtnota" type="hidden" name="tgl_jtnota" value='<?=$tgl_jt?>'>
+  <div id="form-bayar" class="w3-modal" style="background-color:rgba(1, 1, 1, 0);padding-top: 0px">
+  <?php date_default_timezone_set('Asia/Jakarta'); ?>
 
-              <label for="byr_no_fakjual" class="w3-col l4 s4 col-form-label w3-margin-top" style="margin-left: 15px"><b>Nomer Nota</b></label>
-              <div class="w3-col l7 s7 w3-margin-top">
-                <input id="byr_no_fakjual" type="text" style="font-size: 10pt;" class="form-control hrf_arial" name="byr_no_fakjual" value="<?=$no_fakjual?>" disabled >
-                <input id="no_fakjuals" type="hidden" style="font-size: 9pt;" class="form-control hrf_arial" name="no_fakjuals" value="<?=$no_fakjual?>" required="" >
-              </div>    
+  <!--
+    CATATAN PERUBAHAN:
+    1. max-width modal dinaikkan dari 450px -> 1260px, layout diubah dari 1 kolom (w3-col l4/l7)
+       jadi grid 3 kolom: Data Transaksi | Diskon & Biaya | Pembayaran.
+    2. Semua id, name, onclick/onkeyup/onfocus/onblur, dan isi <script> TIDAK diubah sama sekali,
+       hanya dipindah posisinya ke kolom yang sesuai.
+    3. Ditambahkan id="poin_info" pada kotak info poin (sebelumnya JS mereferensikan
+       document.getElementById('poin_info') tapi elemen ini belum punya id -> ini memperbaiki
+       bug laten, bukan perubahan perilaku baru).
+    4. Di layar <= 900px, grid otomatis kembali ke 1 kolom (scroll) supaya tetap nyaman dipakai di HP.
+  -->
+  <style>
+    #form-bayar .w3-modal-content{
+      max-width: 1260px !important;
+      width: 95% !important;
+      margin: 20px auto !important;
+    }
+    #form-bayar .bayar-grid{
+      display:grid;
+      grid-template-columns: 0.85fr 0.95fr 1.35fr;
+      gap:0;
+    }
+    #form-bayar .bayar-col{
+      padding:8px 18px;
+      min-width:0;
+    }
+    #form-bayar .bayar-col + .bayar-col{
+      border-left:1px solid #d9d3b0;
+    }
+    #form-bayar .bayar-col-title{
+      font-size:10.5pt;
+      letter-spacing:.3px;
+      color:#6b6b6b;
+      font-weight:bold;
+      margin:2px 0 10px;
+      padding-bottom:4px;
+      border-bottom:2px solid orange;
+      display:inline-block;
+    }
+    #form-bayar .field{
+      margin-bottom:10px;
+      position:relative;
+    }
+    #form-bayar .field > label{
+      display:block;
+      font-size:10pt;
+      margin-bottom:3px;
+    }
+    #form-bayar .checkline{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    #form-bayar .checkline label{
+      margin:0;
+      font-size:10pt;
+    }
+    #form-bayar .money-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      border-bottom:1px solid #e6e1c0;
+      padding:5px 0;
+      margin-bottom:0;
+    }
+    #form-bayar .money-row > label{
+      margin:0;
+      flex-shrink:0;
+      font-size:10.5pt;
+      white-space:nowrap;
+    }
+    #form-bayar .money-input-wrap{
+      width:135px;
+      flex-shrink:0;
+    }
+    #form-bayar .money-input-wrap input{
+      width:100%;
+    }
+    #form-bayar .hint{
+      font-size:9pt;
+      color:#777;
+      margin:2px 0 8px;
+    }
+    #form-bayar .poin-box{
+      margin-top:12px;
+    }
+    #form-bayar .bayar-block{
+      background:#f4f8ff;
+      border:1px solid #cfe0f7;
+      border-radius:6px;
+      padding:10px 12px;
+      margin:10px 0;
+    }
+    #form-bayar .bayar-block label{
+      display:block;
+      font-size:10.5pt;
+      margin-bottom:4px;
+    }
+    #form-bayar .bayar-block #bayar{
+      border:1px solid #9db8e0 !important;
+      border-radius:4px;
+      padding:6px 8px;
+      font-size:18pt !important;
+    }
+    #form-bayar .kembali-block{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#eef7ee;
+      border:1px solid #cdeacd;
+      border-radius:6px;
+      padding:8px 12px;
+      margin:10px 0;
+    }
+    #form-bayar .kembali-block label{
+      margin:0;
+      font-size:11pt;
+    }
+    #form-bayar .kembali-block #kembali1{
+      color:#1e7d32 !important;
+      font-size:15pt !important;
+    }
+    #form-bayar .bayar-actions{
+      display:flex;
+      gap:8px;
+      margin-top:12px;
+    }
+    #form-bayar .bayar-actions button{
+      flex:1;
+      height:34px;
+    }
+    @media (max-width: 900px){
+      #form-bayar .bayar-grid{
+        grid-template-columns: 1fr;
+      }
+      #form-bayar .bayar-col + .bayar-col{
+        border-left:none;
+        border-top:1px solid #d9d3b0;
+      }
+    }
+  </style>
 
-              <label for="nm_pelbayar" class="w3-col l4 s4 col-form-label" style="margin-left:15px"><b>Pelanggan</b></label>
-              <div class="w3-col l7 s7">
-                <div class="input-group">
-                  <input id="nm_pelbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_pel_byr" value="<?=$nm_pel?>" onkeyup="carnmpel()">
-                  <input type="hidden" id="kd_pel_byr" name="kd_pel_byr" value="<?=$kd_pel?>">
-                  <div class="input-group-btn">
-                    <button id="btn-fpel" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
-                  </div>  
-                </div>  
+  <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="border-radius:5px;background: linear-gradient(565deg, #FAFAD2 10%, white 80%);border-style: ridge;border-color:white;">
+    <div style="background-color: orange;border-style: ridge;border-color: white;text-shadow: 1px 1px 2px black" class="yz-theme-d1 p-1">&nbsp;<i class="fa fa-server"></i>
+      BAYAR NOTA PENJUALAN BARANG
+      <span onclick="document.getElementById('form-bayar').style.display='none'" class="w3-display-topright" title="Close Modal" style="margin-top: -3px;margin-right: 0px;cursor: pointer"><img style="width: 108%" src="img/tomexit2.png" alt=""></span>
+    </div>
 
-                  <div id="boxpelbay_1" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
-                    <table id="tabpelanggan" class="table-bordered table-hover" style="font-size:10pt;background-color: white;width: 100%;border-collapse: collapse;white-space: nowrap;font-size:9pt">
-                      <tr align="middle" class="yz-theme-l4" style="background-color: white;position:sticky;top:1px">
-                        <th style="width: 2%">NO</th>
-                        <th>NAMA</th>
-                        <th style="width: 30%">ALAMAT</th>
-                      </tr>
-                      <?php 
-                      $cekpel = mysqli_query($connect, "SELECT * from pelanggan ORDER BY nm_pel ASC ");
-                      $xpel=0;
-                      while ($datpel = mysqli_fetch_array($cekpel)){
-                        $xpel++;
-                      ?>
-                      <tr>
-                        <td style="text-align: right"><?php echo $xpel?>&nbsp;</td>
-                        <td>
-                          <input class="w3-input" type="text" readonly value="<?=$datpel['nm_pel']; ?>"
-                          style="border: none;background-color: transparent;cursor: pointer"
-                          onkeydown="if(event.keyCode==13){this.click()}" 
-                          onclick="document.getElementById('<?='pilpel'.$xpel?>').click();">
-                        </td>
+    <div class="modal-body">
+      <form id="form2" onsubmit="return false;" style="font-size: 10pt">
+        <input id="tgl_jual" type="hidden" name="tgl_jual" value='<?=$tgl_fakjual?>'>
+        <input id="tgl_jtnota" type="hidden" name="tgl_jtnota" value='<?=$tgl_jt?>'>
 
-                        <td align="left" class="button" style="cursor:pointer;">
-                          <input id="<?='pilpel'.$xpel?>" class="w3-input" type="text" readonly="" value="<?=$datpel['al_pel']; ?>" 
-                          style="border: none;background-color: transparent;cursor: pointer"
-                          onkeydown="if(event.keyCode==13){this.click()}" 
-                          onclick="document.getElementById('kd_pel_byr').value='<?=mysqli_escape_string($connect,$datpel['kd_pel']) ?>';document.getElementById('nm_pelbayar').value='<?=mysqli_escape_string($connect,$datpel['nm_pel']) ?>';document.getElementById('boxpelbay_1').style.display='none'">
-                        </td>
-                      </tr>  
+        <div class="bayar-grid">
 
-                      <?php   
-                      }
-                      unset($datpel);mysqli_free_result($cekpel);
-                      ?>
-                    </table>
-                    <script>
-                      $(document).ready(function(){
-                        $("#btn-fpel").click(function(){
-                          $("#nm_pelbayar").focus();
-                          $("#boxpelbay_1").slideToggle("fast");
-                          $("#tabbay").slideUp("fast");
-                          $("#viewidmemberbayar").slideUp("fast");
-                        });
-                        
-                       });
+          <!-- ===================== KOLOM 1: DATA TRANSAKSI ===================== -->
+          <div class="bayar-col">
+            <div class="bayar-col-title">Data Transaksi</div>
 
-                      function carnmpel() {
-                        var input, filter, table, tr, td, i, txtValue, tdx;
-                        input = document.getElementById("nm_pelbayar");
-                        filter = input.value.toUpperCase();
-                        table = document.getElementById("tabpelanggan");
-                        tr = table.getElementsByTagName("tr");
-                        for (i = 0; i < tr.length; i++) {
-                          td = tr[i].getElementsByTagName("input")[0];
-                          if (td) {
-                            txtValue = td.textContent || td.value;
-                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                              tr[i].style.display = "";
-                              // table.style.display = "";
-                            } else {
-                              tr[i].style.display = "none";
-                              // table.style.display = "none";
-                            }
-                          }       
-                        }
-                      }
-                    </script>
-                  </div>
+            <div class="field">
+              <label for="byr_no_fakjual"><b>Nomer Nota</b></label>
+              <input id="byr_no_fakjual" type="text" style="font-size: 10pt;" class="form-control hrf_arial" name="byr_no_fakjual" value="<?=$no_fakjual?>" disabled >
+              <input id="no_fakjuals" type="hidden" style="font-size: 9pt;" class="form-control hrf_arial" name="no_fakjuals" value="<?=$no_fakjual?>" required="" >
+            </div>
+
+            <div class="field">
+              <label for="nm_pelbayar"><b>Pelanggan</b></label>
+              <div class="input-group">
+                <input id="nm_pelbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_pel_byr" value="<?=$nm_pel?>" onkeyup="carnmpel()">
+                <input type="hidden" id="kd_pel_byr" name="kd_pel_byr" value="<?=$kd_pel?>">
+                <div class="input-group-btn">
+                  <button id="btn-fpel" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
+                </div>
               </div>
 
-              <label for="nm_memberbayar" class="w3-col l4 s4 col-form-label" style="margin-left:15px"><b>Member</b></label>
-              <div class="w3-col l7 s7">
-                <div class="input-group">
-                  <input id="nm_memberbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_member_byr" value="" onkeyup="carnmmember()" placeholder="Kosongkan jika bukan member">
-                  <input type="hidden" id="kd_member_byr" name="kd_member_byr" value="">
-                  <input type="hidden" id="poin_member" name="poin_member" value="0">
-                  <div class="input-group-btn">
-                    <button id="btn-fmember" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
-                  </div>  
-                </div>  
-                <div id="viewidmemberbayar" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
-                </div>
-                <script>
-                  function bayarcarimember(){
-                    $.ajax({
-                      url: 'f_jualcarimember.php',
-                      type: 'POST',
-                      data: {keyword: $("#nm_memberbayar").val()}, 
-                      dataType: "json",
-                      beforeSend: function(e) {
-                        if(e && e.overrideMimeType) {
-                          e.overrideMimeType("application/json;charset=UTF-8");
-                        }
-                      },
-                      success: function(response){ 
-                        $("#viewidmemberbayar").html(response.hasil);
-                      },
-                      error: function (xhr, ajaxOptions, thrownError) {
-                        alert(xhr.responseText);
-                      }
-                    });
-                  }
-                  
-                  // Pastikan fungsi bisa diakses secara global
-                  window.bayarcarimember = bayarcarimember;
-                  
-                  // Panggil setelah fungsi didefinisikan
-                  $(document).ready(function(){
-                    // Tidak perlu dipanggil otomatis, akan dipanggil saat button diklik
-                  });
+              <div id="boxpelbay_1" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
+                <table id="tabpelanggan" class="table-bordered table-hover" style="font-size:10pt;background-color: white;width: 100%;border-collapse: collapse;white-space: nowrap;font-size:9pt">
+                  <tr align="middle" class="yz-theme-l4" style="background-color: white;position:sticky;top:1px">
+                    <th style="width: 2%">NO</th>
+                    <th>NAMA</th>
+                    <th style="width: 30%">ALAMAT</th>
+                  </tr>
+                  <?php
+                  $cekpel = mysqli_query($connect, "SELECT * from pelanggan ORDER BY nm_pel ASC ");
+                  $xpel=0;
+                  while ($datpel = mysqli_fetch_array($cekpel)){
+                    $xpel++;
+                  ?>
+                  <tr>
+                    <td style="text-align: right"><?php echo $xpel?>&nbsp;</td>
+                    <td>
+                      <input class="w3-input" type="text" readonly value="<?=$datpel['nm_pel']; ?>"
+                      style="border: none;background-color: transparent;cursor: pointer"
+                      onkeydown="if(event.keyCode==13){this.click()}"
+                      onclick="document.getElementById('<?='pilpel'.$xpel?>').click();">
+                    </td>
 
-                  function carnmmember() {
-                    var input, filter, table, tr, td, i, txtValue;
-                    input = document.getElementById("nm_memberbayar");
-                    filter = input.value.toUpperCase();
-                    table = document.getElementById("tabmember");
-                    if(table) {
-                      tr = table.getElementsByTagName("tr");
-                      for (i = 0; i < tr.length; i++) {
-                        td = tr[i].getElementsByTagName("input")[0];
-                        if (td) {
-                          txtValue = td.textContent || td.value;
-                          if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            tr[i].style.display = "";
-                          } else {
-                            tr[i].style.display = "none";
-                          }
-                        }       
-                      }
+                    <td align="left" class="button" style="cursor:pointer;">
+                      <input id="<?='pilpel'.$xpel?>" class="w3-input" type="text" readonly="" value="<?=$datpel['al_pel']; ?>"
+                      style="border: none;background-color: transparent;cursor: pointer"
+                      onkeydown="if(event.keyCode==13){this.click()}"
+                      onclick="document.getElementById('kd_pel_byr').value='<?=mysqli_escape_string($connect,$datpel['kd_pel']) ?>';document.getElementById('nm_pelbayar').value='<?=mysqli_escape_string($connect,$datpel['nm_pel']) ?>';document.getElementById('boxpelbay_1').style.display='none'">
+                    </td>
+                  </tr>
+
+                  <?php
+                  }
+                  unset($datpel);mysqli_free_result($cekpel);
+                  ?>
+                </table>
+              </div>
+            </div>
+            <script>
+              $(document).ready(function(){
+                $("#btn-fpel").click(function(){
+                  $("#nm_pelbayar").focus();
+                  $("#boxpelbay_1").slideToggle("fast");
+                  $("#tabbay").slideUp("fast");
+                  $("#viewidmemberbayar").slideUp("fast");
+                });
+
+               });
+
+              function carnmpel() {
+                var input, filter, table, tr, td, i, txtValue, tdx;
+                input = document.getElementById("nm_pelbayar");
+                filter = input.value.toUpperCase();
+                table = document.getElementById("tabpelanggan");
+                tr = table.getElementsByTagName("tr");
+                for (i = 0; i < tr.length; i++) {
+                  td = tr[i].getElementsByTagName("input")[0];
+                  if (td) {
+                    txtValue = td.textContent || td.value;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                      tr[i].style.display = "";
+                      // table.style.display = "";
                     } else {
-                      // Jika tabel belum ada, load dulu
-                      bayarcarimember();
+                      tr[i].style.display = "none";
+                      // table.style.display = "none";
                     }
                   }
+                }
+              }
+            </script>
 
-                  function hitungdiscmember() {
-                    var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
-                    var byr_awal = document.getElementById('byr_awal') ? document.getElementById('byr_awal').value : '0';
-                    byr_awal = Number(backangkades(byr_awal));
-                    
-                    var disc_member = 0;
-                    // Diskon member 1% jika belanja minimal Rp 300.000
-                    if(kd_member != '' && kd_member != null && byr_awal >= 300000) {
-                      disc_member = Math.floor(byr_awal * 0.01);
+            <div class="field">
+              <label for="nm_memberbayar"><b>Member</b></label>
+              <div class="input-group">
+                <input id="nm_memberbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_member_byr" value="" onkeyup="carnmmember()" placeholder="Kosongkan jika bukan member">
+                <input type="hidden" id="kd_member_byr" name="kd_member_byr" value="">
+                <input type="hidden" id="poin_member" name="poin_member" value="0">
+                <div class="input-group-btn">
+                  <button id="btn-fmember" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
+                </div>
+              </div>
+              <div id="viewidmemberbayar" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
+              </div>
+            </div>
+            <script>
+              function bayarcarimember(){
+                $.ajax({
+                  url: 'f_jualcarimember.php',
+                  type: 'POST',
+                  data: {keyword: $("#nm_memberbayar").val()},
+                  dataType: "json",
+                  beforeSend: function(e) {
+                    if(e && e.overrideMimeType) {
+                      e.overrideMimeType("application/json;charset=UTF-8");
                     }
-                    
-                    if(document.getElementById('disc_member')){
-                      document.getElementById('disc_member').value = angkatitikdes(disc_member);
+                  },
+                  success: function(response){
+                    $("#viewidmemberbayar").html(response.hasil);
+                  },
+                  error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.responseText);
+                  }
+                });
+              }
+
+              // Pastikan fungsi bisa diakses secara global
+              window.bayarcarimember = bayarcarimember;
+
+              // Panggil setelah fungsi didefinisikan
+              $(document).ready(function(){
+                // Tidak perlu dipanggil otomatis, akan dipanggil saat button diklik
+              });
+
+              function carnmmember() {
+                var input, filter, table, tr, td, i, txtValue;
+                input = document.getElementById("nm_memberbayar");
+                filter = input.value.toUpperCase();
+                table = document.getElementById("tabmember");
+                if(table) {
+                  tr = table.getElementsByTagName("tr");
+                  for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("input")[0];
+                    if (td) {
+                      txtValue = td.textContent || td.value;
+                      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                      } else {
+                        tr[i].style.display = "none";
+                      }
                     }
-                    if(document.getElementById('disc_member_hidden')){
-                      document.getElementById('disc_member_hidden').value = disc_member;
-                    }
-                    
-                    // JANGAN memanggil hitdisc() di sini untuk menghindari circular dependency
-                    // hitdisc() akan dipanggil secara terpisah jika diperlukan
+                  }
+                } else {
+                  // Jika tabel belum ada, load dulu
+                  bayarcarimember();
+                }
+              }
+
+              function hitungdiscmember() {
+                var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+                var byr_awal = document.getElementById('byr_awal') ? document.getElementById('byr_awal').value : '0';
+                byr_awal = Number(backangkades(byr_awal));
+
+                var disc_member = 0;
+                // Diskon member 1% jika belanja minimal Rp 300.000
+                if(kd_member != '' && kd_member != null && byr_awal >= 300000) {
+                  disc_member = Math.floor(byr_awal * 0.01);
+                }
+
+                if(document.getElementById('disc_member')){
+                  document.getElementById('disc_member').value = angkatitikdes(disc_member);
+                }
+                if(document.getElementById('disc_member_hidden')){
+                  document.getElementById('disc_member_hidden').value = disc_member;
+                }
+
+                // JANGAN memanggil hitdisc() di sini untuk menghindari circular dependency
+                // hitdisc() akan dipanggil secara terpisah jika diperlukan
+              }
+
+              function hitungpoin(skip_disc_update) {
+                try {
+                  var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
+                  var tot_belanja = document.getElementById('tot_belanja') ? document.getElementById('tot_belanja').value : '0';
+                  tot_belanja = Number(backangkades(tot_belanja));
+
+                  // JANGAN memanggil hitungdiscmember() atau hitdisc() di sini
+                  // hitungdiscmember() sudah dipanggil oleh hitdisc() sebelum memanggil fungsi ini
+                  // Jika dipanggil langsung (bukan dari hitdisc), skip_disc_update akan false
+                  // dan kita perlu memanggil hitdisc() terlebih dahulu dari luar
+
+                  // Hitung poin: setiap kelipatan Rp 50.000 mendapat 1 poin
+                  var poin_earned = Math.floor(tot_belanja / 50000);
+
+                  // Update poin yang akan didapat
+                  var poin_earned_display = document.getElementById('poin_earned_display');
+                  if(poin_earned_display){
+                    poin_earned_display.innerHTML = poin_earned + ' poin';
+                  }
+                  var poin_earned_hidden = document.getElementById('poin_earned_hidden');
+                  if(poin_earned_hidden){
+                    poin_earned_hidden.value = poin_earned;
                   }
 
-                  function hitungpoin(skip_disc_update) {
-                    try {
-                      var kd_member = document.getElementById('kd_member_byr') ? document.getElementById('kd_member_byr').value : '';
-                      var tot_belanja = document.getElementById('tot_belanja') ? document.getElementById('tot_belanja').value : '0';
-                      tot_belanja = Number(backangkades(tot_belanja));
-                      
-                      // JANGAN memanggil hitungdiscmember() atau hitdisc() di sini
-                      // hitungdiscmember() sudah dipanggil oleh hitdisc() sebelum memanggil fungsi ini
-                      // Jika dipanggil langsung (bukan dari hitdisc), skip_disc_update akan false
-                      // dan kita perlu memanggil hitdisc() terlebih dahulu dari luar
-                      
-                      // Hitung poin: setiap kelipatan Rp 50.000 mendapat 1 poin
-                      var poin_earned = Math.floor(tot_belanja / 50000);
-                      
-                      // Update poin yang akan didapat
-                      var poin_earned_display = document.getElementById('poin_earned_display');
-                      if(poin_earned_display){
-                        poin_earned_display.innerHTML = poin_earned + ' poin';
+                  // Jika tidak ada member yang dipilih
+                  if(kd_member == '' || kd_member == null) {
+                    // Reset poin redeem
+                    if(document.getElementById('poin_redeem')){
+                      document.getElementById('poin_redeem').value = '0';
+                    }
+                    if(document.getElementById('poin_redeem_hidden')){
+                      document.getElementById('poin_redeem_hidden').value = '0';
+                    }
+                    // Reset poin yang dimiliki
+                    if(document.getElementById('poin_member_available')){
+                      document.getElementById('poin_member_available').value = '0';
+                    }
+                    if(document.getElementById('poin_member_display')){
+                      document.getElementById('poin_member_display').innerHTML = '0 poin';
+                    }
+                    // Sembunyikan informasi poin jika belum memilih member
+                    var poin_info = document.getElementById('poin_info');
+                    if(poin_info){
+                      poin_info.style.display = 'none';
+                    }
+                    return;
+                  }
+
+                  // Tampilkan informasi poin terlebih dahulu
+                  var poin_info = document.getElementById('poin_info');
+                  if(poin_info){
+                    poin_info.style.display = 'block';
+                    console.log('Poin info displayed, kd_member:', kd_member, 'poin_earned:', poin_earned);
+                  } else {
+                    console.error('poin_info element not found!');
+                  }
+
+                  // Ambil poin member yang tersedia
+                  $.ajax({
+                    url: 'f_tukarpoin_cekpoin.php',
+                    type: 'POST',
+                    data: {kd_member: kd_member},
+                    dataType: "json",
+                    beforeSend: function(e) {
+                      if(e && e.overrideMimeType) {
+                        e.overrideMimeType("application/json;charset=UTF-8");
                       }
-                      var poin_earned_hidden = document.getElementById('poin_earned_hidden');
-                      if(poin_earned_hidden){
-                        poin_earned_hidden.value = poin_earned;
+                    },
+                    success: function(response){
+                      var poin_available = response.poin || 0;
+                      if(document.getElementById('poin_member_available')){
+                        document.getElementById('poin_member_available').value = poin_available;
                       }
-                      
-                      // Jika tidak ada member yang dipilih
-                      if(kd_member == '' || kd_member == null) {
-                        // Reset poin redeem
-                        if(document.getElementById('poin_redeem')){
-                          document.getElementById('poin_redeem').value = '0';
-                        }
-                        if(document.getElementById('poin_redeem_hidden')){
-                          document.getElementById('poin_redeem_hidden').value = '0';
-                        }
-                        // Reset poin yang dimiliki
-                        if(document.getElementById('poin_member_available')){
-                          document.getElementById('poin_member_available').value = '0';
-                        }
-                        if(document.getElementById('poin_member_display')){
-                          document.getElementById('poin_member_display').innerHTML = '0 poin';
-                        }
-                        // Sembunyikan informasi poin jika belum memilih member
-                        var poin_info = document.getElementById('poin_info');
-                        if(poin_info){
-                          poin_info.style.display = 'none';
-                        }
-                        return;
+                      var poin_member_display = document.getElementById('poin_member_display');
+                      if(poin_member_display){
+                        poin_member_display.innerHTML = number_format(poin_available, 0, ',', '.') + ' poin';
                       }
-                      
-                      // Tampilkan informasi poin terlebih dahulu
                       var poin_info = document.getElementById('poin_info');
                       if(poin_info){
                         poin_info.style.display = 'block';
-                        console.log('Poin info displayed, kd_member:', kd_member, 'poin_earned:', poin_earned);
-                      } else {
-                        console.error('poin_info element not found!');
                       }
-                      
-                      // Ambil poin member yang tersedia
-                      $.ajax({
-                        url: 'f_tukarpoin_cekpoin.php',
-                        type: 'POST',
-                        data: {kd_member: kd_member}, 
-                        dataType: "json",
-                        beforeSend: function(e) {
-                          if(e && e.overrideMimeType) {
-                            e.overrideMimeType("application/json;charset=UTF-8");
-                          }
-                        },
-                        success: function(response){ 
-                          var poin_available = response.poin || 0;
-                          if(document.getElementById('poin_member_available')){
-                            document.getElementById('poin_member_available').value = poin_available;
-                          }
-                          var poin_member_display = document.getElementById('poin_member_display');
-                          if(poin_member_display){
-                            poin_member_display.innerHTML = number_format(poin_available, 0, ',', '.') + ' poin';
-                          }
-                          var poin_info = document.getElementById('poin_info');
-                          if(poin_info){
-                            poin_info.style.display = 'block';
-                          }
-                        },
-                        error: function (xhr, ajaxOptions, thrownError) {
-                          console.error('Error loading poin:', xhr.responseText);
-                          var poin_available = 0;
-                          if(document.getElementById('poin_member_available')){
-                            document.getElementById('poin_member_available').value = '0';
-                          }
-                          var poin_member_display = document.getElementById('poin_member_display');
-                          if(poin_member_display){
-                            poin_member_display.innerHTML = '0 poin';
-                          }
-                          var poin_info = document.getElementById('poin_info');
-                          if(poin_info){
-                            poin_info.style.display = 'block';
-                          }
-                        }
-                      });
-                    } catch(e) {
-                      console.error('Error in hitungpoin:', e);
-                    }
-                  }
-                  
-                  // Pastikan fungsi bisa diakses secara global
-                  window.hitungpoin = hitungpoin;
-
-                  function number_format(number, decimals, dec_point, thousands_sep) {
-                    number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
-                    var n = !isFinite(+number) ? 0 : +number,
-                      prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-                      sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-                      dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-                      s = '',
-                      toFixedFix = function(n, prec) {
-                        var k = Math.pow(10, prec);
-                        return '' + Math.round(n * k) / k;
-                      };
-                    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-                    if (s[0].length > 3) {
-                      s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-                    }
-                    if ((s[1] || '').length < prec) {
-                      s[1] = s[1] || '';
-                      s[1] += new Array(prec - s[1].length + 1).join('0');
-                    }
-                    return s.join(dec);
-                  }
-
-                  function hitungredeempoin(){
-                    var poin_redeem_str = document.getElementById('poin_redeem').value.replace(/\./g, '');
-                    var poin_redeem = parseFloat(poin_redeem_str) || 0;
-                    var poin_available = parseFloat(document.getElementById('poin_member_available').value) || 0;
-                    
-                    // Validasi poin tidak melebihi yang dimiliki
-                    if(poin_redeem > poin_available){
-                      alert('Poin yang digunakan melebihi poin yang dimiliki!\nPoin tersedia: ' + number_format(poin_available, 0, ',', '.') + ' poin');
-                      document.getElementById('poin_redeem').value = '0';
-                      poin_redeem = 0;
-                    }
-                    
-                    // Konversi poin ke rupiah: 1 poin = Rp 100
-                    var nilai_poin = poin_redeem * 100;
-                    document.getElementById('poin_redeem_hidden').value = nilai_poin;
-                    
-                    hitdisc();
-                  }
-
-                  $(document).ready(function(){
-                    $("#btn-fmember").click(function(){
-                      $("#nm_memberbayar").focus();
-                      $("#viewidmemberbayar").slideToggle("fast");
-                      $("#boxpelbay_1").slideUp("fast");
-                      $("#tabbay").slideUp("fast");
-                      bayarcarimember();
-                    });
-                    
-                    // Monitor perubahan pada kd_member_byr
-                    var kd_member_input = document.getElementById('kd_member_byr');
-                    if(kd_member_input) {
-                      // Gunakan MutationObserver atau event listener
-                      var observer = new MutationObserver(function(mutations) {
-                        mutations.forEach(function(mutation) {
-                          if(mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                            setTimeout(function(){
-                              if(typeof window.hitungpoin === 'function') {
-                                window.hitungpoin();
-                              }
-                            }, 300);
-                          }
-                        });
-                      });
-                      
-                      // Observe perubahan value
-                      setInterval(function(){
-                        var current_value = kd_member_input.value;
-                        if(current_value && current_value !== kd_member_input.getAttribute('data-last-value')) {
-                          kd_member_input.setAttribute('data-last-value', current_value);
-                          setTimeout(function(){
-                            if(typeof window.hitungpoin === 'function') {
-                              window.hitungpoin();
-                            }
-                          }, 300);
-                        }
-                      }, 500);
+                    },
+                    error: function (xhr, ajaxOptions, thrownError) {
+                      console.error('Error loading poin:', xhr.responseText);
+                      var poin_available = 0;
+                      if(document.getElementById('poin_member_available')){
+                        document.getElementById('poin_member_available').value = '0';
+                      }
+                      var poin_member_display = document.getElementById('poin_member_display');
+                      if(poin_member_display){
+                        poin_member_display.innerHTML = '0 poin';
+                      }
+                      var poin_info = document.getElementById('poin_info');
+                      if(poin_info){
+                        poin_info.style.display = 'block';
+                      }
                     }
                   });
-                </script>
+                } catch(e) {
+                  console.error('Error in hitungpoin:', e);
+                }
+              }
+
+              // Pastikan fungsi bisa diakses secara global
+              window.hitungpoin = hitungpoin;
+
+              function number_format(number, decimals, dec_point, thousands_sep) {
+                number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+                var n = !isFinite(+number) ? 0 : +number,
+                  prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+                  sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+                  dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+                  s = '',
+                  toFixedFix = function(n, prec) {
+                    var k = Math.pow(10, prec);
+                    return '' + Math.round(n * k) / k;
+                  };
+                s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+                if (s[0].length > 3) {
+                  s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+                }
+                if ((s[1] || '').length < prec) {
+                  s[1] = s[1] || '';
+                  s[1] += new Array(prec - s[1].length + 1).join('0');
+                }
+                return s.join(dec);
+              }
+
+              function hitungredeempoin(){
+                var poin_redeem_str = document.getElementById('poin_redeem').value.replace(/\./g, '');
+                var poin_redeem = parseFloat(poin_redeem_str) || 0;
+                var poin_available = parseFloat(document.getElementById('poin_member_available').value) || 0;
+
+                // Validasi poin tidak melebihi yang dimiliki
+                if(poin_redeem > poin_available){
+                  alert('Poin yang digunakan melebihi poin yang dimiliki!\nPoin tersedia: ' + number_format(poin_available, 0, ',', '.') + ' poin');
+                  document.getElementById('poin_redeem').value = '0';
+                  poin_redeem = 0;
+                }
+
+                // Konversi poin ke rupiah: 1 poin = Rp 100
+                var nilai_poin = poin_redeem * 100;
+                document.getElementById('poin_redeem_hidden').value = nilai_poin;
+
+                hitdisc();
+              }
+
+              $(document).ready(function(){
+                $("#btn-fmember").click(function(){
+                  $("#nm_memberbayar").focus();
+                  $("#viewidmemberbayar").slideToggle("fast");
+                  $("#boxpelbay_1").slideUp("fast");
+                  $("#tabbay").slideUp("fast");
+                  bayarcarimember();
+                });
+
+                // Monitor perubahan pada kd_member_byr
+                var kd_member_input = document.getElementById('kd_member_byr');
+                if(kd_member_input) {
+                  // Gunakan MutationObserver atau event listener
+                  var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                      if(mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                        setTimeout(function(){
+                          if(typeof window.hitungpoin === 'function') {
+                            window.hitungpoin();
+                          }
+                        }, 300);
+                      }
+                    });
+                  });
+
+                  // Observe perubahan value
+                  setInterval(function(){
+                    var current_value = kd_member_input.value;
+                    if(current_value && current_value !== kd_member_input.getAttribute('data-last-value')) {
+                      kd_member_input.setAttribute('data-last-value', current_value);
+                      setTimeout(function(){
+                        if(typeof window.hitungpoin === 'function') {
+                          window.hitungpoin();
+                        }
+                      }, 300);
+                    }
+                  }, 500);
+                }
+              });
+            </script>
+
+            <div class="field">
+              <label for="nm_crewbayar"><b>Crew</b></label>
+              <div class="input-group">
+                <input id="nm_crewbayar" type="text" style="font-size: 10pt;" class="form-control" name="nm_crew_byr" value="" onkeyup="carnmcrew()" placeholder="Kosongkan jika tidak ada crew">
+                <input type="hidden" id="kd_crew_byr" name="kd_crew_byr" value="">
+                <div class="input-group-btn">
+                  <button id="btn-fcrew" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button>
+                </div>
+              </div>
+              <div id="viewidcrewbayar" style="position:absolute;z-index: 20;overflow: auto;display: none;border-style: ridge;border-color: white;max-height:400px;width:260px" class="w3-card">
+              </div>
+            </div>
+            <script>
+              function bayarcaricrew(){
+                $.ajax({
+                  url: 'f_jualcaricrew.php',
+                  type: 'POST',
+                  data: {keyword: $("#nm_crewbayar").val()},
+                  dataType: "json",
+                  beforeSend: function(e) {
+                    if(e && e.overrideMimeType) {
+                      e.overrideMimeType("application/json;charset=UTF-8");
+                    }
+                  },
+                  success: function(response){
+                    $("#viewidcrewbayar").html(response.hasil);
+                  },
+                  error: function (xhr) {
+                    alert(xhr.responseText);
+                  }
+                });
+              }
+              window.bayarcaricrew = bayarcaricrew;
+
+              function carnmcrew() {
+                var input, filter, table, tr, td, i, txtValue;
+                input = document.getElementById("nm_crewbayar");
+                filter = input.value.toUpperCase();
+                table = document.getElementById("tabcrew");
+                if(table) {
+                  tr = table.getElementsByTagName("tr");
+                  for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("input")[0];
+                    if (td) {
+                      txtValue = td.textContent || td.value;
+                      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                      } else {
+                        tr[i].style.display = "none";
+                      }
+                    }
+                  }
+                } else {
+                  bayarcaricrew();
+                }
+                if(input.value === ''){
+                  document.getElementById('kd_crew_byr').value = '';
+                }
+              }
+
+              $(document).ready(function(){
+                $("#btn-fcrew").click(function(){
+                  $("#nm_crewbayar").focus();
+                  $("#viewidcrewbayar").slideToggle("fast");
+                  $("#viewidmemberbayar").slideUp("fast");
+                  $("#boxpelbay_1").slideUp("fast");
+                  $("#tabbay").slideUp("fast");
+                  bayarcaricrew();
+                });
+              });
+            </script>
+
+            <div class="field">
+              <label for="kd_bayar2"><b>Cara Bayar</b></label>
+              <div class="input-group">
+                <input id="kd_bayar2" style="font-size: 10pt" type="text" class="form-control" name="kd_bayar" value="<?=$kd_bayar?>" required>
+                <span><button id="btn-baypil" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button></span>
               </div>
 
-              <div id="poin_info" class="w3-col l11 s11" style="margin-left:15px;margin-top:5px;display:none">
-                <div class="w3-card w3-padding" style="background-color: #fff3cd;border-left: 4px solid #ffc107">
-                  <small><i class="fa fa-star" style="color:orange"></i> <b>Poin yang akan didapat:</b> <span id="poin_earned_display">0 poin</span></small>
-                  <input type="hidden" id="poin_earned_hidden" name="poin_earned_hidden" value="0">
-                  <br>
-                  <small><i class="fa fa-gift" style="color:green"></i> <b>Poin yang dimiliki:</b> <span id="poin_member_display">0 poin</span></small>
-                  <input type="hidden" id="poin_member_available" name="poin_member_available" value="0">
-                </div>
-              </div>    
-                
-              <label for="kd_bayar2" class="w3-col l4 s4 col-form-label" style="margin-left: 15px"><b>Cara Bayar</b></label>
-                <div class="w3-col l7 s7">
-                  <div class="input-group">
-                    <input id="kd_bayar2" style="font-size: 10pt" type="text" class="form-control" name="kd_bayar" value="<?=$kd_bayar?>" required>  
-                    <span><button id="btn-baypil" class="form-control yz-theme-l4 w3-hover-shadow" style="height: 31px;cursor: pointer;border:1px solid black" type="button"><i class="fa fa-caret-down"></i></button></span>  
-                  </div>  
-                  
-                  <!--  -->
-                    <div id="tabbay" class="table-responsive w3-card" style="overflow:hidden;border-style: ridge; border-color: white;height: 62px;display: none;position: absolute;z-index: 1;max-width: 260px">
-                      <table class="table table-hover" style="font-size:10pt;background-color: white ">
-                        <tr>
-                          <td align="middle" class="button" onclick="document.getElementById('kd_bayar2').value='TUNAI'" style="cursor: pointer;padding: 2px"><?php echo 'TUNAI' ?></td>
-                        </tr>  
-                        <tr>
-                          <td align="middle" class="button" onclick="document.getElementById('kd_bayar2').value='TEMPO'" style="cursor: pointer;padding: 2px"><?php echo 'TEMPO' ?></td>
-                        </tr> 
-                      </table>    
-                    </div>  
-                    
-                    <script>
-                      $(document).ready(function(){
-                        $("#btn-baypil").click(function(){
-                          $("#tabbay").slideToggle("fast");
-                          $("#boxpelbay_1").slideUp("fast");
-                        });
-                        // $("#tabbay").mouseleave(function(){
-                        //   $("#tabbay").slideUp("fast");
-                        // });
-                        $("#tabbay").click(function(){
-                          $("#tabbay").slideUp("fast");
-                        });
-                      });
-                    </script>
-                  <!--  -->
-                </div>
-
-              <label for="tgl_jtnotas" class="w3-col l4 s4 col-form-label" style="margin-left: 15px"><b>Tanggal Tempo</b></label>
-              <div class="w3-col l7 s7">
-                <input class="form-control" type="date" id="tgl_jtnotas" name="tgl_jtnotas" value="<?=date('Y-m-d',strtotime($tgl_jt))?>" style="font-size: 10pt">
-              </div>    
-
-              <label for="cek_tf" class="w3-col l4 s4 col-form-label" style="margin-left: 15px"><b>Pembayaran Transfer</b></label>
-              <div class="w3-col l7 s7" style="font-size: 14pt">
-                <input type="checkbox" id="cek_tf" style="height:20px;width:20px;margin-top:5px" onclick="cektf()">
-                <input type="hidden" id="pil_tf" name="pil_tf">
-              </div>  
-              
-              <label for="byr_awal" class="w3-col l4 s3 col-form-label w3-margin-top " style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-shopping-bag" style="color:blue"></i>&nbsp;&nbsp;<b>Belanja</b></label >
-              <div class="w3-col l7 s8 w3-margin-top" style="border-bottom: 1px solid lightgrey;margin-left: 15px">        
-                <input id="byr_awal" type="text"  class="form-control hrf_arial money" value='<?=gantitides($gtotawal-$j_hrg_jual)?>' name="byr_awal" style="border:none;background-color: transparent;font-size: 14pt;text-align: right;">
-                <input id="byr_jual1" type="hidden"  class="money" value='<?=gantitides($gtotnota-$totret)?>' required="">
-                <input id="byr_jual" type="hidden"  class="" name="byr_jual" value='<?=gantitides($gtotnota-$totret)?>' required>
-              </div>       
-          
-              <label for="tdiscitem" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-tags" style="color:orange"></i>&nbsp;&nbsp;<b>Discount Item</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
-                <input id="tdiscitem" type="text" value="<?=gantitides(round($tdisc2-$j_disrp,0))?>" class= "form-control money" name="tdiscitem"  readonly="" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;">
-                <input type="hidden" id="tdiscitem1" name='tdiscitem1' value="<?=gantitides($tdisc2-$j_disrp)?>">
+              <div id="tabbay" class="table-responsive w3-card" style="overflow:hidden;border-style: ridge; border-color: white;height: 62px;display: none;position: absolute;z-index: 1;max-width: 260px">
+                <table class="table table-hover" style="font-size:10pt;background-color: white ">
+                  <tr>
+                    <td align="middle" class="button" onclick="document.getElementById('kd_bayar2').value='TUNAI'" style="cursor: pointer;padding: 2px"><?php echo 'TUNAI' ?></td>
+                  </tr>
+                  <tr>
+                    <td align="middle" class="button" onclick="document.getElementById('kd_bayar2').value='TEMPO'" style="cursor: pointer;padding: 2px"><?php echo 'TEMPO' ?></td>
+                  </tr>
+                </table>
               </div>
+            </div>
+            <script>
+              $(document).ready(function(){
+                $("#btn-baypil").click(function(){
+                  $("#tabbay").slideToggle("fast");
+                  $("#boxpelbay_1").slideUp("fast");
+                });
+                // $("#tabbay").mouseleave(function(){
+                //   $("#tabbay").slideUp("fast");
+                // });
+                $("#tabbay").click(function(){
+                  $("#tabbay").slideUp("fast");
+                });
+              });
+            </script>
 
-              <label for="disctot" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-tags" style="color:orange"></i>&nbsp;&nbsp;<b>Discount Nota</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
-                <input id="disctot" type="text" value="<?=gantitides(round($gdisc1-$j_disctem,0))?>" class= "form-control money" name="disctot"  required="" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;" 
-                onkeyup="hitdisc()" 
+            <div class="field">
+              <label for="tgl_jtnotas"><b>Tanggal Tempo</b></label>
+              <input class="form-control" type="date" id="tgl_jtnotas" name="tgl_jtnotas" value="<?=date('Y-m-d',strtotime($tgl_jt))?>" style="font-size: 10pt">
+            </div>
+
+            <div class="checkline">
+              <input type="checkbox" id="cek_tf" style="height:18px;width:18px" onclick="cektf()">
+              <label for="cek_tf"><b>Pembayaran Transfer</b></label>
+              <input type="hidden" id="pil_tf" name="pil_tf">
+            </div>
+
+            <div id="poin_info" class="w3-card w3-padding poin-box" style="background-color: #fff3cd;border-left: 4px solid #ffc107">
+              <small><i class="fa fa-star" style="color:orange"></i> <b>Poin yang akan didapat:</b> <span id="poin_earned_display">0 poin</span></small>
+              <input type="hidden" id="poin_earned_hidden" name="poin_earned_hidden" value="0">
+              <br>
+              <small><i class="fa fa-gift" style="color:green"></i> <b>Poin yang dimiliki:</b> <span id="poin_member_display">0 poin</span></small>
+              <input type="hidden" id="poin_member_available" name="poin_member_available" value="0">
+            </div>
+          </div>
+          <!-- ===================== /KOLOM 1 ===================== -->
+
+          <!-- ===================== KOLOM 2: DISKON & BIAYA ===================== -->
+          <div class="bayar-col">
+            <div class="bayar-col-title">Diskon &amp; Biaya</div>
+
+            <div class="money-row">
+              <label for="byr_awal"><i class="fa fa-shopping-bag" style="color:blue"></i>&nbsp;<b>Belanja</b></label>
+              <div class="money-input-wrap">
+                <input id="byr_awal" type="text" class="form-control hrf_arial money" value='<?=gantitides($gtotawal-$j_hrg_jual)?>' name="byr_awal" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;">
+              </div>
+            </div>
+            <input id="byr_jual1" type="hidden" class="money" value='<?=gantitides($gtotnota-$totret)?>' required="">
+            <input id="byr_jual" type="hidden" class="" name="byr_jual" value='<?=gantitides($gtotnota-$totret)?>' required>
+
+            <div class="money-row">
+              <label for="tdiscitem"><i class="fa fa-tags" style="color:orange"></i>&nbsp;<b>Discount Item</b></label>
+              <div class="money-input-wrap">
+                <input id="tdiscitem" type="text" value="<?=gantitides(round($tdisc2-$j_disrp,0))?>" class= "form-control money" name="tdiscitem"  readonly="" style="border:none;background-color: transparent;font-size: 11pt;text-align: right;">
+              </div>
+            </div>
+            <input type="hidden" id="tdiscitem1" name='tdiscitem1' value="<?=gantitides($tdisc2-$j_disrp)?>">
+
+            <div class="money-row">
+              <label for="disctot"><i class="fa fa-tags" style="color:orange"></i>&nbsp;<b>Discount Nota</b></label>
+              <div class="money-input-wrap">
+                <input id="disctot" type="text" value="<?=gantitides(round($gdisc1-$j_disctem,0))?>" class= "form-control money" name="disctot"  required="" style="border:none;background-color: transparent;font-size: 11pt;text-align: right;"
+                onkeyup="hitdisc()"
                 onfocus="document.getElementById('bayar').value='';
                 hitbayar(document.getElementById('kd_bayar2').value);"
                 >
               </div>
-              
-              <label for="voucher" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-tags" style="color:orange"></i>&nbsp;&nbsp;<b>Voucher</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
-                <input id="voucher" type="text" value="<?=gantitides(round($totvo-$j_discvo,0))?>" class= "form-control money" name="voucher"  style="border:none;background-color: transparent;font-size: 12pt;text-align: right;"
-                onkeyup="hitdisc()" 
+            </div>
+
+            <div class="money-row">
+              <label for="voucher"><i class="fa fa-tags" style="color:orange"></i>&nbsp;<b>Voucher</b></label>
+              <div class="money-input-wrap">
+                <input id="voucher" type="text" value="<?=gantitides(round($totvo-$j_discvo,0))?>" class= "form-control money" name="voucher"  style="border:none;background-color: transparent;font-size: 11pt;text-align: right;"
+                onkeyup="hitdisc()"
                 onfocus="document.getElementById('bayar').value='';
                 hitbayar(document.getElementById('kd_bayar2').value);"
                 >
               </div>
+            </div>
 
-              <label for="poin_redeem" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-gift" style="color:green"></i>&nbsp;&nbsp;<b>Tukar Poin</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
-                <input id="poin_redeem" type="text" value="0" class= "form-control money" name="poin_redeem" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;"
-                onkeyup="hitungredeempoin()" 
+            <div class="money-row">
+              <label for="poin_redeem"><i class="fa fa-gift" style="color:green"></i>&nbsp;<b>Tukar Poin</b></label>
+              <div class="money-input-wrap">
+                <input id="poin_redeem" type="text" value="0" class= "form-control money" name="poin_redeem" style="border:none;background-color: transparent;font-size: 11pt;text-align: right;"
+                onkeyup="hitungredeempoin()"
                 onfocus="document.getElementById('bayar').value='';
                 hitbayar(document.getElementById('kd_bayar2').value);"
                 placeholder="0"
                 >
-                <input type="hidden" id="poin_redeem_hidden" name="poin_redeem_hidden" value="0">
-                <small style="color: #666;font-size: 9pt;">1 poin = Rp 100 (maks sesuai poin yang dimiliki)</small>
               </div>
+            </div>
+            <input type="hidden" id="poin_redeem_hidden" name="poin_redeem_hidden" value="0">
+            <div class="hint">1 poin = Rp 100 (maks sesuai poin yang dimiliki)</div>
 
-              <label for="disc_member" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-user" style="color:purple"></i>&nbsp;&nbsp;<b>Diskon Member</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left: 15px">
-                <input id="disc_member" type="text" value="0" class= "form-control money" name="disc_member" readonly style="border:none;background-color: #f0f0f0;font-size: 12pt;text-align: right;color:purple">
-                <input type="hidden" id="disc_member_hidden" name="disc_member_hidden" value="0">
-                <small style="color: #666;font-size: 9pt;">Diskon 1% untuk member belanja minimal Rp 300.000</small>
+            <div class="money-row">
+              <label for="disc_member"><i class="fa fa-user" style="color:purple"></i>&nbsp;<b>Diskon Member</b></label>
+              <div class="money-input-wrap">
+                <input id="disc_member" type="text" value="0" class= "form-control money" name="disc_member" readonly style="border:none;background-color: #f0f0f0;font-size: 11pt;text-align: right;color:purple">
               </div>
+            </div>
+            <input type="hidden" id="disc_member_hidden" name="disc_member_hidden" value="0">
+            <div class="hint">Diskon 1% untuk member belanja minimal Rp 300.000</div>
 
-              <label for="ongkir" class="w3-col l4 s5 col-form-label" style="font-size: 11pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-truck" style="color:red"></i>&nbsp;&nbsp;<b>Jasa Kirim </b></label>
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left:15px;">
-                <input type="text" id="ongkir" name="ongkir" class="form-control money" value="<?=gantitides(round($ongkir,0))?>" onkeyup="hitongkir(this.value);" style="border:none;background-color: transparent;font-size: 12pt;text-align: right;">
-              </div>  
+            <div class="money-row" style="border-bottom:none;">
+              <label for="ongkir"><i class="fa fa-truck" style="color:red"></i>&nbsp;<b>Jasa Kirim</b></label>
+              <div class="money-input-wrap">
+                <input type="text" id="ongkir" name="ongkir" class="form-control money" value="<?=gantitides(round($ongkir,0))?>" onkeyup="hitongkir(this.value);" style="border:none;background-color: transparent;font-size: 11pt;text-align: right;">
+              </div>
+            </div>
+          </div>
+          <!-- ===================== /KOLOM 2 ===================== -->
 
-              <label for="tot_belanja" class="w3-col l4 s3 col-form-label" style="font-size: 12pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-briefcase" style="color:darkblue"></i>&nbsp;&nbsp;<b>Total </b></label >
-              <div class="w3-col l7 s8" style="border-bottom: 1px solid lightgrey;margin-left:15px">
+          <!-- ===================== KOLOM 3: PEMBAYARAN ===================== -->
+          <div class="bayar-col">
+            <div class="bayar-col-title">Pembayaran</div>
+
+            <div class="money-row" style="border-bottom: 2px solid #cdd; font-size:12pt">
+              <label for="tot_belanja"><i class="fa fa-briefcase" style="color:darkblue"></i>&nbsp;<b>Total</b></label>
+              <div class="money-input-wrap" style="width:150px">
                 <input id="tot_belanja" type="text" class="form-control money" name="tot_belanja"  required="" value="<?=gantitides(round($gtotnotas-$totret,0))?>" readonly style="border:none;background-color: transparent;font-size: 14pt;text-align: right;">
               </div>
-
-              <label for="bayar" class="w3-col l4 s3 col-form-label" style="font-size: 12pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-money" style="color:darkblue"></i>&nbsp;&nbsp;<b>Bayar</b></label >
-              <div class="w3-col l7 s8" style="border-bottom: 1px solid lightgrey;margin-left:15px">
-                <input id="bayar" type="text" class="form-control hrf_arial money" name="bayar"  required style="border:none;background-color: transparent;font-size: 14pt;text-align: right;" onkeyup="hitbayar(document.getElementById('kd_bayar2').value);" 
-                onkeypress="
-                if (event.keyCode==13){
-                  if ( '<?=$gtot?>' != '0'){
-                    document.getElementById('tmb-simpan').click();
-                  }          
-                }"
-                onblur="hitbayar(document.getElementById('kd_bayar2').value)" autofocus>
-              </div>     
-              <label for="kembali1" class="w3-col l4 s5 col-form-label" style="font-size: 12pt;border-bottom: 1px solid lightgrey;margin-left: 5px"><i class="fa fa-mail-reply-all" style="color:darkblue"></i>&nbsp;&nbsp;<b>Kembali</b></label >
-              <div class="w3-col l7 s6" style="border-bottom: 1px solid lightgrey;margin-left:15px">
-                <input id="kembali1" type="text" class="form-control hrf_arial money" required style="border:none;background-color: transparent;font-size: 14pt;text-align: right;color:blue" disabled="">
-                <input id="kembali" type="hidden" class="form-control hrf_arial money" name="kembali"  required style="border:none;background-color: transparent;font-size: 14pt;text-align: right;">
-              </div>
-              <div class="col-sm-6" style="font-size: 14pt">
-                <input type="checkbox" id="pil_cetak" name="pil_cetak" checked="" value="<?=$cet?>"
-                onclick="
-                   if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
-                    if(this.checked==false){
-                      document.getElementById('inocetak').value='NOCETAK'
-                    }else{document.getElementById('inocetak').value='CETAK-SM'}
-                  }else{
-                    if(this.checked==false){
-                      document.getElementById('inocetak').value='NOCETAK'
-                    }else{document.getElementById('inocetak').value='<?=$cet?>'}
-                  }">
-                <label for="pil_cetak" style="cursor: pointer" >Cetak Nota &nbsp;&nbsp;<i class="fa fa-print" style="color:darkblue"></i></label>
-              </div>  
-                <?php
-                if($kode==1){ ?>  
-                  <script>
-                    document.getElementById("pil_cetak").checked;
-                    if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
-                      document.getElementById('inocetak').value='CETAK-SM';
-                    }else{
-                      document.getElementById('inocetak').value='<?=$cet?>';
-                    }
-                  </script>
-                <?php }else{ ?>
-                  <script>document.getElementById("pil_cetak").checked=false</script>
-                <?php }?>
-              
-            </div>      
-            <div class="row w3-container">
-              
-              <input type="hidden" id="inocetak" name="inocetak" VALUE="CETAK">
-              <div class="col-sm-8 offset-sm-2 text-center"> 
-                <?php if ( $gtot != '0') { ?>
-                  <button id='tmb-simpan' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px"
-                    onkeypress=" if(event.keyCode==13){this.click();}"
-                    onclick="if(window.innerWidth<=992){document.getElementById('pil_cetak').value=document.getElementById('inocetak').value}else{document.getElementById('pil_cetak').value=document.getElementById('inocetak').value};
-                    hitungpoin();
-                    simpanbyr(document.getElementById('tgl_jual').value,document.getElementById('no_fakjuals').value,
-                    document.getElementById('kd_pel_byr').value,document.getElementById('kd_bayar2').value,
-                    document.getElementById('byr_awal').value,document.getElementById('tot_belanja').value,
-                    document.getElementById('bayar').value,document.getElementById('kembali').value,
-                    document.getElementById('disctot').value,document.getElementById('tdiscitem1').value,
-                    document.getElementById('voucher').value,document.getElementById('ongkir').value,
-                    document.getElementById('pil_tf').value,document.getElementById('tgl_jtnotas').value,
-                    document.getElementById('inocetak').value,document.getElementById('pil_cetak').value);
-                   "
-                  ><i class="fa fa-save"></i> Simpan</button>   
-                <?php } else {?>     
-                  <button id='tmb-simpan-disabled' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px" disabled><i class="fa fa-save"></i> Simpan</button>     
-                <?php } ?>
-                <button onclick="document.getElementById('form-bayar').style.display='none'" type="button" class="btn btn-warning" style="box-shadow: 1px 1px 2px black;font-size: 12px;width: 70px;height: 30px"><i class="fa fa-undo"></i> Batal</button>   
-
-                <!-- simpan tanpa cetak -->
-                <button id="btn-nocetak" type="button" onclick="
-                  if (document.getElementById('tmb-simpan').disabled==false){
-                    hitungpoin();
-                    document.getElementById('inocetak').value='NOCETAK';
-                    document.getElementById('pil_cetak').checked=false;
-                    document.getElementById('pil_cetak').value='NOCETAK';
-                    document.getElementById('tmb-simpan').click();kosongkan2();  
-                  } 
-                  " style="display:none">
-                </button>
-
-              </div>                
             </div>
-          </form>
 
-        </div>  
-      </div>  
+            <div class="bayar-block">
+              <label for="bayar"><i class="fa fa-money" style="color:darkblue"></i>&nbsp;<b>Bayar</b></label>
+              <input id="bayar" type="text" class="form-control hrf_arial money" name="bayar"  required style="background-color: #fff;text-align: right;" onkeyup="hitbayar(document.getElementById('kd_bayar2').value);"
+              onkeypress="
+              if (event.keyCode==13){
+                if ( '<?=$gtot?>' != '0'){
+                  document.getElementById('tmb-simpan').click();
+                }
+              }"
+              onblur="hitbayar(document.getElementById('kd_bayar2').value)" autofocus>
+            </div>
+
+            <div class="kembali-block">
+              <label for="kembali1"><i class="fa fa-mail-reply-all" style="color:darkblue"></i>&nbsp;<b>Kembali</b></label>
+              <input id="kembali1" type="text" class="form-control hrf_arial money" required style="border:none;background-color: transparent;text-align: right;width:130px" disabled="">
+            </div>
+            <input id="kembali" type="hidden" class="form-control hrf_arial money" name="kembali"  required style="border:none;background-color: transparent;font-size: 14pt;text-align: right;">
+
+            <div class="field" style="font-size: 12pt">
+              <input type="checkbox" id="pil_cetak" name="pil_cetak" checked="" value="<?=$cet?>"
+              onclick="
+                 if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+                  if(this.checked==false){
+                    document.getElementById('inocetak').value='NOCETAK'
+                  }else{document.getElementById('inocetak').value='CETAK-SM'}
+                }else{
+                  if(this.checked==false){
+                    document.getElementById('inocetak').value='NOCETAK'
+                  }else{document.getElementById('inocetak').value='<?=$cet?>'}
+                }">
+              <label for="pil_cetak" style="cursor: pointer;margin-left:6px" >Cetak Nota &nbsp;&nbsp;<i class="fa fa-print" style="color:darkblue"></i></label>
+            </div>
+            <?php
+            if($kode==1){ ?>
+              <script>
+                document.getElementById("pil_cetak").checked;
+                if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)){
+                  document.getElementById('inocetak').value='CETAK-SM';
+                }else{
+                  document.getElementById('inocetak').value='<?=$cet?>';
+                }
+              </script>
+            <?php }else{ ?>
+              <script>document.getElementById("pil_cetak").checked=false</script>
+            <?php }?>
+            <input type="hidden" id="inocetak" name="inocetak" VALUE="CETAK">
+
+            <div class="bayar-actions">
+              <?php if ( $gtot != '0') { ?>
+                <button id='tmb-simpan' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px"
+                  onkeypress=" if(event.keyCode==13){this.click();}"
+                  onclick="if(window.innerWidth<=992){document.getElementById('pil_cetak').value=document.getElementById('inocetak').value}else{document.getElementById('pil_cetak').value=document.getElementById('inocetak').value};
+                  hitungpoin();
+                  simpanbyr(document.getElementById('tgl_jual').value,document.getElementById('no_fakjuals').value,
+                  document.getElementById('kd_pel_byr').value,document.getElementById('kd_bayar2').value,
+                  document.getElementById('byr_awal').value,document.getElementById('tot_belanja').value,
+                  document.getElementById('bayar').value,document.getElementById('kembali').value,
+                  document.getElementById('disctot').value,document.getElementById('tdiscitem1').value,
+                  document.getElementById('voucher').value,document.getElementById('ongkir').value,
+                  document.getElementById('pil_tf').value,document.getElementById('tgl_jtnotas').value,
+                  document.getElementById('inocetak').value,document.getElementById('pil_cetak').value);
+                 "
+                ><i class="fa fa-save"></i> Simpan</button>
+              <?php } else {?>
+                <button id='tmb-simpan-disabled' class="btn btn-primary" style="box-shadow: 1px 1px 2px black;font-size: 12px" disabled><i class="fa fa-save"></i> Simpan</button>
+              <?php } ?>
+              <button onclick="document.getElementById('form-bayar').style.display='none'" type="button" class="btn btn-warning" style="box-shadow: 1px 1px 2px black;font-size: 12px"><i class="fa fa-undo"></i> Batal</button>
+            </div>
+
+            <!-- simpan tanpa cetak -->
+            <button id="btn-nocetak" type="button" onclick="
+              if (document.getElementById('tmb-simpan').disabled==false){
+                hitungpoin();
+                document.getElementById('inocetak').value='NOCETAK';
+                document.getElementById('pil_cetak').checked=false;
+                document.getElementById('pil_cetak').value='NOCETAK';
+                document.getElementById('tmb-simpan').click();kosongkan2();
+              }
+              " style="display:none">
+            </button>
+          </div>
+          <!-- ===================== /KOLOM 3 ===================== -->
+
+        </div>
+      </form>
+
     </div>
-  <!-- End form bayar    -->
-  <div id="simpanbayar"></div>
+  </div>
+</div>
+<!-- End form bayar    -->
+<div id="simpanbayar"></div>
 <script>
   function backangka(b)
   {

@@ -413,6 +413,7 @@
           <a href="m_sup.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Supplier</a>
           <a href="m_pel.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Pelanggan</a>
           <a href="m_member.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Member</a>
+          <a href="m_crew.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Crew</a>
           <a href="m_toko.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Toko</a>
           <a href="f_masbrg.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Barang</a>
           <a href="m_paket.php" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Inisial Perpaket</a>
@@ -478,6 +479,7 @@
           <a href="#" onclick="closemenu();document.getElementById('formcetretur').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Penjualan</a>
           <a href="#" onclick="closemenu();document.getElementById('formcetrekap').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Rekapitulasi</a>
           <a href="#" onclick="closemenu();document.getElementById('formcetjualmember').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Member</a>
+          <a href="#" onclick="closemenu();document.getElementById('formcetjualcrew').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Crew</a>
           <a href="#" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px" onclick="closemenu();document.getElementById('form-piut').style.display='block'">
             <i class="fa fa-bullseye">&nbsp;</i>Bayar Piutang</a>
           <a href="#" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px" onclick="closemenu();document.getElementById('form-hut').style.display='block'">
@@ -561,6 +563,7 @@
             <a href="m_sup.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Supplier</a>
             <a href="m_pel.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Pelanggan</a>
             <a href="m_member.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Member</a>
+            <a href="m_crew.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Crew</a>
             <!-- <a href="m_toko.php" class="w3-bar-item w3-button w3-border"><i class="fa fa-bullseye">&nbsp;</i>Toko</a> -->
             <a href="f_masbrg.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Barang</a>
             <a href="m_paket.php" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Inisial Perpaket</a>
@@ -627,6 +630,7 @@
             <a href="#" onclick="closemenu();document.getElementById('formcetretur').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:2px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Penjualan</a>
             <a href="#" onclick="closemenu();document.getElementById('formcetreturbeli').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Retur Pembelian</a>
             <a href="#" onclick="closemenu();document.getElementById('formcetjualmember').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Member</a>
+            <a href="#" onclick="closemenu();document.getElementById('formcetjualcrew').style.display='block'" class="w3-bar-item w3-button w3-border" style="padding:4px;padding-left:20px"><i class="fa fa-bullseye">&nbsp;</i>Transaksi Crew</a>
             <a href="#" class="w3-bar-item w3-button w3-border" onclick="closemenu();document.getElementById('form-piut').style.display='block'" style="padding:4px;padding-left:20px">
               <i class="fa fa-bullseye">&nbsp;</i>Bayar Piutang</a>
             <a href="#" class="w3-bar-item w3-button w3-border" onclick="closemenu();document.getElementById('form-hut').style.display='block'" style="padding:4px;padding-left:20px">
@@ -1222,6 +1226,61 @@
       </div>
     </div>
     <!-- End Form cetak transaksi member-->
+
+    <!-- Form cetak transaksi crew-->
+    <div id="formcetjualcrew" class="w3-modal" style="padding-top:60px;margin-left:0px;background-color:rgba(1, 1, 1, 0.3) ">
+      <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="border-style: ridge;border-color: white;width:600px ">
+        <div class="yz-theme-d1" style="font-size: 14px;padding:4px">
+          &nbsp; <i class="fa fa-print"></i>&nbsp;Cetak Transaksi Crew
+          <span onclick="document.getElementById('formcetjualcrew').style.display='none'" class="w3-display-topright" title="Close Form" style="margin-top: -2px;margin-right: 0px;cursor: pointer"><img style="width: 108%" src="img/tomexit2.png" alt=""></span>
+        </div>
+        <div class="w3-container w3-padding-large">
+          <form action="f_cetak_jual_crew.php" method="POST" target="_blank">
+            <div class="row">
+              <div class="col-sm-7">
+                <div class="form-group row">
+                  <label for="tglcrew1" class="col-sm-5 col-form-label">Tanggal</label>
+                  <div class="col-sm-7">
+                    <input type="date" id="tglcrew1" name="tgl1" placeholder="Tanggal awal" required="">
+                  </div>
+                </div>
+                <div class="form-group row" style="margin-top: -10px">
+                  <label for="tglcrew2" class="col-sm-5 col-form-label">s/d Tanggal</label>
+                  <div class="col-sm-7">
+                    <input type="date" id="tglcrew2" name="tgl2" placeholder="Tanggal akhir" required="">
+                  </div>
+                </div>
+                <div class="form-group row" style="margin-top: -10px">
+                  <label for="crewreport" class="col-sm-5 col-form-label">Crew</label>
+                  <div class="col-sm-7">
+                    <select class="form-control" name="kd_crew" id="crewreport" style="border: 1px solid black;font-size:12px ;height: 30px;" tabindex="4">
+                      <option value="">SEMUA CREW</option>
+                      <?php
+                      include_once 'crew_helper.php';
+                      ensureCrewTable($connect);
+                      $kd_toko_crew = isset($_SESSION['id_toko']) ? mysqli_real_escape_string($connect, $_SESSION['id_toko']) : '';
+                      $qcrew = mysqli_query($connect, "SELECT kd_crew,nm_crew FROM crew WHERE kd_toko='$kd_toko_crew' ORDER BY nm_crew ASC");
+                      if($qcrew){
+                        while($dcrew = mysqli_fetch_assoc($qcrew)){
+                      ?>
+                        <option value="<?=htmlspecialchars($dcrew['kd_crew'])?>"><?=htmlspecialchars($dcrew['nm_crew'])?></option>
+                      <?php }
+                        mysqli_free_result($qcrew);
+                      }
+                      ?>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-5 ">
+                <button class="btn w3-card w3-right"><img src="img/printer.png" alt=""></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- End Form cetak transaksi crew-->
 
     <!-- Form cetak nota bagian penjualan-->
     <div id="formcetjual_bag" class="w3-modal" style="padding-top:60px;margin-left:0px;background-color:rgba(1, 1, 1, 0.3) ">

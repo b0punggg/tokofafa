@@ -15,6 +15,8 @@
   if (!isset($connect) || !$connect) {
     $connect = opendtcek();
   }
+  include_once 'crew_helper.php';
+  ensureMasJualCrewColumn($connect);
   
   // Ambil keyword dari $_POST yang sudah diset oleh f_jual_cetnota.php
   $keyword = isset($_POST['keyword']) ? $_POST['keyword'] : '';
@@ -66,10 +68,13 @@
     $poin_saldo = 0;
     
     // Cari kd_member dari mas_jual
-    $cek_member = mysqli_query($connect, "SELECT kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+    $cek_member = mysqli_query($connect, "SELECT kd_member, poin_earned, kd_crew FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+    $kd_crew = '';
+    $nm_crew = '';
     if (mysqli_num_rows($cek_member) > 0) {
       $dt_member = mysqli_fetch_assoc($cek_member);
       $kd_member = isset($dt_member['kd_member']) ? $dt_member['kd_member'] : '';
+      $kd_crew = isset($dt_member['kd_crew']) ? $dt_member['kd_crew'] : '';
       $poin_earned = isset($dt_member['poin_earned']) ? floatval($dt_member['poin_earned']) : 0;
       
       // Ambil nama member dan poin saldo jika ada kd_member
@@ -82,6 +87,14 @@
         }
         mysqli_free_result($sqlmember);
         unset($sqlmember,$datamember);
+      }
+      if (!empty($kd_crew)) {
+        $sqlcrew=mysqli_query($connect,"SELECT nm_crew FROM crew WHERE kd_crew='$kd_crew' AND kd_toko='$kd_toko' LIMIT 1");
+        if ($sqlcrew && mysqli_num_rows($sqlcrew) > 0) {
+          $datacrew=mysqli_fetch_assoc($sqlcrew);
+          $nm_crew = isset($datacrew['nm_crew']) ? $datacrew['nm_crew'] : '';
+        }
+        if ($sqlcrew) { mysqli_free_result($sqlcrew); }
       }
     }
     mysqli_free_result($cek_member);
@@ -101,6 +114,9 @@
       if (!empty($kd_member) && !empty($nm_member)) {
         $Text .= spasistr('',$def)."Member   ".spasistr('',5).":".spasistr($nm_member,30)."\n";
         $Text .= spasistr('',$def)."Poin Saldo".spasistr('',3).":".spasistr(number_format($poin_saldo, 0, ',', '.'),30)."\n";
+      }
+      if (!empty($kd_crew) && !empty($nm_crew)) {
+        $Text .= spasistr('',$def)."Crew     ".spasistr('',5).":".spasistr($nm_crew,30)."\n";
       }
       $Text .= spasistr('',$def)."-----------------------------------------------\n";
       $Text .= spasistr('',$def)."No.".spasistr('',5)."Nama Barang\n";

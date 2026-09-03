@@ -25,18 +25,23 @@
   
   // Ambil kd_pel dari database berdasarkan mas_jual atau dum_jual
   $connect = opendtcek();
+  include_once 'crew_helper.php';
+  ensureMasJualCrewColumn($connect);
   $kd_pel = 'IDPEL-0'; // Default
   $kd_member = ''; // Default
   $poin_earned = 0; // Default
   $nm_member = ''; // Default
   $poin_saldo = 0; // Default
+  $kd_crew = '';
+  $nm_crew = '';
   
   // Cari kd_pel dan kd_member dari mas_jual jika ada
-  $cekpel = mysqli_query($connect, "SELECT kd_pel, kd_member, poin_earned FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
+  $cekpel = mysqli_query($connect, "SELECT kd_pel, kd_member, poin_earned, kd_crew FROM mas_jual WHERE no_fakjual='$no_fakjual' AND tgl_jual='$tgl_jual' AND kd_toko='$kd_toko' LIMIT 1");
   if (mysqli_num_rows($cekpel) > 0) {
     $dtpel = mysqli_fetch_assoc($cekpel);
     $kd_pel = $dtpel['kd_pel'];
     $kd_member = isset($dtpel['kd_member']) ? $dtpel['kd_member'] : '';
+    $kd_crew = isset($dtpel['kd_crew']) ? $dtpel['kd_crew'] : '';
     $poin_earned = isset($dtpel['poin_earned']) ? floatval($dtpel['poin_earned']) : 0;
   } else {
     // Jika tidak ada di mas_jual, cek dari dum_jual
@@ -72,6 +77,15 @@
     }
     mysqli_free_result($sqlmember);
     unset($sqlmember,$datamember);
+  }
+
+  if (!empty($kd_crew)) {
+    $sqlcrew=mysqli_query($connect,"SELECT nm_crew FROM crew WHERE kd_crew='$kd_crew' AND kd_toko='$kd_toko' LIMIT 1");
+    if ($sqlcrew && mysqli_num_rows($sqlcrew) > 0) {
+      $datacrew=mysqli_fetch_assoc($sqlcrew);
+      $nm_crew = isset($datacrew['nm_crew']) ? $datacrew['nm_crew'] : '';
+    }
+    if ($sqlcrew) { mysqli_free_result($sqlcrew); }
   }
   
   mysqli_close($connect);

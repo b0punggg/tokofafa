@@ -11,6 +11,7 @@
   ini_set('display_errors', 0);
 
 include_once 'config.php';
+include_once 'crew_helper.php';
 date_default_timezone_set('Asia/Jakarta');
 session_start();
 $kd_toko      = $_SESSION['id_toko'];
@@ -19,6 +20,7 @@ $tgl_jual     = isset($_POST['tgl_jual']) ? $_POST['tgl_jual'] : '';
 $no_fakjual   = isset($_POST['no_fakjuals']) ? $_POST['no_fakjuals'] : '';
 $kd_pel       = isset($_POST['kd_pel_byr']) ? $_POST['kd_pel_byr'] : '';
 $kd_member    = isset($_POST['kd_member_byr']) ? $_POST['kd_member_byr'] : '';
+$kd_crew      = isset($_POST['kd_crew_byr']) ? $_POST['kd_crew_byr'] : '';
 $kd_bayar     = isset($_POST['kd_bayar']) ? $_POST['kd_bayar'] : '';
 $byr_jual     = backnumdes(isset($_POST['byr_awal']) ? $_POST['byr_awal'] : '0');//**Tagihan penjualan awal
 $byr_tot      = backnumdes(isset($_POST['tot_belanja']) ? $_POST['tot_belanja'] : '0');//**Tagihan awal + disc + ongkir
@@ -41,7 +43,9 @@ $d            = false;
 $tghi         = date("Y-m-d H:i:s");   
   
 //echo $voucher;
-$conbayar=opendtcek();              
+$conbayar=opendtcek();
+ensureCrewTable($conbayar);
+ensureMasJualCrewColumn($conbayar);              
 
 
 //CARI NOURUT RETUR
@@ -415,6 +419,7 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
     $no_fakjual_esc = mysqli_real_escape_string($conbayar, $no_fakjual);
     $kd_pel_esc = mysqli_real_escape_string($conbayar, $kd_pel);
     $kd_member_esc = mysqli_real_escape_string($conbayar, $kd_member);
+    $kd_crew_esc = mysqli_real_escape_string($conbayar, $kd_crew);
     $ket_bayar_esc = mysqli_real_escape_string($conbayar, $ket_bayar);
     $kd_bayar_esc = mysqli_real_escape_string($conbayar, $kd_bayar);
     $tf_esc = mysqli_real_escape_string($conbayar, $tf);
@@ -433,7 +438,7 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
     // Gunakan INSERT dengan nama kolom eksplisit untuk menghindari error "Column count doesn't match"
     // Struktur berdasarkan backup yang berhasil + kolom baru (kd_member, poin_earned)
     // Urutan: tgl_jual, kd_toko, no_fakjual, tot_jual, tot_disc, tot_laba, ket_bayar, kd_bayar, bayar_uang, susuk_uang, kd_pel, cetak, kd_member, poin_earned, ongkir, saldo_hutang, tgl_jt, trf, execut
-    $d=mysqli_query($conbayar,"INSERT INTO mas_jual (tgl_jual,kd_toko,no_fakjual,tot_jual,tot_disc,tot_laba,ket_bayar,kd_bayar,bayar_uang,susuk_uang,kd_pel,cetak,kd_member,poin_earned,ongkir,saldo_hutang,tgl_jt,trf,execut) VALUES('$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','0','$kd_member_esc','$poin_earned','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
+    $d=mysqli_query($conbayar,"INSERT INTO mas_jual (tgl_jual,kd_toko,no_fakjual,tot_jual,tot_disc,tot_laba,ket_bayar,kd_bayar,bayar_uang,susuk_uang,kd_pel,cetak,kd_member,kd_crew,poin_earned,ongkir,saldo_hutang,tgl_jt,trf,execut) VALUES('$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','0','$kd_member_esc','$kd_crew_esc','$poin_earned','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
     
     // Jika masih error, coba dengan struktur lama tanpa kd_member dan poin_earned
     if (!$d) {
@@ -443,8 +448,8 @@ if(mysqli_num_rows($cek)>=1){ //** data ditemukan
       $d=mysqli_query($conbayar,"INSERT INTO mas_jual (tgl_jual,kd_toko,no_fakjual,tot_jual,tot_disc,tot_laba,ket_bayar,kd_bayar,bayar_uang,susuk_uang,kd_pel,cetak,ongkir,saldo_hutang,tgl_jt,trf,execut) VALUES('$tgl_jual_esc','$kd_toko_esc','$no_fakjual_esc','$tot_sale','$tot_discitem','$totlaba','$ket_bayar_esc','$kd_bayar_esc','$bayar','$susuk','$kd_pel_esc','0','$ongkir','$saldohut','$tgl_jt_esc','$tf_esc','$tghi')");
       if ($d) {
         // Jika berhasil dengan struktur lama, update kd_member dan poin_earned secara terpisah
-        if (!empty($kd_member_esc) || $poin_earned > 0) {
-          mysqli_query($conbayar,"UPDATE mas_jual SET kd_member='$kd_member_esc',poin_earned='$poin_earned' WHERE no_fakjual='$no_fakjual_esc' AND tgl_jual='$tgl_jual_esc' AND kd_toko='$kd_toko_esc'");
+        if (!empty($kd_member_esc) || $poin_earned > 0 || !empty($kd_crew_esc)) {
+          mysqli_query($conbayar,"UPDATE mas_jual SET kd_member='$kd_member_esc',kd_crew='$kd_crew_esc',poin_earned='$poin_earned' WHERE no_fakjual='$no_fakjual_esc' AND tgl_jual='$tgl_jual_esc' AND kd_toko='$kd_toko_esc'");
         }
       }
     }
