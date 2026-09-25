@@ -83,10 +83,10 @@
     mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
     for ($z=0; $z < $copies ; $z++) {
       if ($x == 0) {echo "<tr style='height:15mm'>";}  ?>
-      <td style="width: 32mm; height:16mm; vertical-align: middle; overflow: hidden;">
-        <p style='font-size:7pt;text-align: center;margin:0;padding:0;line-height:1;'><b><?=$nm_brg?></b></p>
-        <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:9mm; color: black; font-size: 1.5mm"></barcode>
-      </td> <?php          
+      <td style="width: 32mm; height:15mm; vertical-align: middle; overflow: hidden;">
+  <p style='font-size:6pt;text-align: center;margin:0;padding:0;line-height:1;'><b><?=$nm_brg?></b></p>
+  <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:7mm; color: black; font-size: 1.2mm"></barcode>
+</td> <?php          
       $x=$x+1; 
       if ( $x == $jbar ) { echo "</tr>";$x=0;}
     } 
@@ -119,7 +119,7 @@
       $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     }
     if($kertas=='70'){
-      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(0, 0, 2, 0));
+      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
