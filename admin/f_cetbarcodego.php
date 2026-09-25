@@ -76,24 +76,23 @@
           
           if ($x<8 && $x!=0) {echo "</tr>";}
           }else{
-            while($data=mysqli_fetch_array($cek)){
-              $nm_brg=$data['nm_brg'];
-              $no_urut=$data['no_urut'];
-              $copies=$data['copy'];
-              mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
-              for ($z=0; $z < $copies ; $z++) {
-                if ($x == 0) {echo "<tr>";}  ?>
-                <td style="width: 33mm">
-                  <p style='font-size:7pt;text-align: center'><b><?=$nm_brg?></b></p>
-                  <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:10mm; color: black; font-size: 1.5mm"></barcode>
-                  <!-- <p style="font-size:6pt;text-align: center"><?="Rp.".gantiti(round($data['hrg_jum1'],0))?></p> -->
-                </td> <?php          
-                $x=$x+1; 
-                if ( $x == $jbar ) { echo "</tr>";$x=0;}
-              } 
-            }     
-            if ($x<8 && $x!=0) {echo "</tr>";} 
-          }
+  while($data=mysqli_fetch_array($cek)){
+    $nm_brg=$data['nm_brg'];
+    $no_urut=$data['no_urut'];
+    $copies=$data['copy'];
+    mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
+    for ($z=0; $z < $copies ; $z++) {
+      if ($x == 0) {echo "<tr style='height:15mm'>";}  ?>
+      <td style="width: 32mm; height:13mm; vertical-align: middle; overflow: hidden;">
+        <p style='font-size:7pt;text-align: center;margin:0;padding:0;line-height:1;'><b><?=$nm_brg?></b></p>
+        <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:9mm; color: black; font-size: 1.5mm"></barcode>
+      </td> <?php          
+      $x=$x+1; 
+      if ( $x == $jbar ) { echo "</tr>";$x=0;}
+    } 
+  }     
+  if ($x<8 && $x!=0) {echo "</tr>";} 
+}
         mysqli_free_result($cek);unset($data);
       }  
      ?> 
@@ -120,7 +119,7 @@
       $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     }
     if($kertas=='70'){
-      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(2, 0, 0, 0));
     } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
