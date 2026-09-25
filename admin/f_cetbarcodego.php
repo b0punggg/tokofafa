@@ -17,7 +17,10 @@
   }
   if($kertas=='80'){
     $jbar=3;
-  } 
+  }
+  if($kertas=='70'){
+  $jbar=2;   // 2 kolom sesuai label kamu
+} 
  
   //  if($_SESSION['pilprint']=='CETAK-CK'){
   //   $jbar=2;
@@ -72,29 +75,25 @@
           }   
           
           if ($x<8 && $x!=0) {echo "</tr>";}
-        }else{
-          while($data=mysqli_fetch_array($cek)){
-            $nm_brg=$data['nm_brg'];
-            $no_urut=$data['no_urut'];
-            $copies=$data['copy'];
-            mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
-            for ($z=0; $z < $copies ; $z++) {
-              if ($x == 0) {echo "<tr>";}  
-              ?>
-              <tr>
-                <td style="width: 90px">
+          }else{
+            while($data=mysqli_fetch_array($cek)){
+              $nm_brg=$data['nm_brg'];
+              $no_urut=$data['no_urut'];
+              $copies=$data['copy'];
+              mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
+              for ($z=0; $z < $copies ; $z++) {
+                if ($x == 0) {echo "<tr>";}  ?>
+                <td style="width: 33mm">
                   <p style='font-size:7pt;text-align: center'><b><?=$nm_brg?></b></p>
-                  <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:35mm; height:12mm; color: black; font-size: 2mm"></barcode>
+                  <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:10mm; color: black; font-size: 1.5mm"></barcode>
                   <!-- <p style="font-size:6pt;text-align: center"><?="Rp.".gantiti(round($data['hrg_jum1'],0))?></p> -->
-                </td> 
-              </tr>
-              <?php          
-              $x=$x+1; 
-              if ( $x == 8 ) { echo "</tr>";$x=0;}
-            } 
-          }     
-          if ($x<8 && $x!=0) {echo "</tr>";} 
-        }
+                </td> <?php          
+                $x=$x+1; 
+                if ( $x == $jbar ) { echo "</tr>";$x=0;}
+              } 
+            }     
+            if ($x<8 && $x!=0) {echo "</tr>";} 
+          }
         mysqli_free_result($cek);unset($data);
       }  
      ?> 
@@ -111,16 +110,18 @@
     try
     { 
 
-      if($kertas=='A4'){
-        $html2pdf = new Html2Pdf('P', 'A4', 'en' );
-      }
-      if($kertas=='58'){
-        $html2pdf = new Html2Pdf('P', array(58,3700), 'en' );
-      }
-      if($kertas=='80'){
-        $html2pdf = new Html2Pdf('P', array(80,3700), 'en' );
-      } 
-      
+    if($kertas=='A4'){
+      $html2pdf = new Html2Pdf('P', 'A4', 'en' );
+    }
+    if($kertas=='58'){
+      $html2pdf = new Html2Pdf('P', array(58,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+    }
+    if($kertas=='80'){
+      $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+    }
+    if($kertas=='70'){
+      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+    } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
       $html2pdf->Output($c_nmfile);
