@@ -50,7 +50,7 @@
       border-bottom: none;
     }
 </style>
-<page backtop="0mm" backbottom="0mm" backleft="4mm" backright="0mm">
+<page backtop="0mm" backbottom="0mm" backleft="0mm" backright="0mm">
   <table>    
      <?php 
       $i=0;$x=0;
