@@ -16,7 +16,7 @@
     $jbar=2;
   }
   if($kertas=='80'){
-    $jbar=3;
+    $jbar=2;
   }
   if($kertas=='70'){
   $jbar=2;   // 2 kolom sesuai label kamu
@@ -30,7 +30,7 @@
     table {
     width:  100%;
     text-align: center;
-    margin-left: 2mm;
+    margin-left: 4mm;
     }
     tr {
       page-break-inside: avoid;
