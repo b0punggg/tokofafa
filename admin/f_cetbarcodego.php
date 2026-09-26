@@ -85,8 +85,8 @@
     for ($z=0; $z < $copies ; $z++) {
       if ($x == 0) {echo "<tr style='height:15mm'>";}  ?>
       <td style="width: 32mm; height:15mm; vertical-align: top; padding-top: 2mm; overflow: hidden;">
-      <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:28mm; height:8mm; color: black; font-size: 1.5mm"></barcode>
-      </td> <?php          
+  <barcode dimension="1D" type="C128" value="<?=$data['kd_bar']?>" label="label" style="width:31mm; height:12mm; color: black; font-size: 2mm"></barcode>
+</td> <?php          
       $x=$x+1; 
       if ( $x == $jbar ) { echo "</tr>";$x=0;}
     } 
