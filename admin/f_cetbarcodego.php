@@ -119,7 +119,7 @@
       $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     }
     if($kertas=='70'){
-      $html2pdf = new Html2Pdf('P', array(70,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+      $html2pdf = new Html2Pdf('P', array(70,300), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
