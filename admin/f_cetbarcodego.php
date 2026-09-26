@@ -29,16 +29,17 @@
 <style>
     table {
     width:  100%;
-    /*border: solid 1px black;*/
     text-align: center;
     margin-left: 2mm;
+    }
+    tr {
+      page-break-inside: avoid;
     }
     th {
       text-align: center;
       border: solid 1px black;
       background: white;
     }
-
     td {
       border: solid 1px black;
       background: white;
@@ -48,7 +49,6 @@
       border-top: none;
       border-bottom: none;
     }
-
 </style>
 <page backtop="0mm" backbottom="0mm" backleft="0mm" backright="0mm">
   <table>    
@@ -119,7 +119,7 @@
       $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     }
     if($kertas=='70'){
-      $html2pdf = new Html2Pdf('P', array(70,300), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+      $html2pdf = new Html2Pdf('P', array(70,150), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
