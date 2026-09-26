@@ -84,8 +84,8 @@
     mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
     for ($z=0; $z < $copies ; $z++) {
       if ($x == 0) {echo "<tr style='height:15mm'>";}  ?>
-      <td style="width: 32mm; height:15mm; vertical-align: top; padding-top: 2mm; overflow: hidden;">
-  <barcode dimension="1D" type="C128" value="<?=$data['kd_bar']?>" label="label" style="width:31mm; height:11mm; color: black; font-size: 2mm"></barcode>
+      <td style="width: 33mm; height:15mm; vertical-align: top; padding-top: 2mm; overflow: hidden;">
+  <barcode dimension="1D" type="C128" value="<?=$data['kd_bar']?>" label="label" style="width:30mm; height:10mm; color: black; font-size: 2mm"></barcode>
 </td> <?php          
       $x=$x+1; 
       if ( $x == $jbar ) { echo "</tr>";$x=0;}
@@ -119,7 +119,7 @@
       $html2pdf = new Html2Pdf('P', array(80,3700), 'en', true, 'UTF-8', array(0, 0, 0, 0));
     }
     if($kertas=='70'){
-      $html2pdf = new Html2Pdf('P', array(70,150), 'en', true, 'UTF-8', array(0, 0, 0, 0));
+      $html2pdf = new Html2Pdf('P', array(70,100), 'en', true, 'UTF-8', array(1, 0, 0, 0));
     } 
       $html2pdf->pdf->SetDisplayMode('fullpage');
       $html2pdf->writeHTML($content);
