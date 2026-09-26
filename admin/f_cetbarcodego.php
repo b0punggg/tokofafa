@@ -84,7 +84,7 @@
     mysqli_query($concet,"UPDATE mas_brg SET cetak='1' WHERE no_urut='$no_urut'");
     for ($z=0; $z < $copies ; $z++) {
       if ($x == 0) {echo "<tr style='height:15mm'>";}  ?>
-      <td style="width: 32mm; height:15mm; vertical-align: middle; overflow: hidden;">
+      <td style="width: 32mm; height:15mm; vertical-align: top; padding-top: 2mm; overflow: hidden;">
       <barcode dimension="1D" type="C39" value="<?=$data['kd_bar']?>" label="label" style="width:28mm; height:8mm; color: black; font-size: 1.5mm"></barcode>
       </td> <?php          
       $x=$x+1; 
