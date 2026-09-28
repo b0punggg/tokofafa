@@ -14,12 +14,13 @@ while ($d = mysqli_fetch_assoc($cek)) {
 }
 
 // Susun TSPL: 1 baris = 2 label
-$tspl  = "SIZE 70 mm,15 mm\r\nGAP 3 mm,0\r\nDIRECTION 1\r\nDENSITY 10\r\nSPEED 3\r\n";
+$tspl  = "SIZE 70 mm,15 mm\r\nGAP 3 mm,0\r\nDIRECTION 1\r\nREFERENCE 0,0\r\nDENSITY 10\r\nSPEED 3\r\n";
+$tspl .= "AUTODETECT\r\n";
 for ($i = 0; $i < count($labels); $i += 2) {
     $tspl .= "CLS\r\n";
-    $tspl .= 'BARCODE 30,15,"128",70,1,0,2,2,"'.$labels[$i]."\"\r\n";
+    $tspl .= 'BARCODE 30,4,"128",55,1,0,2,2,"'.$labels[$i]."\"\r\n";
     if (isset($labels[$i+1])) {
-        $tspl .= 'BARCODE 318,15,"128",70,1,0,2,2,"'.$labels[$i+1]."\"\r\n";
+        $tspl .= 'BARCODE 318,4,"128",55,1,0,2,2,"'.$labels[$i+1]."\"\r\n";
     }
     $tspl .= "PRINT 1,1\r\n";
 }
